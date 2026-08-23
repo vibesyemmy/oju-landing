@@ -118,6 +118,10 @@ not-configured, upstream failure, and both no-JS redirects), and CI runs it.
 
 ## Before launch
 
+- [ ] **Replace the team in `src/data/site.ts`** — Adunni Bakare, Chidi Okafor
+      and Temilade Adeyemi are invented. They read as real people, which makes
+      them the most dangerous placeholder here: every other one is a visible
+      `[BRACKET]`, this one is not. Set `TEAM = []` to hide the section instead.
 - [ ] Replace the hero wall imagery in `src/assets/wall/` — currently placeholders
 - [ ] Replace every `[BRACKET]` — they are real facts still owed, not styling
 - [ ] Real project data in `src/content/work/` (delete `project-one.mdx`)

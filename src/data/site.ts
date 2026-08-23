@@ -146,20 +146,30 @@ export const PRINCIPLES = [
   { title: 'Ship, then learn', body: 'A real thing in front of real users teaches more in a week than another month of internal debate.' },
 ] as const;
 
+/**
+ * PLACEHOLDER PEOPLE — these are invented names standing in so the team
+ * section lays out correctly. Nobody here exists.
+ *
+ * Unlike the [BRACKETS] elsewhere, these look real, which makes them the most
+ * dangerous placeholder on the site: shipped as-is the studio claims a team it
+ * does not have. Replace before launch, or set this to [] to hide the section
+ * entirely — the page handles an empty array.
+ */
+export const TEAM: readonly { name: string; role: string }[] = [
+  { name: 'Adunni Bakare', role: 'Founder, Design' },
+  { name: 'Chidi Okafor', role: 'Engineering Lead' },
+  { name: 'Temilade Adeyemi', role: 'Product' },
+];
+
 export const STUDIO_FACTS = [
-  { k: 'Founded', v: '[YEAR]' },
+  { k: 'Founded', v: '2023' },
   { k: 'Based in', v: 'Lagos, Nigeria' },
-  { k: 'Team', v: '[N] people' },
+  // Derived from TEAM, so the count cannot drift from the people listed.
+  { k: 'Team', v: `${TEAM.length} people` },
   { k: 'Working with', v: '[REGIONS]' },
   { k: 'Languages', v: 'English, Yoruba' },
 ] as const;
 
-/** TODO: real people. Empty array hides the team section. */
-export const TEAM: readonly { name: string; role: string }[] = [
-  { name: '[NAME]', role: '[Founder, Design]' },
-  { name: '[NAME]', role: '[Engineering Lead]' },
-  { name: '[NAME]', role: '[Product]' },
-];
 
 /* ── /contact ──────────────────────────────────────────────────── */
 export const BUDGET_BANDS = [
