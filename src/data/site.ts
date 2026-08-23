@@ -47,3 +47,125 @@ export const FOOTER_COLUMNS = [
 
 /** TODO: replace with real client names. Empty array hides the strip entirely. */
 export const CLIENTS: readonly string[] = [];
+
+/* ── /services ─────────────────────────────────────────────────
+   The three capability columns from the homepage, expanded. Same
+   order, same numbering — a visitor arriving from the homepage
+   should recognise where they landed. */
+export const SERVICES = [
+  {
+    num: '01',
+    id: 'design',
+    title: 'Design',
+    lede: 'The face of the thing — what a person sees, touches, and judges you by before they read a word.',
+    includes: [
+      'Product UI and UX',
+      'Brand identity and art direction',
+      'Design systems and Figma libraries',
+      'Motion and interaction design',
+      'Prototyping and usability testing',
+    ],
+    deliverables: [
+      'A component library your team can build from',
+      'Screen designs for every state, not just the happy path',
+      'Motion specs that survive handover',
+      'Brand assets and usage guidelines',
+    ],
+  },
+  {
+    num: '02',
+    id: 'product',
+    title: 'Product',
+    lede: 'Working out what is worth building — and what to leave out — before anybody writes code.',
+    includes: [
+      'Discovery and user research',
+      'Product strategy and positioning',
+      'Roadmapping and prioritisation',
+      'Scoping and estimation',
+      'Analytics and measurement plans',
+    ],
+    deliverables: [
+      'Research synthesis you can act on',
+      'A prioritised roadmap with reasons attached',
+      'Scoped estimates engineering will stand behind',
+      'The list of things you decided not to build',
+    ],
+  },
+  {
+    num: '03',
+    id: 'engineering',
+    title: 'Engineering',
+    lede: 'The part behind the face. Shipped, monitored, and still standing at month six.',
+    includes: [
+      'Web applications — React, Next.js, TypeScript',
+      'Mobile — Swift and React Native',
+      'APIs and third-party integrations',
+      'Infrastructure, CI/CD and monitoring',
+      'Performance and accessibility work',
+    ],
+    deliverables: [
+      'Production code, documented and handed over',
+      'A deploy pipeline your team owns',
+      'Architecture decisions written down',
+      'Monitoring that pages someone when it breaks',
+    ],
+  },
+] as const;
+
+/** How work is structured. Prices are a conversation, not a table. */
+export const ENGAGEMENTS = [
+  {
+    title: 'Project',
+    lede: 'A defined outcome with a start and an end. Most first engagements.',
+    detail: 'Fixed scope, fixed timeline, staged payments. Typically [6–12] weeks.',
+  },
+  {
+    title: 'Retainer',
+    lede: 'Continuous design and engineering capacity, month to month.',
+    detail: 'A set number of days each month. For teams shipping continuously. Minimum [3] months.',
+  },
+  {
+    title: 'Embedded',
+    lede: 'We join your team and work inside your process.',
+    detail: 'Your tools, your standups, your repo. For companies with a team already in motion.',
+  },
+] as const;
+
+export const PROCESS = [
+  { num: '01', title: 'Discovery', body: 'We work out what the actual problem is, which is rarely the one in the brief. Research, stakeholder interviews, a look at what you already have.' },
+  { num: '02', title: 'Design', body: 'Flows, then screens, then a system. We test the risky parts early and cheaply, before they are expensive to change.' },
+  { num: '03', title: 'Build', body: 'The same team that drew it builds it, so nothing is lost at handover. Shipped in increments you can see, not one reveal at the end.' },
+  { num: '04', title: 'Support', body: 'Launch is the middle, not the end. We monitor, fix, and hand over cleanly — or stay on if you want us to.' },
+] as const;
+
+/* ── /studio ───────────────────────────────────────────────────── */
+export const PRINCIPLES = [
+  { title: 'One team, both crafts', body: 'The people who design it are the people who build it. No translation layer, no drawings thrown over a wall.' },
+  { title: 'The seam is where products fail', body: 'Most work goes wrong between design and engineering — in the states nobody specced and the edge cases nobody drew. We own that gap because we are on both sides of it.' },
+  { title: 'Show the build, not just the picture', body: 'Anyone can produce a beautiful mockup. We would rather show you the architecture, the load time, and the thing running.' },
+  { title: 'Ship, then learn', body: 'A real thing in front of real users teaches more in a week than another month of internal debate.' },
+] as const;
+
+export const STUDIO_FACTS = [
+  { k: 'Founded', v: '[YEAR]' },
+  { k: 'Based in', v: 'Lagos, Nigeria' },
+  { k: 'Team', v: '[N] people' },
+  { k: 'Working with', v: '[REGIONS]' },
+  { k: 'Languages', v: 'English, Yoruba' },
+] as const;
+
+/** TODO: real people. Empty array hides the team section. */
+export const TEAM: readonly { name: string; role: string }[] = [
+  { name: '[NAME]', role: '[Founder, Design]' },
+  { name: '[NAME]', role: '[Engineering Lead]' },
+  { name: '[NAME]', role: '[Product]' },
+];
+
+/* ── /contact ──────────────────────────────────────────────────── */
+export const BUDGET_BANDS = [
+  'Under [$10k]',
+  '[$10k–25k]',
+  '[$25k–50k]',
+  '[$50k+]',
+  'Not sure yet',
+] as const;

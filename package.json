@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "check:font": "node scripts/check-font.mjs"
+    "check:font": "node scripts/check-font.mjs",
+    "test:fn": "node scripts/test-contact-fn.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.0",

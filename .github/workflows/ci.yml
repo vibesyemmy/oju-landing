@@ -20,6 +20,10 @@ jobs:
       # Fails if the hand-supplied display font lacks glyphs the site needs.
       # Passes trivially while no font files are present.
       - run: npm run check:font
+
+      # The Pages Function never runs under `astro dev`, so the server side
+      # of the enquiry form is only ever covered here.
+      - run: npm run test:fn
       - run: npm run build
 
       # The performance budget is the sales argument, so it is a gate,

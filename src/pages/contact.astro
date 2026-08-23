@@ -2,15 +2,232 @@
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import PageHero from '../components/PageHero.astro';
+import { BUDGET_BANDS, SITE } from '../data/site';
 ---
 
-<Base title="Contact">
+<Base
+  title="Contact"
+  description="Tell Ojú what you are trying to build. We reply to every enquiry, including the ones we turn down."
+>
   <SiteHeader current="/contact" />
+
   <main id="main">
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
-      <h1 class="font-display text-[44px] leading-tight tracking-tight md:text-[78px]">Contact</h1>
-      <p class="label mt-8">This page is not written yet.</p>
+    <PageHero
+      label="Contact"
+      title="Tell us what you are trying to build."
+      lede="The more concrete you are about the problem, the more useful our first reply will be. We answer every enquiry — including the ones we think we are wrong for."
+    />
+
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
+      <div class="grid gap-14 md:grid-cols-[1.4fr_1fr] md:gap-24">
+        <!-- FORM -->
+        <div>
+          <form id="contact-form" method="POST" action="/api/contact" class="flex flex-col gap-7">
+            <!-- Honeypot. Hidden from people and from screen readers. -->
+            <div class="hidden" aria-hidden="true">
+              <label for="website">Do not fill this in</label>
+              <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <div class="grid gap-7 sm:grid-cols-2">
+              <p class="field">
+                <label for="name">Your name <span class="req" aria-hidden="true">*</span></label>
+                <input id="name" name="name" type="text" required autocomplete="name" />
+              </p>
+              <p class="field">
+                <label for="email">Email <span class="req" aria-hidden="true">*</span></label>
+                <input id="email" name="email" type="email" required autocomplete="email" />
+              </p>
+            </div>
+
+            <div class="grid gap-7 sm:grid-cols-2">
+              <p class="field">
+                <label for="company">Company</label>
+                <input id="company" name="company" type="text" autocomplete="organization" />
+              </p>
+              <p class="field">
+                <label for="budget">Budget</label>
+                <select id="budget" name="budget">
+                  <option value="">Select a range</option>
+                  {BUDGET_BANDS.map((b) => <option value={b}>{b}</option>)}
+                </select>
+              </p>
+            </div>
+
+            <p class="field">
+              <label for="message">What are you building? <span class="req" aria-hidden="true">*</span></label>
+              <textarea id="message" name="message" rows="7" required
+                placeholder="What the product is, who it is for, what is going wrong, and when you need it."
+              ></textarea>
+            </p>
+
+            <div class="flex flex-wrap items-center gap-6">
+              <button type="submit" class="submit">
+                <span>Send enquiry</span>
+                <span class="font-mono" aria-hidden="true">&rarr;</span>
+              </button>
+              <p class="label" id="required-note">
+                <span aria-hidden="true">*</span> Required
+              </p>
+            </div>
+
+            <!-- Filled by the enhancement script; empty and silent without JS,
+                 which instead lands on /contact/thanks or /contact/problem. -->
+            <p id="form-status" class="status" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <!-- ASIDE -->
+        <div class="flex flex-col gap-10">
+          <div>
+            <h2 class="label mb-5">Or just email</h2>
+            <a href={`mailto:${SITE.email}`} class="font-display text-[24px] tracking-tight hover:text-accent md:text-[28px]">
+              {SITE.email}
+            </a>
+          </div>
+
+          <div>
+            <h2 class="label mb-5">What happens next</h2>
+            <ol class="flex flex-col gap-4">
+              {
+                [
+                  'We read it properly — a person, not a filter.',
+                  'You get a reply within [2 working days], even if it is a no.',
+                  'If it looks like a fit, we book [45 minutes] to dig into the problem.',
+                  'You get a written scope and a price before anyone commits.',
+                ].map((step, i) => (
+                  <li class="flex gap-3 text-[15px] leading-relaxed text-soft text-pretty">
+                    <span class="font-mono text-[11px] text-accent pt-[3px]">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))
+              }
+            </ol>
+          </div>
+
+          <div>
+            <h2 class="label mb-5">Studio</h2>
+            <p class="text-[15px] leading-relaxed text-soft">
+              {SITE.city}, {SITE.country}<br />
+              Working with teams in [REGIONS]
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
+
   <SiteFooter />
 </Base>
+
+<style is:global>
+  .field { display: flex; flex-direction: column; gap: 9px; }
+
+  .field label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+  .req { color: var(--color-accent); }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 12px 0;
+    min-height: 44px;
+    font-family: var(--font-sans);
+    font-size: 17px;
+    color: var(--color-ink);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--color-rule);
+    border-radius: 0;
+    transition: border-color 180ms ease;
+    box-sizing: border-box;
+  }
+  .field textarea { resize: vertical; line-height: 1.55; }
+
+  .field input:hover,
+  .field select:hover,
+  .field textarea:hover { border-bottom-color: var(--color-soft); }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-bottom-color: var(--color-accent);
+  }
+  .field input:focus-visible,
+  .field select:focus-visible,
+  .field textarea:focus-visible { outline: none; }
+
+  .field ::placeholder { color: var(--color-faint); opacity: 1; }
+
+  /* Only after the browser has judged it, not while typing. */
+  .field input:user-invalid,
+  .field textarea:user-invalid { border-bottom-color: #a33a12; }
+
+  .submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+    padding: 0 0 8px;
+    font-size: 17px;
+    color: var(--color-ink);
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--color-ink);
+    cursor: pointer;
+  }
+  .submit:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+  .submit[aria-busy='true'] { opacity: 0.5; cursor: progress; }
+
+  .status { font-size: 15px; line-height: 1.5; }
+  .status:empty { display: none; }
+  .status[data-tone='ok'] { color: #3f7a4f; }
+  .status[data-tone='bad'] { color: #a33a12; }
+</style>
+
+<script>
+  // Progressive enhancement only. Without JS the form does a normal POST and
+  // the Function redirects to /contact/thanks or /contact/problem.
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const status = document.getElementById('form-status');
+  const button = form?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!status || !button) return;
+
+    button.setAttribute('aria-busy', 'true');
+    status.textContent = '';
+    status.removeAttribute('data-tone');
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { accept: 'application/json' },
+      });
+      const data = await res.json().catch(() => ({}));
+      const ok = res.ok && data.ok !== false;
+
+      status.dataset.tone = ok ? 'ok' : 'bad';
+      status.textContent =
+        data.message ?? (ok ? 'Thanks — we will be in touch.' : 'Something went wrong. Please email us directly.');
+      if (ok) form.reset();
+    } catch {
+      status.dataset.tone = 'bad';
+      status.textContent = 'Could not reach the server. Please email us directly.';
+    } finally {
+      button.removeAttribute('aria-busy');
+    }
+  });
+</script>

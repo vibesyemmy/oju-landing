@@ -2,15 +2,123 @@
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import PageHero from '../components/PageHero.astro';
+import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
 ---
 
-<Base title="Services">
+<Base
+  title="Services"
+  description="Design, product and engineering from one team. What Ojú does, what you get, and how the work is structured."
+>
   <SiteHeader current="/services" />
+
   <main id="main">
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
-      <h1 class="font-display text-[44px] leading-tight tracking-tight md:text-[78px]">Services</h1>
-      <p class="label mt-8">This page is not written yet.</p>
+    <PageHero
+      label="Services"
+      title="Three disciplines, one team, one invoice."
+      lede="Most studios do the drawing and hand the rest to somebody else. We keep the whole thing, because the handover is where products go wrong."
+    />
+
+    {
+      SERVICES.map((s) => (
+        <section id={s.id} class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
+          <div class="grid gap-8 md:grid-cols-[1fr_2fr] md:gap-24">
+            <div>
+              <h2 class="flex items-baseline gap-3 border-b border-ink pb-4">
+                <span class="font-mono text-[11px] text-accent">{s.num}</span>
+                <span class="font-display text-[30px] tracking-tight md:text-[38px]">{s.title}</span>
+              </h2>
+            </div>
+
+            <div class="max-w-[62ch]">
+              <p class="text-xl leading-snug text-pretty md:text-[26px]">{s.lede}</p>
+
+              <div class="mt-10 grid gap-10 sm:grid-cols-2 md:mt-14">
+                <div>
+                  <h3 class="label mb-5">What it covers</h3>
+                  <ul class="flex flex-col gap-3">
+                    {s.includes.map((i) => (
+                      <li class="font-mono text-[13px] leading-relaxed text-soft">{i}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 class="label mb-5">What you get</h3>
+                  <ul class="flex flex-col gap-3">
+                    {s.deliverables.map((d) => (
+                      <li class="flex gap-2.5 text-[15px] leading-relaxed text-soft text-pretty">
+                        <span class="mt-[7px] size-1 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                        <span>{d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      ))
+    }
+
+    <!-- PROCESS -->
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
+      <h2 class="label mb-9 md:mb-14">How the work runs</h2>
+      <ol class="grid gap-10 md:grid-cols-4 md:gap-12">
+        {
+          PROCESS.map((p) => (
+            <li class="border-t border-ink pt-5">
+              <p class="font-mono text-[11px] text-accent">{p.num}</p>
+              <h3 class="font-display mt-3 text-[26px] tracking-tight">{p.title}</h3>
+              <p class="mt-4 text-[15px] leading-relaxed text-soft text-pretty">{p.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- ENGAGEMENTS -->
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
+      <div class="grid gap-8 md:grid-cols-[1fr_2fr] md:gap-24">
+        <h2 class="label">Ways to work together</h2>
+        <div class="flex flex-col">
+          {
+            ENGAGEMENTS.map((e) => (
+              <div class="grid gap-2 border-b border-rule py-7 last:border-b-0 md:grid-cols-[1fr_2fr] md:gap-10">
+                <h3 class="font-display text-[24px] tracking-tight md:text-[28px]">{e.title}</h3>
+                <div class="max-w-[52ch]">
+                  <p class="text-[17px] leading-relaxed text-pretty">{e.lede}</p>
+                  <p class="mt-2 font-mono text-[12.5px] leading-relaxed text-faint">{e.detail}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+      <p class="label mt-10 max-w-[60ch] leading-relaxed">
+        Pricing depends on scope and shape &mdash; tell us the problem and we will quote the work.
+      </p>
+    </section>
+
+    <!-- CTA -->
+    <section class="border-t border-rule px-6 py-16 md:px-20 md:py-28">
+      <h2 class="font-display max-w-[18ch] text-[40px] leading-[1.04] tracking-[-0.024em] md:text-[72px] md:tracking-[-0.028em]">
+        Not sure which of these you need?
+      </h2>
+      <p class="mt-7 max-w-[46ch] text-lg leading-relaxed text-soft text-pretty">
+        Most people are not, at the start. Describe the problem and we will tell you
+        what the work actually is &mdash; even if the answer is that you do not need us.
+      </p>
+      <div class="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-10">
+        <a href="/contact" class="cta">
+          <span class="text-base md:text-[17px]">Start a project</span>
+          <span class="font-mono text-[15px]" aria-hidden="true">&rarr;</span>
+        </a>
+        <a href={`mailto:${SITE.email}`} class="font-mono text-[13px] text-soft hover:text-ink md:text-sm">
+          {SITE.email}
+        </a>
+      </div>
     </section>
   </main>
+
   <SiteFooter />
 </Base>

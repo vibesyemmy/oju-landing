@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import PageHero from '../../components/PageHero.astro';
+import { SITE } from '../../data/site';
+---
+
+<Base title="Thanks" description="Your enquiry reached Ojú.">
+  <SiteHeader current="/contact" />
+  <main id="main">
+    <PageHero
+      label="Contact"
+      title="That reached us."
+      lede="A person will read it — usually within [2 working days], and you will get an answer either way. If it is urgent, reply to the confirmation or email us directly."
+    />
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
+      <div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-10">
+        <a href="/work" class="cta">
+          <span class="text-base md:text-[17px]">See the work</span>
+          <span class="font-mono text-[15px]" aria-hidden="true">&rarr;</span>
+        </a>
+        <a href={`mailto:${SITE.email}`} class="font-mono text-[13px] text-soft hover:text-ink md:text-sm">
+          {SITE.email}
+        </a>
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>

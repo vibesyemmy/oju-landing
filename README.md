@@ -101,6 +101,21 @@ push the padding out — delete the leftover files once nothing needs padding.
 Some of these images show client projects. Check you still have the right to
 show a given piece before it ships on a company site rather than a personal one.
 
+## Contact form — needs one env var
+
+The enquiry form posts to a Cloudflare Pages Function at
+`functions/api/contact.ts`. It requires **`CONTACT_WEBHOOK_URL`** in the Pages
+project's environment variables — point it at anything that accepts a JSON POST
+(Resend, Postmark, a Slack incoming webhook, a Zapier catch hook).
+
+Without it the form returns 503 and tells the visitor to email instead. It does
+**not** pretend to succeed: a form that silently swallows enquiries is worse than
+no form, because you never find out it broke.
+
+The Function never runs under `astro dev` — submitting locally always shows the
+failure path. `npm run test:fn` covers it instead (validation, honeypot,
+not-configured, upstream failure, and both no-JS redirects), and CI runs it.
+
 ## Before launch
 
 - [ ] Replace the hero wall imagery in `src/assets/wall/` — currently placeholders
@@ -109,7 +124,7 @@ show a given piece before it ships on a company site rather than a personal one.
 - [ ] `CLIENTS` in `src/data/site.ts` — empty array currently hides the strip
 - [ ] `/og.png` at 1200×630
 - [ ] Real domain in `astro.config.mjs` (`SITE`)
-- [ ] Write `/studio`, `/services`, `/contact` — currently stubs
+- [ ] Set `CONTACT_WEBHOOK_URL` in the Cloudflare Pages project
 - [ ] Contact form endpoint
 
 ## Known gaps

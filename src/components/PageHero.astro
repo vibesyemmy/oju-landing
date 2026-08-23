@@ -1,0 +1,24 @@
+---
+/** Shared top-of-page block. Keeps /studio, /services and /contact opening
+ *  the same way so they read as one site rather than three. */
+interface Props {
+  label: string;
+  title: string;
+  lede?: string;
+}
+const { label, title, lede } = Astro.props;
+---
+
+<section class="border-t border-rule px-6 pt-12 pb-10 md:px-20 md:pt-20 md:pb-16">
+  <p class="label mb-8 md:mb-12">{label}</p>
+  <h1 class="font-display max-w-[16ch] text-[44px] leading-[1.02] tracking-[-0.024em] text-pretty md:text-[78px] md:tracking-[-0.028em]">
+    {title}
+  </h1>
+  {
+    lede && (
+      <p class="mt-8 max-w-[46ch] text-lg leading-relaxed text-soft text-pretty md:mt-12 md:text-[22px]">
+        {lede}
+      </p>
+    )
+  }
+</section>
