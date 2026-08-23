@@ -46,6 +46,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="preload" as="font" type="font/woff2"
           href="/fonts/nohemi-variable.woff2?v=1" crossorigin />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <!-- Explicit icon stops the browser auto-requesting /favicon.ico,
+         which 404'd and tripped the console-errors audit. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />

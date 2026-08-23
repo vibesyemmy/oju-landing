@@ -7,10 +7,15 @@
   --color-paper:  #f2efe9;
   --color-ink:    #17160f;
   --color-soft:   #55524a;
-  --color-faint:  #8f8b81;
+  /* >= 4.5:1 on both --color-paper (5.2) and --color-fill (4.6). The old
+     #8f8b81 measured 2.96 and 2.62 — it failed WCAG AA everywhere the
+     mono labels are used, which is most of the site. */
+  --color-faint:  #67635a;
   --color-rule:   #d8d4ca;
   --color-fill:   #e6e2d9;
-  --color-accent: oklch(0.55 0.15 45);
+  /* Darkened from 0.55: as text on paper it measured 4.47:1, just under
+     AA. Same hue, imperceptible as a brand shift, clears the gate. */
+  --color-accent: oklch(0.50 0.152 45);
 
   /* Nohemi is hand-supplied (see src/styles/fonts.css). Fallback is Archivo,
      already self-hosted — a grotesk, because falling back from a geometric
