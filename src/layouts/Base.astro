@@ -1,0 +1,64 @@
+---
+// Self-hosted, subset to latin + latin-ext only. Both are load-bearing, for
+// different reasons:
+//   latin     (U+0000-00FF) — the precomposed accents: ú, ì, é, à.
+//                             This is what keeps "Ojú" and "Ojú-ìwé" whole.
+//   latin-ext (U+0100-024F, U+1E00-1EFF) — the dot-below Yoruba characters
+//                             ẹ, ọ, ṣ. Needed the moment full Yoruba
+//                             orthography enters the copy.
+// Dropping either silently falls back mid-word. Verify before changing.
+import '@fontsource/archivo/latin-400.css';
+import '@fontsource/archivo/latin-ext-400.css';
+import '@fontsource/archivo/latin-500.css';
+import '@fontsource/archivo/latin-ext-500.css';
+import '@fontsource/archivo/latin-600.css';
+import '@fontsource/archivo/latin-ext-600.css';
+import '@fontsource/space-mono/latin-400.css';
+import '@fontsource/space-mono/latin-ext-400.css';
+import '@fontsource/space-mono/latin-700.css';
+import '@fontsource/space-mono/latin-ext-700.css';
+import '../styles/fonts.css';
+import '../styles/global.css';
+
+import { SITE } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = SITE.description } = Astro.props;
+const pageTitle = title ? `${title} — ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- The display face paints the hero — the LCP element. Preloading it
+         removes a round-trip from the critical path. -->
+    <link rel="preload" as="font" type="font/woff2"
+          href="/fonts/nohemi-variable.woff2?v=1" crossorigin />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- TODO: /og.png — 1200x630. Until it exists, links unfurl bare. -->
+  </head>
+
+  <body>
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-paper focus:px-4 focus:py-2">
+      Skip to content
+    </a>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap">
+  <style>
+    :root {
+      --paper: #f2efe9;
+      --ink:   #17160f;
+      --soft:  #55524a;
+      --faint: #8f8b81;
+      --rule:  #d8d4ca;
+      --accent: oklch(0.55 0.15 45);
+    }
+    body { margin: 0; background: var(--paper); color: var(--ink);
+           font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--ink); }
+    .disp { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-weight: 400; }
+    .mono { font-family: 'Space Mono', ui-monospace, 'Courier New', monospace; }
+    .lab  { font-family: 'Space Mono', ui-monospace, monospace; font-size: 11px;
+            letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+    .sec  { padding: 0 80px; }
+    .rule { border-top: 1px solid var(--rule); }
+    .ph   { background: #e6e2d9; border: 1px solid var(--rule);
+            font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em;
+            color: var(--faint); display: flex; align-items: center; justify-content: center; }
+    .row  { display: grid; grid-template-columns: 3.2fr 2.4fr 1.6fr 0.8fr; gap: 32px;
+            align-items: baseline; padding: 26px 0; border-bottom: 1px solid var(--rule); }
+    .row:hover .rowname { color: var(--accent); }
+  </style>
+</helmet>
+
+<div style="width: 1440px; background: var(--paper)">
+
+  <!-- ── NAV ───────────────────────────────────────────── -->
+  <div class="sec" style="display: flex; align-items: center; justify-content: space-between; height: 88px">
+    <div class="disp" style="font-size: 27px; letter-spacing: -0.01em">Ojú</div>
+    <div class="lab" style="display: flex; gap: 36px">
+      <div>Work</div><div>Studio</div><div>Services</div><div>Contact</div>
+    </div>
+    <div class="lab">Lagos <span style="color: var(--ink)">14:22</span> WAT</div>
+  </div>
+
+  <!-- ── HERO ──────────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 104px; padding-bottom: 96px">
+    <div class="disp" style="font-size: 118px; line-height: 0.94; letter-spacing: -0.028em; max-width: 1180px; text-wrap: pretty">
+      We design the face.<br>We build what&rsquo;s behind it.
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 88px; gap: 80px">
+      <div style="font-size: 19px; line-height: 1.55; color: var(--soft); max-width: 520px; text-wrap: pretty">
+        Ojú is a design and product studio in Lagos. Interfaces, brand systems, and
+        the software underneath &mdash; drawn and shipped by one team.
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--ink); padding-bottom: 8px; white-space: nowrap">
+        <span style="font-size: 16px">Start a project</span>
+        <span class="mono" style="font-size: 15px">&rarr;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CLIENTS ───────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 36px; padding-bottom: 36px; display: flex; gap: 64px; align-items: baseline">
+    <div class="lab" style="white-space: nowrap">Trusted by</div>
+    <div class="mono" style="display: flex; flex-wrap: wrap; gap: 12px 36px; font-size: 13px; color: var(--soft)">
+      <sc-for list="{{clients}}" as="c" hint-placeholder-count="7">
+        <div>{{c}}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ── SELECTED WORK ─────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 88px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 52px">
+      <div class="lab">Selected work <span style="color: var(--ink)">&mdash; 06</span></div>
+      <div class="lab" style="display: flex; gap: 26px">
+        <div style="color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 4px">All</div>
+        <div>Design</div><div>Product</div><div>Engineering</div>
+      </div>
+    </div>
+
+    <div class="row" style="padding-top: 0; padding-bottom: 14px">
+      <div class="lab">Project</div><div class="lab">Discipline</div><div class="lab">Sector</div>
+      <div class="lab" style="text-align: right">Year</div>
+    </div>
+
+    <sc-for list="{{projects}}" as="p" hint-placeholder-count="6">
+      <div class="row">
+        <div class="rowname disp" style="font-size: 34px; letter-spacing: -0.015em; transition: color 0.2s">{{p.name}}</div>
+        <div class="mono" style="font-size: 13px; color: var(--soft)">{{p.disc}}</div>
+        <div class="mono" style="font-size: 13px; color: var(--soft)">{{p.sector}}</div>
+        <div class="mono" style="font-size: 13px; color: var(--faint); text-align: right">{{p.year}}</div>
+      </div>
+    </sc-for>
+
+    <div style="display: flex; align-items: center; gap: 12px; margin-top: 44px">
+      <span class="mono" style="font-size: 13px; letter-spacing: 0.04em; border-bottom: 1px solid var(--ink); padding-bottom: 4px">All projects</span>
+      <span class="mono" style="font-size: 13px">&rarr;</span>
+    </div>
+  </div>
+
+  <!-- ── CAPABILITIES ──────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 96px">
+    <div class="lab" style="margin-bottom: 52px">What we do</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 56px">
+      <sc-for list="{{caps}}" as="c" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 22px">
+          <div style="display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--ink); padding-bottom: 16px">
+            <span class="mono" style="font-size: 11px; color: var(--accent)">{{c.num}}</span>
+            <span class="disp" style="font-size: 30px; letter-spacing: -0.01em">{{c.title}}</span>
+          </div>
+          <div style="font-size: 17px; line-height: 1.5; color: var(--soft); text-wrap: pretty">{{c.line}}</div>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px">
+            <sc-for list="{{c.items}}" as="i" hint-placeholder-count="5">
+              <div class="mono" style="font-size: 12.5px; color: var(--faint)">{{i}}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ── PROOF ─────────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 96px; padding-bottom: 96px">
+    <div class="lab" style="margin-bottom: 44px">Impact</div>
+    <div class="disp" style="font-size: 52px; line-height: 1.18; letter-spacing: -0.02em; max-width: 1080px; text-wrap: pretty">
+      [CLIENT] cut signup drop-off by <span style="color: var(--accent)">[XX%]</span> after we
+      redesigned and rebuilt their onboarding in <span style="color: var(--accent)">[X]</span> weeks.
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-top: 44px">
+      <span class="mono" style="font-size: 13px; letter-spacing: 0.04em; border-bottom: 1px solid var(--ink); padding-bottom: 4px">Read the case study</span>
+      <span class="mono" style="font-size: 13px">&rarr;</span>
+    </div>
+  </div>
+
+  <!-- ── STUDIO ────────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 88px">
+    <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 88px; align-items: start">
+      <div>
+        <div class="lab" style="margin-bottom: 44px">Studio</div>
+        <div class="disp" style="font-size: 42px; line-height: 1.22; letter-spacing: -0.018em; margin-bottom: 32px; text-wrap: pretty">
+          Ojú means <span style="font-style: italic">face</span> in Yoruba.
+          Ojú-ìwé means <span style="font-style: italic">page</span>.
+        </div>
+        <div style="font-size: 18px; line-height: 1.6; color: var(--soft); max-width: 500px; text-wrap: pretty">
+          An interface is the face of a system &mdash; the only part a person ever meets.
+          Most studios draw the face and hand the rest to someone else. We keep both,
+          because the seam between them is where products go wrong.
+        </div>
+      </div>
+      <div class="ph" style="height: 400px">[STUDIO PHOTO]</div>
+    </div>
+  </div>
+
+  <!-- ── CONTACT ───────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 112px; padding-bottom: 112px">
+    <div class="disp" style="font-size: 88px; line-height: 1.02; letter-spacing: -0.028em; max-width: 1000px">
+      Have something worth building?
+    </div>
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 64px; gap: 64px">
+      <div style="display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--ink); padding-bottom: 8px">
+        <span style="font-size: 17px">Start a project</span>
+        <span class="mono" style="font-size: 16px">&rarr;</span>
+      </div>
+      <div class="mono" style="font-size: 14px; color: var(--soft)">[HELLO@OJU.STUDIO]</div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ────────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 56px; padding-bottom: 48px">
+    <div style="display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 48px; align-items: start">
+      <div class="disp" style="font-size: 27px">Ojú</div>
+      <sc-for list="{{footcols}}" as="f" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div class="lab" style="margin-bottom: 8px">{{f.title}}</div>
+          <sc-for list="{{f.items}}" as="i" hint-placeholder-count="4">
+            <div class="mono" style="font-size: 12.5px; color: var(--soft)">{{i}}</div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--rule)">
+      <div class="lab">&copy; 2026 Ojú Studio</div>
+      <div class="lab">Lagos, Nigeria</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#c2612a","options":["#c2612a","#1c1b19","#2f5eea","#3f7a4f"],"section":"Theme"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      clients: ['[CLIENT ONE]', '[CLIENT TWO]', '[CLIENT THREE]', '[CLIENT FOUR]',
+                '[CLIENT FIVE]', '[CLIENT SIX]', '[CLIENT SEVEN]'],
+      projects: [
+        { name: '[Project One]',   disc: 'Brand, UI/UX, Web',       sector: 'Fintech',   year: '2026' },
+        { name: '[Project Two]',   disc: 'Product, iOS',            sector: 'Logistics', year: '2025' },
+        { name: '[Project Three]', disc: 'Design system, Web app',  sector: 'Health',    year: '2025' },
+        { name: '[Project Four]',  disc: 'Identity, Motion',        sector: 'Media',     year: '2025' },
+        { name: '[Project Five]',  disc: 'UI/UX, Engineering',      sector: 'Commerce',  year: '2024' },
+        { name: '[Project Six]',   disc: 'Discovery, Prototype',    sector: 'Education', year: '2024' }
+      ],
+      caps: [
+        { num: '01', title: 'Design',
+          line: 'From a first identity to a design system a team can actually hold on to.',
+          items: ['UI/UX design', 'Brand & identity', 'Motion & graphics', 'Design systems', 'Figma libraries'] },
+        { num: '02', title: 'Product',
+          line: 'From a vague ambition to a scope somebody can actually build against.',
+          items: ['Discovery & research', 'Product strategy', 'Roadmapping', 'Scoping & estimation', 'Usability testing'] },
+        { num: '03', title: 'Engineering',
+          line: 'From prototype to production traffic — and it stays up afterwards.',
+          items: ['React / Next.js', 'Swift & React Native', 'Node / Python APIs', 'Postgres & infra', 'CI/CD & monitoring'] }
+      ],
+      footcols: [
+        { title: 'Studio', items: ['Work', 'Services', 'About', 'Journal'] },
+        { title: 'Design', items: ['UI/UX', 'Brand & identity', 'Motion', 'Design systems'] },
+        { title: 'Build',  items: ['Web applications', 'Mobile apps', 'APIs', 'Infrastructure'] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

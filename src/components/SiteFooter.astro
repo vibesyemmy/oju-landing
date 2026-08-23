@@ -1,0 +1,25 @@
+---
+import { FOOTER_COLUMNS, SITE } from '../data/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-rule px-6 pt-14 pb-12 md:px-20">
+  <div class="grid grid-cols-2 gap-8 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:gap-12">
+    <p class="font-display col-span-2 text-2xl md:col-span-1 md:text-[27px]">{SITE.name}</p>
+    {
+      FOOTER_COLUMNS.map((col) => (
+        <div class="flex flex-col gap-3">
+          <p class="label mb-2">{col.title}</p>
+          {col.items.map((item) => (
+            <span class="font-mono text-[12.5px] text-soft">{item}</span>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="mt-16 flex justify-between border-t border-rule pt-6">
+    <p class="label">© {year} {SITE.name} Studio</p>
+    <p class="label">{SITE.city}, {SITE.country}</p>
+  </div>
+</footer>

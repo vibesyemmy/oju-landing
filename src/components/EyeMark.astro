@@ -1,0 +1,147 @@
+---
+/**
+ * The Ojú mark — an eye, because the name means one.
+ *
+ * Abstract rather than literal: three concentric forms, geometric enough to sit
+ * with Nohemi. The pupil tracks the pointer, the whole eye blinks on a slow
+ * cycle, and the iris dilates as the page scrolls.
+ *
+ * Decorative — aria-hidden, and it does nothing under prefers-reduced-motion.
+ * No animation library: CSS keyframes, a scroll-driven timeline where supported,
+ * and ~500 bytes of pointer maths.
+ */
+---
+
+<div class="eye" aria-hidden="true" data-eye>
+  <svg viewBox="0 0 120 120" class="eye__svg">
+    <circle class="eye__ring" cx="60" cy="60" r="55" />
+    <g class="eye__lid">
+      <circle class="eye__iris" cx="60" cy="60" r="38" />
+      <g class="eye__pupil">
+        <circle cx="60" cy="60" r="15" />
+        <!-- The catchlight is what makes this read as an eye rather than a
+             dot. One circle, and the whole mark lands. -->
+        <circle class="eye__glint" cx="66" cy="53" r="4.5" />
+      </g>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .eye {
+    /* Set by the pointer handler; the pupil reads them. */
+    --eye-x: 0px;
+    --eye-y: 0px;
+    width: 100%;
+    height: 100%;
+  }
+
+  .eye__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .eye__ring {
+    fill: none;
+    stroke: var(--color-ink);
+    stroke-opacity: 0.22;
+    stroke-width: 1.5;
+  }
+
+  .eye__iris {
+    fill: var(--color-accent);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .eye__pupil {
+    fill: var(--color-ink);
+    transform: translate(var(--eye-x), var(--eye-y));
+    transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Squash rather than a drawn eyelid — reads as a blink on an abstract eye
+     and costs one transform. */
+  .eye__glint {
+    fill: var(--color-paper);
+  }
+
+  .eye__lid {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: eye-blink 7s ease-in-out infinite;
+  }
+
+  @keyframes eye-blink {
+    0%, 91%, 100% { transform: scaleY(1); }
+    94%           { transform: scaleY(0.04); }
+    97%           { transform: scaleY(1); }
+  }
+
+  /* Zero-JS scroll reaction where the browser supports it. */
+  @supports (animation-timeline: scroll()) {
+    .eye__iris {
+      animation: eye-dilate linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 60vh;
+    }
+    @keyframes eye-dilate {
+      from { transform: scale(1); }
+      to   { transform: scale(0.55); }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eye__lid,
+    .eye__iris {
+      animation: none;
+    }
+    .eye__pupil {
+      transform: none;
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Pointer tracking. No library — one listener, one rAF, two custom properties.
+  const eyes = document.querySelectorAll<HTMLElement>('[data-eye]');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (eyes.length && !reduced.matches) {
+    const MAX = 15; // SVG units the pupil may travel from centre
+    let pending = false;
+    let px = 0;
+    let py = 0;
+
+    const apply = () => {
+      pending = false;
+      for (const eye of eyes) {
+        const r = eye.getBoundingClientRect();
+        if (r.width === 0) continue;
+        const dx = px - (r.left + r.width / 2);
+        const dy = py - (r.top + r.height / 2);
+        const dist = Math.hypot(dx, dy) || 1;
+        // Ease off with distance so the pupil settles instead of snapping.
+        const pull = Math.min(dist / 420, 1) * MAX;
+        eye.style.setProperty('--eye-x', `${(dx / dist) * pull}px`);
+        eye.style.setProperty('--eye-y', `${(dy / dist) * pull}px`);
+      }
+    };
+
+    addEventListener(
+      'pointermove',
+      (e) => {
+        px = e.clientX;
+        py = e.clientY;
+        if (!pending) {
+          pending = true;
+          requestAnimationFrame(apply);
+        }
+      },
+      { passive: true },
+    );
+  }
+</script>

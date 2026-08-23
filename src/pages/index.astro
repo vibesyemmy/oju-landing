@@ -1,0 +1,106 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import HeroStatement from '../components/hero/HeroStatement.astro';
+import WorkWall from '../components/WorkWall.astro';
+// Alternatives, one import swap away:
+//   HeroEditorial — original left-aligned statement
+//   HeroConverge  — converging-stream carousel
+import { CAPABILITIES, CLIENTS, SITE } from '../data/site';
+
+---
+
+<Base>
+  <SiteHeader />
+
+  <main id="main">
+    <!-- HERO -->
+    <HeroStatement />
+    <WorkWall />
+
+    <!-- CLIENTS — hidden until there are real names to show. -->
+    {
+      CLIENTS.length > 0 && (
+        <section class="flex flex-col gap-4 border-t border-rule px-6 py-7 md:flex-row md:items-baseline md:gap-16 md:px-20 md:py-9">
+          <p class="label whitespace-nowrap">Trusted by</p>
+          <ul class="flex flex-wrap gap-x-9 gap-y-3 font-mono text-[13px] text-soft">
+            {CLIENTS.map((c) => <li>{c}</li>)}
+          </ul>
+        </section>
+      )
+    }
+
+    <!-- CAPABILITIES -->
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
+      <h2 class="label mb-8 md:mb-13">What we do</h2>
+      <div class="grid gap-11 md:grid-cols-3 md:gap-14">
+        {
+          CAPABILITIES.map((cap) => (
+            <div class="flex flex-col gap-4 md:gap-5">
+              <h3 class="flex items-baseline gap-3 border-b border-ink pb-3 md:pb-4">
+                <span class="font-mono text-[11px] text-accent">{cap.num}</span>
+                <span class="font-display text-[26px] tracking-tight md:text-[30px]">{cap.title}</span>
+              </h3>
+              <p class="text-base leading-relaxed text-soft text-pretty md:text-[17px]">{cap.line}</p>
+              <ul class="mt-2 flex flex-wrap gap-x-5 gap-y-2 md:flex-col md:gap-2.5">
+                {cap.items.map((item) => (
+                  <li class="font-mono text-xs text-faint md:text-[12.5px]">{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- PROOF — replace every bracket before launch. -->
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-24">
+      <h2 class="label mb-7 md:mb-11">Impact</h2>
+      <p class="font-display max-w-[1080px] text-[30px] leading-tight tracking-tight text-pretty md:text-[52px]">
+        [CLIENT] cut signup drop-off by <span class="text-accent">[XX%]</span> after we redesigned
+        and rebuilt their onboarding in <span class="text-accent">[X]</span> weeks.
+      </p>
+      <a href="/work" class="cta mt-7 font-mono text-[13px] tracking-wide md:mt-11">
+        Read the case study <span aria-hidden="true">→</span>
+      </a>
+    </section>
+
+    <!-- STUDIO -->
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
+      <div class="grid gap-8 md:grid-cols-[1.15fr_1fr] md:gap-22">
+        <div>
+          <h2 class="label mb-7 md:mb-11">Studio</h2>
+          <p class="font-display mb-6 text-[30px] leading-snug tracking-tight text-pretty md:mb-8 md:text-[42px]">
+            <span lang="yo">Ojú</span> means <em>face</em> in Yoruba.
+            <span lang="yo" class="whitespace-nowrap">Ojú-ìwé</span> means <em>page</em>.
+          </p>
+          <p class="max-w-[500px] text-base leading-relaxed text-soft text-pretty md:text-[18px]">
+            An interface is the face of a system — the only part a person ever meets. Most studios
+            draw the face and hand the rest to someone else. We keep both, because the seam between
+            them is where products go wrong.
+          </p>
+        </div>
+        <div class="placeholder h-60 md:h-100">[STUDIO PHOTO]</div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="border-t border-rule px-6 py-16 md:px-20 md:py-28">
+      <h2 class="font-display max-w-[1000px] text-[44px] leading-[1.04] tracking-[-0.022em] md:text-[88px] md:leading-[1.02] md:tracking-[-0.028em]">
+        Have something worth building?
+      </h2>
+      <div class="mt-9 flex flex-col items-start gap-7 md:mt-16 md:flex-row md:items-end md:justify-between md:gap-16">
+        <a href="/contact" class="cta">
+          <span class="text-base md:text-[17px]">Start a project</span>
+          <span class="font-mono text-[15px]" aria-hidden="true">→</span>
+        </a>
+        <a href={`mailto:${SITE.email}`} class="font-mono text-[13px] text-soft hover:text-ink md:text-sm">
+          {SITE.email}
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+</Base>

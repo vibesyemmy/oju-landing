@@ -1,0 +1,15 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",   "title": "Case study — desktop", "x": 0,    "y": 0, "w": 1440, "h": 6950 },
+    { "file": "Mobile.dc.html", "title": "Case study — mobile",  "x": 1600, "y": 0, "w": 390,  "h": 7250 }
+  ],
+  "annotations": [
+    { "id": "structure", "x": 0, "y": -230, "w": 560,
+      "text": "STRUCTURE — Tailscale skeleton (outcome headline + meta sidebar), Dropbox ordering (results before narrative), Customer.io metric treatment.\nA visitor who reads only the headline and the three numbers still gets the whole story." },
+    { "id": "two-tracks", "x": 600, "y": -230, "w": 480,
+      "text": "01 Design and 02 Build are deliberately equal weight — same heading scale, same amount of page. This is the section that decides whether Oju reads as a design shop or a studio that ships. Do not let Build shrink when you fill in real content." },
+    { "id": "brackets", "x": 1600, "y": -230, "w": 390,
+      "text": "Every [BRACKET] is a slot, and the bracketed sentences are instructions for what belongs there — replace the whole sentence, not just the bracket. Stack names are illustrative; swap for what you actually used." }
+  ],
+  "launch": { "view": "canvas" }
+}

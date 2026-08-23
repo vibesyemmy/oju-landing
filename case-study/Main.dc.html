@@ -1,0 +1,272 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap">
+  <style>
+    :root {
+      --paper: #f2efe9; --ink: #17160f; --soft: #55524a;
+      --faint: #8f8b81; --rule: #d8d4ca; --accent: oklch(0.55 0.15 45);
+    }
+    body { margin: 0; background: var(--paper); color: var(--ink);
+           font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+           -webkit-font-smoothing: antialiased; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--ink); }
+    .disp { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
+    .mono { font-family: 'Space Mono', ui-monospace, monospace; }
+    .lab  { font-family: 'Space Mono', ui-monospace, monospace; font-size: 11px;
+            letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+    .sec  { padding: 0 80px; }
+    .rule { border-top: 1px solid var(--rule); }
+    .ph   { background: #e6e2d9; border: 1px solid var(--rule);
+            font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em;
+            color: var(--faint); display: flex; align-items: center; justify-content: center; }
+    .body { font-size: 19px; line-height: 1.62; color: var(--soft); text-wrap: pretty; }
+    .kick { font-size: 22px; line-height: 1.55; color: var(--ink); text-wrap: pretty; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; background: var(--paper)">
+
+  <!-- ── NAV ───────────────────────────────────────────── -->
+  <div class="sec" style="display: flex; align-items: center; justify-content: space-between; height: 88px">
+    <div class="disp" style="font-size: 27px; letter-spacing: -0.01em">Ojú</div>
+    <div class="lab" style="display: flex; gap: 36px">
+      <div style="color: var(--ink)">Work</div><div>Studio</div><div>Services</div><div>Contact</div>
+    </div>
+    <div class="lab">Lagos <span style="color: var(--ink)">14:22</span> WAT</div>
+  </div>
+
+  <!-- ── HEADLINE + META ───────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 56px; padding-bottom: 72px">
+    <div class="lab" style="margin-bottom: 56px">
+      <span style="color: var(--soft)">Work</span>
+      <span style="margin: 0 10px; color: var(--rule)">/</span>[Project One]
+    </div>
+    <div style="display: grid; grid-template-columns: 1.9fr 1fr; gap: 96px; align-items: start">
+      <div class="disp" style="font-size: 78px; line-height: 1.02; letter-spacing: -0.028em; text-wrap: pretty">
+        How [CLIENT] cut signup drop-off by [XX%]
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0">
+        <sc-for list="{{meta}}" as="m" hint-placeholder-count="6">
+          <div style="display: flex; justify-content: space-between; gap: 24px; padding: 15px 0; border-bottom: 1px solid var(--rule)">
+            <div class="lab" style="white-space: nowrap">{{m.k}}</div>
+            <div class="mono" style="font-size: 13px; color: var(--ink); text-align: right">{{m.v}}</div>
+          </div>
+        </sc-for>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 26px">
+          <span class="mono" style="font-size: 13px; border-bottom: 1px solid var(--ink); padding-bottom: 4px">Visit the live site</span>
+          <span class="mono" style="font-size: 13px">&rarr;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HERO IMAGE ────────────────────────────────────── -->
+  <div class="sec" style="padding-bottom: 88px">
+    <div class="ph" style="height: 700px">[HERO IMAGE &mdash; 1280 &times; 700]</div>
+  </div>
+
+  <!-- ── KEY RESULTS ───────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 72px; padding-bottom: 72px">
+    <div class="lab" style="margin-bottom: 48px">Results</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 56px">
+      <sc-for list="{{results}}" as="r" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--ink); padding-top: 24px">
+          <div class="disp" style="font-size: 68px; line-height: 1; letter-spacing: -0.03em; color: var(--accent)">{{r.n}}</div>
+          <div class="body" style="font-size: 17px">{{r.t}}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div class="lab" style="margin-top: 44px; color: var(--soft)">
+      Results sit above the story &mdash; a visitor who reads nothing else still gets the point.
+    </div>
+  </div>
+
+  <!-- ── THE BRIEF ─────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 88px">
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 96px; align-items: start">
+      <div class="lab">The brief</div>
+      <div style="max-width: 780px; display: flex; flex-direction: column; gap: 28px">
+        <div class="kick">
+          [CLIENT] was losing [XX%] of new users between account creation and first
+          transaction &mdash; and nobody could say which step was doing the damage.
+        </div>
+        <div class="body">
+          [Two or three sentences of context: what the business was, what had already been
+          tried, why it mattered commercially now. Name the constraint that shaped everything
+          &mdash; a deadline, a legacy system, a regulatory rule.]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 01 DESIGN ─────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 88px">
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 48px">
+      <span class="mono" style="font-size: 12px; color: var(--accent)">01</span>
+      <span class="disp" style="font-size: 44px; letter-spacing: -0.02em">Design</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 96px; align-items: start; margin-bottom: 56px">
+      <div class="lab">What we drew</div>
+      <div class="body" style="max-width: 780px">
+        [What the research turned up, what you decided to change and why. One paragraph &mdash;
+        the artefacts below carry the detail.]
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px">
+      <div class="ph" style="height: 380px">[RESEARCH SYNTHESIS]</div>
+      <div class="ph" style="height: 380px">[USER FLOW &mdash; BEFORE / AFTER]</div>
+    </div>
+    <div class="ph" style="height: 520px; margin-bottom: 32px">[KEY SCREENS]</div>
+    <div class="ph" style="height: 260px">[DESIGN SYSTEM &mdash; COMPONENTS &amp; TOKENS]</div>
+  </div>
+
+  <!-- ── 02 BUILD ──────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 88px">
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 48px">
+      <span class="mono" style="font-size: 12px; color: var(--accent)">02</span>
+      <span class="disp" style="font-size: 44px; letter-spacing: -0.02em">Build</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 96px; align-items: start; margin-bottom: 56px">
+      <div class="lab">What we shipped</div>
+      <div class="body" style="max-width: 780px">
+        [How it was actually built, and what that bought the client. This section is why a
+        prospect believes Ojú can ship &mdash; give it the same weight as the design above.]
+      </div>
+    </div>
+
+    <div class="ph" style="height: 440px; margin-bottom: 56px">[ARCHITECTURE DIAGRAM]</div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 56px; margin-bottom: 64px">
+      <sc-for list="{{stack}}" as="s" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="lab" style="border-bottom: 1px solid var(--rule); padding-bottom: 14px">{{s.k}}</div>
+          <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 4px">
+            <sc-for list="{{s.items}}" as="i" hint-placeholder-count="4">
+              <div class="mono" style="font-size: 13px; color: var(--soft)">{{i}}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div class="lab" style="margin-bottom: 28px">Decisions that mattered</div>
+    <sc-for list="{{decisions}}" as="d" hint-placeholder-count="3">
+      <div style="display: grid; grid-template-columns: 60px 1fr; gap: 32px; padding: 26px 0; border-top: 1px solid var(--rule); align-items: baseline">
+        <div class="mono" style="font-size: 12px; color: var(--accent)">{{d.n}}</div>
+        <div class="body" style="font-size: 20px; color: var(--ink); max-width: 900px">{{d.t}}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- ── OUTCOME ───────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 88px">
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 96px; align-items: start">
+      <div class="lab">Outcome</div>
+      <div style="max-width: 780px; display: flex; flex-direction: column; gap: 28px">
+        <div class="kick">
+          [What changed, in the client's terms &mdash; not yours. Tie it back to the number
+          in the headline.]
+        </div>
+        <div class="body">
+          [What happened after launch: what the team kept, what you still maintain, what
+          came next. If the engagement is ongoing, say so.]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── QUOTE ─────────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 88px; padding-bottom: 88px">
+    <div class="disp" style="font-size: 42px; line-height: 1.28; letter-spacing: -0.018em; max-width: 1080px; text-wrap: pretty">
+      &ldquo;[One or two sentences from the client. Best quotes name a specific fear that
+      turned out to be unfounded &mdash; not generic praise.]&rdquo;
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px; margin-top: 44px">
+      <div class="ph" style="width: 52px; height: 52px; border-radius: 50%; font-size: 9px">[PIC]</div>
+      <div style="display: flex; flex-direction: column; gap: 5px">
+        <div style="font-size: 16px">[NAME]</div>
+        <div class="mono" style="font-size: 12.5px; color: var(--faint)">[ROLE], [CLIENT]</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NEXT PROJECT ──────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 72px; padding-bottom: 72px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 64px">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <div class="lab">Next project</div>
+        <div class="disp" style="font-size: 58px; letter-spacing: -0.025em">[Project Two]</div>
+        <div class="mono" style="font-size: 13px; color: var(--soft)">Product, iOS &middot; Logistics &middot; 2025</div>
+      </div>
+      <div class="mono" style="font-size: 40px">&rarr;</div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ────────────────────────────────────────── -->
+  <div class="sec rule" style="padding-top: 56px; padding-bottom: 48px">
+    <div style="display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 48px; align-items: start">
+      <div class="disp" style="font-size: 27px">Ojú</div>
+      <sc-for list="{{footcols}}" as="f" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div class="lab" style="margin-bottom: 8px">{{f.title}}</div>
+          <sc-for list="{{f.items}}" as="i" hint-placeholder-count="4">
+            <div class="mono" style="font-size: 12.5px; color: var(--soft)">{{i}}</div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--rule)">
+      <div class="lab">&copy; 2026 Ojú Studio</div>
+      <div class="lab">Lagos, Nigeria</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#c2612a","options":["#c2612a","#1c1b19","#2f5eea","#3f7a4f"],"section":"Theme"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      meta: [
+        { k: 'Client',   v: '[CLIENT]' },
+        { k: 'Sector',   v: '[FINTECH]' },
+        { k: 'Services', v: '[BRAND, UI/UX, WEB]' },
+        { k: 'Team',     v: '[3 FROM OJÚ]' },
+        { k: 'Duration', v: '[X WEEKS]' },
+        { k: 'Year',     v: '[2026]' }
+      ],
+      results: [
+        { n: '[XX%]', t: '[drop in signup abandonment, first 90 days]' },
+        { n: '[X.Xs]', t: '[faster to first meaningful paint on mobile]' },
+        { n: '[XX]',  t: '[components shipped in the new design system]' }
+      ],
+      stack: [
+        { k: 'Front end', items: ['[React / Next.js]', '[TypeScript]', '[Tailwind]', '[Framer Motion]'] },
+        { k: 'Back end',  items: ['[Node / Fastify]', '[Postgres]', '[Redis queue]', '[REST + webhooks]'] },
+        { k: 'Platform',  items: ['[AWS / Vercel]', '[GitHub Actions]', '[Sentry]', '[Feature flags]'] }
+      ],
+      decisions: [
+        { n: '01', t: 'Rebuilt [FLOW] as a server-driven sequence, so copy and step order change without shipping a release.' },
+        { n: '02', t: 'Moved [HEAVY OPERATION] onto a background queue — [METRIC] fell from [X] to [Y].' },
+        { n: '03', t: 'Replaced [VENDOR SDK] with a thin in-house client and cut [XX]kb from the first load.' }
+      ],
+      footcols: [
+        { title: 'Studio', items: ['Work', 'Services', 'About', 'Journal'] },
+        { title: 'Design', items: ['UI/UX', 'Brand & identity', 'Motion', 'Design systems'] },
+        { title: 'Build',  items: ['Web applications', 'Mobile apps', 'APIs', 'Infrastructure'] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

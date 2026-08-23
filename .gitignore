@@ -1,0 +1,18 @@
+dist/
+node_modules/
+.astro/
+.DS_Store
+*.log
+.env
+.env.production
+.lighthouseci/
+
+# Licensed font sources — free to use, NOT free to redistribute.
+# Keep the originals out of the repo; only the subset woff2 in public/ ships.
+vendor/fonts/
+
+# Seeded design-canvas payloads — ~2 MB of generated editor output each.
+# The .dc.html files in homepage/ and case-study/ are the real source;
+# these are re-seeded from them. Published copies live as Artifacts.
+/oju-homepage.html
+/case-study/oju-case-study.html

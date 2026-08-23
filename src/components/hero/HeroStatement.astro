@@ -1,0 +1,79 @@
+---
+/**
+ * Hero statement. The work wall follows immediately as its own section, so its
+ * top band reads above the fold without this component owning it.
+ */
+import EyeMark from '../EyeMark.astro';
+import { SITE } from '../../data/site';
+---
+
+<section class="statement border-t border-rule">
+  <p class="label statement__kicker">{SITE.tagline} &mdash; {SITE.city}</p>
+
+  <h1 class="statement__title font-display">
+    <span class="hero__line"
+      ><span class="hero__inner"
+        >We design the face.<span class="hero__eye"><EyeMark /></span></span
+      ></span
+    >
+    <span class="hero__line"><span class="hero__inner">We build what&rsquo;s behind it.</span></span>
+  </h1>
+
+  <div class="hero__sub statement__below">
+    <p class="statement__lede">{SITE.description}</p>
+    <div class="statement__actions">
+      <a href="/contact" class="cta">
+        <span class="text-base md:text-[17px]">Start a project</span>
+        <span class="font-mono text-[15px]" aria-hidden="true">&rarr;</span>
+      </a>
+      <a href="/work" class="cta cta--quiet">
+        <span class="text-base md:text-[17px]">View work</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .statement {
+    text-align: center;
+    padding: clamp(3rem, 7vw, 6rem) 1.5rem clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .statement__kicker { margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+
+  .statement__title {
+    font-size: clamp(2.25rem, 6.2vw, 5rem);
+    line-height: 0.98;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+  }
+
+  .statement__below {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+    margin-top: clamp(1.75rem, 3.5vw, 2.75rem);
+  }
+
+  .statement__lede {
+    max-width: 34rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--color-soft);
+    text-wrap: pretty;
+  }
+  @media (min-width: 768px) { .statement__lede { font-size: 1.1875rem; } }
+
+  .statement__actions { display: flex; align-items: center; gap: 2rem; }
+
+  /* Secondary action: same underline language, quieter weight. */
+  :global(.cta--quiet) {
+    border-bottom-color: var(--color-rule);
+    color: var(--color-soft);
+  }
+  :global(.cta--quiet:hover) {
+    color: var(--color-ink);
+    border-bottom-color: var(--color-ink);
+  }
+</style>

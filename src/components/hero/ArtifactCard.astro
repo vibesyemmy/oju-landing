@@ -1,0 +1,196 @@
+---
+/**
+ * NOT CURRENTLY RENDERED. Kept as the no-imagery fallback: if the placeholder
+ * photography has to come out before real work exists, the wall can be filled
+ * with these instead. Costs nothing while unused — Astro only bundles what a
+ * page imports.
+ *
+ * One artefact card. Every variant is markup — no photography, no canvas.
+ *
+ * Design kinds carry light grounds, engineering kinds mostly dark, so a wall
+ * built from them has rhythm instead of reading as one block.
+ */
+import type { Kind, Span } from './artifact-kinds';
+
+
+interface Props {
+  kind: Kind;
+  /** Row span in the masonry column; drives the card's height. */
+  span?: Span;
+}
+const { kind, span = 'md' } = Astro.props;
+---
+
+<div class:list={['acard', `acard--${span}`]} data-kind={kind}>
+  {kind === 'type' && <span class="a-display">Aa</span>}
+  {kind === 'letter' && <span class="a-display a-display--sm">Ójú</span>}
+
+  {kind === 'palette' && (
+    <div class="a-bands">
+      <i style="background:#17160f" /><i style="background:var(--color-accent)" />
+      <i style="background:#8f8b81" /><i style="background:#e6e2d9" />
+    </div>
+  )}
+
+  {kind === 'grid' && <div class="a-grid">{Array.from({ length: 12 }).map(() => <i />)}</div>}
+
+  {kind === 'scale' && (
+    <div class="a-stack">{[100, 74, 54, 38, 24].map((w) => <i class="a-bar" style={`width:${w}%`} />)}</div>
+  )}
+
+  {kind === 'motion' && (
+    <svg class="a-svg" viewBox="0 0 60 60">
+      {[26, 19, 12].map((r, n) => (
+        <circle cx="30" cy="30" r={r} fill="none" stroke="currentColor" stroke-width="2"
+          stroke-dasharray={`${9 + n * 7} ${5 + n * 3}`} />
+      ))}
+      <circle cx="30" cy="30" r="4.5" fill="var(--color-accent)" />
+    </svg>
+  )}
+
+  {kind === 'curve' && (
+    <svg class="a-svg" viewBox="0 0 60 60">
+      <path d="M6 54 C 6 14, 54 46, 54 6" fill="none" stroke="currentColor" stroke-width="2" />
+      <circle cx="6" cy="54" r="4" fill="var(--color-accent)" />
+      <circle cx="54" cy="6" r="4" fill="var(--color-accent)" />
+    </svg>
+  )}
+
+  {kind === 'component' && (
+    <div class="a-stack">
+      <i class="a-field" /><i class="a-field" /><i class="a-btn" />
+    </div>
+  )}
+
+  {kind === 'code' && (
+    <div class="a-lines">
+      {[[40, 'k'], [68, 'p'], [54, 's'], [76, 'p'], [46, 'k'], [60, 's'], [36, 'p']].map(([w, t]) => (
+        <i class={`t-${t}`} style={`width:${w}%`} />
+      ))}
+    </div>
+  )}
+
+  {kind === 'diff' && (
+    <div class="a-lines a-diff">
+      {[[62, 'add'], [48, 'add'], [70, 'del'], [40, 'ctx'], [56, 'add'], [66, 'ctx']].map(([w, t]) => (
+        <i class={`d-${t}`} style={`width:${w}%`} />
+      ))}
+    </div>
+  )}
+
+  {kind === 'terminal' && (
+    <div class="a-term">
+      <b>$ npm run build</b>
+      <i style="width:72%" /><i style="width:54%" />
+      <b class="ok">✓ 7 pages built</b>
+    </div>
+  )}
+
+  {kind === 'tests' && (
+    <div class="a-rows">
+      {[1, 2, 3, 4].map(() => <span><b class="ok">✓</b><i /></span>)}
+    </div>
+  )}
+
+  {kind === 'routes' && (
+    <div class="a-rows">
+      {[['GET', 62], ['POST', 44], ['GET', 70], ['PUT', 38]].map(([m, w]) => (
+        <span><em>{m}</em><i style={`width:${w}%`} /></span>
+      ))}
+    </div>
+  )}
+
+  {kind === 'schema' && (
+    <div class="a-rows">
+      {['client', 'sector', 'year', 'stack'].map((k) => <span><em>{k}</em><i /></span>)}
+    </div>
+  )}
+
+  {kind === 'arch' && (
+    <svg class="a-svg" viewBox="0 0 60 80">
+      <rect x="15" y="7" width="30" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+      <rect x="3" y="34" width="23" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+      <rect x="34" y="34" width="23" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+      <rect x="15" y="61" width="30" height="13" rx="2" fill="var(--color-accent)" />
+      <path d="M30 20 V27 M30 27 H14.5 V34 M30 27 H45.5 V34 M14.5 47 V54 H45.5 V47 M30 54 V61"
+        fill="none" stroke="currentColor" stroke-width="1.6" />
+    </svg>
+  )}
+
+  {kind === 'deploy' && (
+    <div class="a-stack">
+      <b class="ok a-status">● live</b>
+      <i class="a-bar" style="width:100%" /><i class="a-bar" style="width:62%" /><i class="a-bar" style="width:84%" />
+    </div>
+  )}
+</div>
+
+<style is:global>
+  .acard {
+    position: relative;
+    display: grid;
+    place-items: center;
+    /* Editorial, not app-store: the reference uses 14px, which would be the
+       only soft corner on this site. 6px reads deliberate beside the rules. */
+    border-radius: 6px;
+    border: 1px solid rgb(23 22 15 / 0.09);
+    background: #fbfaf7;
+    color: var(--color-soft);
+    overflow: hidden;
+  }
+  .acard--sm { height: 148px; }
+  .acard--md { height: 208px; }
+  .acard--lg { height: 286px; }
+
+  .acard[data-kind='type']      { background: var(--color-accent); border-color: transparent; }
+  .acard[data-kind='letter']    { background: #17160f; border-color: transparent; }
+  .acard[data-kind='grid']      { background: #f7f4ee; }
+  .acard[data-kind='motion']    { background: #ece7dc; color: #17160f; }
+  .acard[data-kind='curve']     { background: #fbfaf7; color: #55524a; }
+  .acard[data-kind='palette']   { border-color: transparent; }
+  .acard[data-kind='code']      { background: #17160f; }
+  .acard[data-kind='terminal']  { background: #17160f; }
+  .acard[data-kind='schema']    { background: #23211a; }
+  .acard[data-kind='tests']     { background: #1d1b15; }
+  .acard[data-kind='routes']    { background: #23211a; }
+  .acard[data-kind='arch']      { background: #f7f4ee; color: #55524a; }
+  .acard[data-kind='diff']      { background: #fbfaf7; }
+  .acard[data-kind='deploy']    { background: #f7f4ee; }
+
+  .a-display { font-family: var(--font-display); font-size: 3rem; line-height: 1; color: var(--color-paper); }
+  .a-display--sm { font-size: 1.9rem; color: var(--color-accent); }
+
+  .a-bands { display: grid; grid-template-rows: repeat(4, 1fr); width: 100%; height: 100%; }
+  .a-bands i { display: block; }
+
+  .a-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; width: 66%; height: 66%; }
+  .a-grid i { display: block; background: rgb(23 22 15 / 0.13); border-radius: 2px; }
+
+  .a-svg { width: 58%; height: 58%; }
+
+  .a-stack { display: flex; flex-direction: column; gap: 8px; width: 66%; }
+  .a-field { display: block; height: 15px; border: 1px solid rgb(23 22 15 / 0.2); border-radius: 3px; }
+  .a-btn { display: block; height: 16px; width: 64%; background: var(--color-accent); border-radius: 3px; }
+  .a-bar { display: block; height: 7px; background: rgb(23 22 15 / 0.15); border-radius: 2px; }
+  .a-status { font-family: var(--font-mono); font-size: 9px; }
+
+  .a-lines { display: flex; flex-direction: column; gap: 6px; width: 68%; }
+  .a-lines i { display: block; height: 6px; border-radius: 2px; background: #55503f; }
+  .a-lines .t-k { background: #6f6a58; }
+  .a-lines .t-p { background: var(--color-accent); opacity: 0.8; }
+  .a-lines .t-s { background: #55705f; }
+  .a-diff i { background: rgb(23 22 15 / 0.12); }
+  .a-diff .d-add { background: rgb(63 122 79 / 0.5); }
+  .a-diff .d-del { background: rgb(194 97 42 / 0.42); }
+
+  .a-term { display: flex; flex-direction: column; gap: 6px; width: 70%; font-family: var(--font-mono); font-size: 9px; }
+  .a-term b { color: #d9d4c4; font-weight: 400; }
+  .a-term i { display: block; height: 5px; background: #3a382e; border-radius: 2px; }
+  .ok { color: #7fae7a; }
+
+  .a-rows { display: flex; flex-direction: column; gap: 7px; width: 70%; }
+  .a-rows span { display: flex; align-items: center; gap: 6px; }
+  .a-rows em { font-family: var(--font-mono); font-style: normal; font-size: 8px; color: #cfc9b8; }
+  .a-rows b { font-size: 9px; }
+  .a-rows i { display: block; height: 5px; flex: 1; background: #3a382e; border-radius: 2px; }
+</style>

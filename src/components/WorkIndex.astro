@@ -1,0 +1,98 @@
+---
+import { DISCIPLINES } from '../content.config';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entries: CollectionEntry<'work'>[];
+  showFilter?: boolean;
+}
+const { entries, showFilter = true } = Astro.props;
+---
+
+<div>
+  <div class="mb-13 flex flex-wrap items-baseline justify-between gap-4">
+    <p class="label">
+      Selected work <span class="text-ink">— {String(entries.length).padStart(2, '0')}</span>
+    </p>
+
+    {
+      showFilter && (
+        <div class="flex gap-5 md:gap-6" role="group" aria-label="Filter work by discipline">
+          <button type="button" class="label filter-btn text-ink border-b border-ink pb-1" data-filter="all" aria-pressed="true">
+            All
+          </button>
+          {DISCIPLINES.map((d) => (
+            <button type="button" class="label filter-btn border-b border-transparent pb-1 transition-colors hover:text-ink" data-filter={d} aria-pressed="false">
+              {d}
+            </button>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  <div class="grid grid-cols-[3.2fr_2.4fr_1.6fr_0.8fr] gap-8 border-b border-rule pb-3.5 max-md:hidden">
+    <p class="label">Project</p>
+    <p class="label">Discipline</p>
+    <p class="label">Sector</p>
+    <p class="label text-right">Year</p>
+  </div>
+
+  <ul id="work-list">
+    {
+      entries.map((entry) => (
+        <li data-disciplines={entry.data.disciplines.join(',')} class="border-b border-rule">
+          <a
+            href={`/work/${entry.id}/`}
+            class="group grid grid-cols-1 items-baseline gap-2 py-5 md:grid-cols-[3.2fr_2.4fr_1.6fr_0.8fr] md:gap-8 md:py-6.5"
+          >
+            <span class="font-display text-[26px] tracking-tight transition-colors group-hover:text-accent md:text-[34px]">
+              {entry.data.title}
+            </span>
+            <span class="font-mono text-[11.5px] text-soft md:text-[13px]">
+              {entry.data.services.join(', ')}
+            </span>
+            <span class="font-mono text-[11.5px] text-soft max-md:hidden md:text-[13px]">
+              {entry.data.sector}
+            </span>
+            <span class="font-mono text-[11.5px] text-faint md:text-right md:text-[13px]">
+              {entry.data.year}
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p id="work-empty" hidden class="label mt-10">No projects in that discipline yet.</p>
+</div>
+
+<script>
+  // The only interactive island on the page. No framework, ~600 bytes.
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const items = document.querySelectorAll<HTMLLIElement>('#work-list > li');
+  const empty = document.getElementById('work-empty');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+
+      buttons.forEach((b) => {
+        const active = b === btn;
+        b.setAttribute('aria-pressed', String(active));
+        b.classList.toggle('text-ink', active);
+        b.classList.toggle('border-ink', active);
+        b.classList.toggle('border-transparent', !active);
+      });
+
+      let visible = 0;
+      items.forEach((li) => {
+        const match = filter === 'all' || (li.dataset.disciplines ?? '').split(',').includes(filter!);
+        li.hidden = !match;
+        if (match) visible++;
+      });
+
+      empty?.toggleAttribute('hidden', visible > 0);
+    });
+  });
+</script>

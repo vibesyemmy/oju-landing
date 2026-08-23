@@ -1,0 +1,32 @@
+---
+/**
+ * The original editorial hero — left-aligned statement, eye set as punctuation.
+ * Kept so the converging-stream hero can be compared against it and reverted
+ * to: swap the import in src/pages/index.astro.
+ */
+import EyeMark from '../EyeMark.astro';
+import { SITE } from '../../data/site';
+---
+
+    <section class="border-t border-rule px-6 pt-16 pb-14 md:px-20 md:pt-26 md:pb-24">
+      <h1 class="hero font-display max-w-[1280px] text-[48px] leading-[0.98] tracking-[-0.02em] md:text-hero md:tracking-[-0.028em]">
+        <span class="hero__line"
+          ><span class="hero__inner"
+            >We design the face.<span class="hero__eye"><EyeMark /></span></span
+          ></span
+        >
+        <span class="hero__line"
+          ><span class="hero__inner">We build what’s behind it.</span></span
+        >
+      </h1>
+
+      <div class="hero__sub mt-8 flex flex-col items-start gap-8 md:mt-22 md:flex-row md:items-end md:justify-between md:gap-20">
+        <p class="max-w-[520px] text-base leading-relaxed text-soft text-pretty md:text-[19px]">
+          {SITE.description}
+        </p>
+        <a href="/contact" class="cta whitespace-nowrap">
+          <span class="text-base md:text-[17px]">Start a project</span>
+          <span class="font-mono text-[15px]" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>

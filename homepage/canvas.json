@@ -1,0 +1,15 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",   "title": "Homepage — desktop", "x": 0,    "y": 0, "w": 1440, "h": 3560 },
+    { "file": "Mobile.dc.html", "title": "Homepage — mobile",  "x": 1600, "y": 0, "w": 390,  "h": 3900 }
+  ],
+  "annotations": [
+    { "id": "direction", "x": 0, "y": -190, "w": 520,
+      "text": "DIRECTION — Locomotive editorial.\nStructure and stance lifted from the reference; type, colour and copy are Oju's own.\nInstrument Serif (display) / Archivo (text) / Space Mono (labels)." },
+    { "id": "eng-signal", "x": 560, "y": -190, "w": 440,
+      "text": "The engineering claim is carried by CONTENT, not by a dark background:\nnamed stack in column 03, discipline column in the work index, a quantified outcome." },
+    { "id": "placeholders", "x": 1600, "y": -190, "w": 390,
+      "text": "Everything in [BRACKETS] is a real fact you still owe — clients, projects, the metric, the email. Nothing here is invented." }
+  ],
+  "launch": { "view": "canvas" }
+}

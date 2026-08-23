@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<Base title="Not found">
+  <SiteHeader />
+  <main id="main">
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
+      <h1 class="font-display text-[44px] leading-tight tracking-tight md:text-[78px]">
+        That page doesn’t exist.
+      </h1>
+      <a href="/" class="cta mt-8">Back to the studio <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>

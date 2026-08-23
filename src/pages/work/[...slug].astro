@@ -1,0 +1,178 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+
+export async function getStaticPaths() {
+  const entries = (await getCollection('work', ({ data }) => !data.draft)).sort(
+    (a, b) => a.data.order - b.data.order || b.data.year - a.data.year,
+  );
+
+  return entries.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, next: entries[(i + 1) % entries.length] },
+  }));
+}
+
+const { entry, next } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+
+const meta = [
+  { k: 'Client', v: d.client },
+  { k: 'Sector', v: d.sector },
+  { k: 'Services', v: d.services.join(', ') },
+  { k: 'Team', v: d.team },
+  { k: 'Duration', v: d.duration },
+  { k: 'Year', v: String(d.year) },
+];
+---
+
+<Base title={d.title} description={d.brief}>
+  <SiteHeader current="/work" />
+
+  <main id="main">
+    <!-- HEADLINE + META -->
+    <section class="border-t border-rule px-6 pt-8 pb-10 md:px-20 md:pt-14 md:pb-18">
+      <nav class="label mb-8 md:mb-14" aria-label="Breadcrumb">
+        <a href="/work" class="text-soft hover:text-ink">Work</a>
+        <span class="mx-2 text-rule" aria-hidden="true">/</span>{d.title}
+      </nav>
+
+      <div class="grid gap-10 md:grid-cols-[1.9fr_1fr] md:gap-24">
+        <h1 class="font-display text-[42px] leading-[1.04] tracking-[-0.022em] text-pretty md:text-display md:tracking-[-0.028em]">
+          {d.outcome}
+        </h1>
+
+        <div class="flex flex-col">
+          <dl>
+            {
+              meta.map((m) => (
+                <div class="flex justify-between gap-6 border-b border-rule py-3.5">
+                  <dt class="label whitespace-nowrap">{m.k}</dt>
+                  <dd class="text-right font-mono text-xs text-ink md:text-[13px]">{m.v}</dd>
+                </div>
+              ))
+            }
+          </dl>
+          {
+            d.liveUrl && (
+              <a href={d.liveUrl} rel="noopener" class="cta mt-6 font-mono text-[13px]">
+                Visit the live site <span aria-hidden="true">→</span>
+              </a>
+            )
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- HERO -->
+    <section class="px-6 pb-12 md:px-20 md:pb-22">
+      {
+        d.hero ? (
+          <Image src={d.hero} alt={`${d.client} — ${d.title}`} widths={[640, 960, 1280, 1920]} sizes="(max-width: 768px) 100vw, 1280px" class="w-full" loading="eager" />
+        ) : (
+          <div class="placeholder h-75 md:h-175">[HERO IMAGE]</div>
+        )
+      }
+    </section>
+
+    <!-- RESULTS -->
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-18">
+      <h2 class="label mb-8 md:mb-12">Results</h2>
+      <div class="grid gap-8 md:grid-cols-3 md:gap-14">
+        {
+          d.results.map((r) => (
+            <div class="flex flex-col gap-2.5 border-t border-ink pt-4.5 md:gap-3.5 md:pt-6">
+              <p class="font-display text-[52px] leading-none tracking-[-0.03em] text-accent md:text-[68px]">{r.value}</p>
+              <p class="text-[15px] leading-relaxed text-soft text-pretty md:text-[17px]">{r.label}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- BRIEF -->
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-22">
+      <div class="grid gap-6 md:grid-cols-[1fr_2fr] md:gap-24">
+        <h2 class="label">The brief</h2>
+        <p class="max-w-[780px] text-lg leading-relaxed text-pretty md:text-[22px]">{d.brief}</p>
+      </div>
+    </section>
+
+    <!-- NARRATIVE — the MDX body. Design and build sections live here. -->
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-22">
+      <div class="narrative">
+        <Content />
+      </div>
+    </section>
+
+    <!-- STACK + DECISIONS -->
+    <section class="border-t border-rule px-6 py-12 md:px-20 md:py-22">
+      <div class="mb-11 grid gap-7 md:grid-cols-3 md:gap-14">
+        {
+          d.stack.map((group) => (
+            <div class="flex flex-col gap-3.5">
+              <h3 class="label border-b border-rule pb-3.5">{group.group}</h3>
+              <ul class="mt-1 flex flex-wrap gap-x-4 gap-y-2 md:flex-col md:gap-2.5">
+                {group.items.map((item) => (
+                  <li class="font-mono text-xs text-soft md:text-[13px]">{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+
+      <h2 class="label mb-5 md:mb-7">Decisions that mattered</h2>
+      <ol>
+        {
+          d.decisions.map((text, i) => (
+            <li class="grid grid-cols-1 items-baseline gap-2.5 border-t border-rule py-5 md:grid-cols-[60px_1fr] md:gap-8 md:py-6.5">
+              <span class="font-mono text-[11px] text-accent md:text-xs">{String(i + 1).padStart(2, '0')}</span>
+              <p class="max-w-[900px] text-[17px] leading-relaxed text-pretty md:text-xl">{text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- QUOTE -->
+    {
+      d.quote && (
+        <section class="border-t border-rule px-6 py-12 md:px-20 md:py-22">
+          <blockquote class="font-display max-w-[1080px] text-[28px] leading-snug tracking-tight text-pretty md:text-[42px]">
+            “{d.quote.text}”
+          </blockquote>
+          <figcaption class="mt-8 flex items-center gap-3.5 md:mt-11 md:gap-4.5">
+            <div class="placeholder size-11 shrink-0 rounded-full text-[8px] md:size-13">[PIC]</div>
+            <div class="flex flex-col gap-1">
+              <p class="text-[15px] md:text-base">{d.quote.name}</p>
+              <p class="font-mono text-[11.5px] text-faint md:text-[12.5px]">{d.quote.role}, {d.client}</p>
+            </div>
+          </figcaption>
+        </section>
+      )
+    }
+
+    <!-- NEXT -->
+    <section class="border-t border-rule px-6 py-11 md:px-20 md:py-18">
+      <a href={`/work/${next.id}/`} class="group flex items-end justify-between gap-5 md:gap-16">
+        <span class="flex flex-col gap-2.5 md:gap-4.5">
+          <span class="label">Next project</span>
+          <span class="font-display text-[38px] tracking-tight transition-colors group-hover:text-accent md:text-[58px]">
+            {next.data.title}
+          </span>
+          <span class="font-mono text-[11.5px] text-soft md:text-[13px]">
+            {next.data.services.join(', ')} · {next.data.sector} · {next.data.year}
+          </span>
+        </span>
+        <span class="font-mono text-2xl md:text-[40px]" aria-hidden="true">→</span>
+      </a>
+    </section>
+  </main>
+
+  <SiteFooter />
+</Base>

@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+
+      # Fails if the hand-supplied display font lacks glyphs the site needs.
+      # Passes trivially while no font files are present.
+      - run: npm run check:font
+      - run: npm run build
+
+      # The performance budget is the sales argument, so it is a gate,
+      # not a report. A feature that cannot fit the budget loses.
+      - name: Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./lighthouserc.json
+          uploadArtifacts: true

@@ -1,0 +1,17 @@
+/* ── Nohemi (display) ──────────────────────────────────────────
+   Rajesh Rajput, free for commercial and personal use ("pay what
+   you want"). Free to USE is not free to REDISTRIBUTE — the source
+   files live in vendor/fonts/ and are gitignored; only this subset
+   is served. See public/fonts/README.md before making the repo public.
+
+   Variable, 100–900, subset to latin + latin-ext: 36.7 KB for every
+   weight. Once the design settles on one weight, a static cut is
+   about half that.                                                 */
+
+@font-face {
+  font-family: 'Nohemi';
+  src: url('/fonts/nohemi-variable.woff2?v=1') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

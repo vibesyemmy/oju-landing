@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+/* ── Design tokens ─────────────────────────────────────────────
+   Single source of truth. These are the values from the design
+   canvases — change them here, never in a component.            */
+@theme {
+  --color-paper:  #f2efe9;
+  --color-ink:    #17160f;
+  --color-soft:   #55524a;
+  --color-faint:  #8f8b81;
+  --color-rule:   #d8d4ca;
+  --color-fill:   #e6e2d9;
+  --color-accent: oklch(0.55 0.15 45);
+
+  /* Nohemi is hand-supplied (see src/styles/fonts.css). Fallback is Archivo,
+     already self-hosted — a grotesk, because falling back from a geometric
+     sans to a serif would read as a bug rather than a graceful degrade. */
+  --font-display: "Nohemi", "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "Space Mono", ui-monospace, "Courier New", monospace;
+
+  /* Editorial display sizes. Tailwind's default ramp tops out too
+     small for this design, so the display end is explicit.        */
+  /* Sized for Nohemi, which sets much wider than the serif this design
+     started from. 104px is the largest that still fits the hero on two
+     lines at the 1280px content width — re-measure if the face changes. */
+  --text-hero:     6.5rem;   /* 104px */
+  --text-hero--line-height: 0.94;
+  --text-display:  4.875rem; /* 78px  */
+  --text-display--line-height: 1.02;
+  --text-section:  2.75rem;  /* 44px  */
+  --text-section--line-height: 1.1;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* The small mono label used throughout the design. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  /* Underlined text link — the design's only button treatment. */
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid currentColor;
+    min-height: 2.75rem; /* 44px touch target */
+    box-sizing: border-box;
+  }
+
+  /* Image placeholder, until real assets land. */
+  .placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-fill);
+    border: 1px solid var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    color: var(--color-faint);
+    text-align: center;
+  }
+}
+
+/* ── Case study narrative ──────────────────────────────────────
+   Styles the MDX body of a case study. Deliberately narrow: the
+   structured parts (meta, results, stack) are components, so this
+   only has to handle prose and figures.                          */
+@layer components {
+  .narrative > * + * {
+    margin-top: 1.75rem;
+  }
+
+  .narrative h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-top: 4.5rem;
+    margin-bottom: 2rem;
+    font-family: var(--font-display);
+    font-size: 2.125rem;
+    letter-spacing: -0.018em;
+  }
+  @media (min-width: 768px) {
+    .narrative h2 { font-size: var(--text-section); }
+  }
+
+  /* "01" / "02" counters on the Design and Build sections. */
+  .narrative h2:nth-of-type(-n+2)::before {
+    content: counter(narrative-section, decimal-leading-zero);
+    counter-increment: narrative-section;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-accent);
+  }
+  .narrative { counter-reset: narrative-section; }
+
+  .narrative h3 {
+    margin-top: 2.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  .narrative p {
+    max-width: 780px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--color-soft);
+    text-wrap: pretty;
+  }
+  @media (min-width: 768px) {
+    .narrative p { font-size: 1.1875rem; line-height: 1.62; }
+  }
+
+  .narrative img { width: 100%; height: auto; }
+
+  .narrative figure { margin-top: 2rem; }
+  .narrative figcaption {
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-faint);
+  }
+
+  .narrative .grid-2 {
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .narrative .grid-2 { grid-template-columns: 1fr 1fr; gap: 2rem; }
+  }
+}
+
+@layer components {
+  /* Nohemi ships no italic. Left alone the browser fakes one by shearing the
+     outlines, which on a geometric sans looks like a rendering fault. Emphasis
+     in display type is carried by weight instead. */
+  .font-display {
+    font-synthesis: none;
+  }
+  .font-display em {
+    font-style: normal;
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  /* ── Hero reveal ─────────────────────────────────────────────
+     Each line rises out of its own clipped box. No library: two
+     keyframes and a delay. `both` fill mode holds the start state,
+     so nothing flashes before the animation runs.
+
+     The padding/negative-margin pair matters — line-height is 0.94,
+     so a plain overflow:hidden would shear the descender off the
+     "g" in "design".                                              */
+  .hero__line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+  }
+
+  .hero__inner {
+    display: block;
+    /* Each logical line balances its own wrap. Without this the narrow
+       viewport orphans "it." on a line of its own. */
+    text-wrap: balance;
+    animation: hero-rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero__line:nth-of-type(2) .hero__inner {
+    animation-delay: 0.11s;
+  }
+
+  @keyframes hero-rise {
+    from { transform: translateY(105%); }
+    to   { transform: translateY(0); }
+  }
+
+  .hero__sub {
+    animation: hero-fade 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
+  }
+
+  @keyframes hero-fade {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* The eye is set as a character, not a graphic: sized in em so it
+     tracks the type ramp and needs no breakpoint of its own. */
+  .hero__eye {
+    display: inline-block;
+    width: 0.78em;
+    height: 0.78em;
+    margin-left: 0.16em;
+    vertical-align: -0.04em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__inner,
+    .hero__sub {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

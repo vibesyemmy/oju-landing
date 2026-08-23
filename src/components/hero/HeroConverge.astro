@@ -1,0 +1,334 @@
+---
+/**
+ * Converging-stream hero.
+ *
+ * Two opposing conveyors — design artefacts from the left, engineering from the
+ * right — recede toward the Ojú eye. The studio's claim, animated: two
+ * disciplines, one team, one shipped thing.
+ *
+ * Depth is real 3D: cards travel in Z under a perspective camera, so the
+ * browser handles scale falloff AND occlusion sorting. Doing it with scale()
+ * instead flattens them into a slab.
+ *
+ * Every card is markup — no photography, no canvas, no images to download.
+ * The only script is an observer that pauses the belt off-screen.
+ */
+import EyeMark from '../EyeMark.astro';
+import { SITE } from '../../data/site';
+
+const LEFT = ['type', 'palette', 'grid', 'letter', 'motion', 'component'] as const;
+const RIGHT = ['code', 'diff', 'terminal', 'arch', 'schema', 'deploy'] as const;
+---
+
+<section class="converge border-t border-rule">
+  <div class="converge__stage" data-converge>
+    <div class="converge__streams" aria-hidden="true">
+      <div class="converge__stream">
+        {
+          LEFT.map((kind, i) => (
+            <div class="card card--l" style={`--i:${i}`} data-kind={kind}>
+              {kind === 'type' && <span class="c-display">Aa</span>}
+              {kind === 'letter' && <span class="c-display c-display--sm">Ójú</span>}
+              {kind === 'palette' && (
+                <div class="c-bands">
+                  <i style="background:#17160f"></i>
+                  <i style="background:var(--color-accent)"></i>
+                  <i style="background:#8f8b81"></i>
+                  <i style="background:#e6e2d9"></i>
+                </div>
+              )}
+              {kind === 'grid' && <div class="c-grid">{Array.from({ length: 12 }).map(() => <i />)}</div>}
+              {kind === 'motion' && (
+                <svg class="c-svg" viewBox="0 0 60 60">
+                  {[26, 19, 12].map((r, n) => (
+                    <circle cx="30" cy="30" r={r} fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-dasharray={`${9 + n * 7} ${5 + n * 3}`} />
+                  ))}
+                  <circle cx="30" cy="30" r="4.5" fill="var(--color-accent)" />
+                </svg>
+              )}
+              {kind === 'component' && (
+                <div class="c-stack">
+                  <i class="c-field" />
+                  <i class="c-field" />
+                  <i class="c-btn" />
+                </div>
+              )}
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="converge__stream">
+        {
+          RIGHT.map((kind, i) => (
+            <div class="card card--r" style={`--i:${i}`} data-kind={kind}>
+              {kind === 'code' && (
+                <div class="c-lines">
+                  {[[40, 'k'], [68, 'p'], [54, 's'], [76, 'p'], [46, 'k'], [60, 's'], [36, 'p']].map(([w, t]) => (
+                    <i class={`t-${t}`} style={`width:${w}%`} />
+                  ))}
+                </div>
+              )}
+              {kind === 'diff' && (
+                <div class="c-lines c-diff">
+                  {[[62, 'add'], [48, 'add'], [70, 'del'], [40, 'ctx'], [56, 'add'], [66, 'ctx']].map(([w, t]) => (
+                    <i class={`d-${t}`} style={`width:${w}%`} />
+                  ))}
+                </div>
+              )}
+              {kind === 'terminal' && (
+                <div class="c-term">
+                  <b>$ build</b>
+                  <i style="width:72%" /><i style="width:54%" />
+                  <b class="ok">✓ 7 pages</b>
+                </div>
+              )}
+              {kind === 'schema' && (
+                <div class="c-rows">
+                  {['client', 'sector', 'year', 'stack'].map((k) => (
+                    <span><em>{k}</em><i /></span>
+                  ))}
+                </div>
+              )}
+              {kind === 'arch' && (
+                <svg class="c-svg" viewBox="0 0 60 80">
+                  <rect x="15" y="7" width="30" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+                  <rect x="3" y="34" width="23" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+                  <rect x="34" y="34" width="23" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+                  <rect x="15" y="61" width="30" height="13" rx="2" fill="var(--color-accent)" />
+                  <path d="M30 20 V27 M30 27 H14.5 V34 M30 27 H45.5 V34 M14.5 47 V54 H45.5 V47 M30 54 V61"
+                    fill="none" stroke="currentColor" stroke-width="1.6" />
+                </svg>
+              )}
+              {kind === 'deploy' && (
+                <div class="c-stack">
+                  <b class="ok c-status">● live</b>
+                  <i class="c-bar" style="width:100%" />
+                  <i class="c-bar" style="width:62%" />
+                  <i class="c-bar" style="width:84%" />
+                </div>
+              )}
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="converge__core"><span class="converge__eye"><EyeMark /></span></div>
+    </div>
+
+    <div class="converge__type">
+      <h1 class="converge__title font-display">
+        <span class="hero__line"><span class="hero__inner">We design the face.</span></span>
+        <span class="hero__line"><span class="hero__inner">We build what’s behind it.</span></span>
+      </h1>
+    </div>
+  </div>
+
+  <div class="converge__foot hero__sub">
+    <p class="converge__lede">{SITE.description}</p>
+    <a href="/contact" class="cta">
+      <span class="text-base md:text-[17px]">Start a project</span>
+      <span class="font-mono text-[15px]" aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .converge { overflow: hidden; }
+
+  .converge__stage {
+    position: relative;
+    height: clamp(470px, 56vw, 690px);
+  }
+
+  .converge__streams {
+    position: absolute;
+    inset: 0;
+    /* The camera. Depth sorting and scale falloff both come from here. */
+    perspective: 1150px;
+    /* Convergence sits below the statement, not behind it. */
+    perspective-origin: 50% 62%;
+    overflow: hidden;
+  }
+
+  .converge__stream {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+
+  .card {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    width: clamp(118px, 13vw, 208px);
+    aspect-ratio: 3 / 4;
+    border: 1px solid rgb(23 22 15 / 0.1);
+    box-shadow: 0 30px 60px -30px rgb(23 22 15 / 0.55);
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    background: #fbfaf7;
+    color: var(--color-soft);
+    animation: flow-l 19s linear infinite;
+    animation-delay: calc(var(--i) * -3.1666s);
+    will-change: transform, opacity;
+  }
+
+  /* Cards ride in from the wings and recede into the eye. Z does the work:
+     near cards are large and paint over the far ones automatically. */
+  @keyframes flow-l {
+    0%   { transform: translate(-50%, -50%) translate3d(-54vw, 6vh, 580px) rotateY(40deg); opacity: 0; }
+    12%  { opacity: 1; }
+    74%  { opacity: 1; }
+    100% { transform: translate(-50%, -50%) translate3d(-2.5vw, -1vh, -1900px) rotateY(6deg); opacity: 0; }
+  }
+
+  @keyframes flow-r {
+    0%   { transform: translate(-50%, -50%) translate3d(53vw, -6vh, 580px) rotateY(-40deg); opacity: 0; }
+    12%  { opacity: 1; }
+    74%  { opacity: 1; }
+    100% { transform: translate(-50%, -50%) translate3d(1.5vw, 1vh, -1900px) rotateY(-6deg); opacity: 0; }
+  }
+
+  .card--r { animation-name: flow-r; }
+
+  /* Alternating grounds so neither side reads as one slab. */
+  .card--l[data-kind='type']      { background: var(--color-accent); border-color: transparent; }
+  .card--l[data-kind='letter']    { background: #17160f; border-color: transparent; }
+  .card--l[data-kind='grid']      { background: #f7f4ee; }
+  .card--l[data-kind='motion']    { background: #ece7dc; color: #17160f; }
+  .card--l[data-kind='component'] { background: #fbfaf7; }
+  .card--l[data-kind='palette']   { border-color: transparent; }
+
+  .card--r[data-kind='code']     { background: #17160f; }
+  .card--r[data-kind='terminal'] { background: #17160f; }
+  .card--r[data-kind='arch']     { background: #f7f4ee; color: #55524a; }
+  .card--r[data-kind='diff']     { background: #fbfaf7; }
+  .card--r[data-kind='schema']   { background: #23211a; }
+  .card--r[data-kind='deploy']   { background: #f7f4ee; }
+
+  .converge__core {
+    position: absolute;
+    top: 62%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+  }
+  .converge__eye { display: block; width: clamp(62px, 7.4vw, 122px); height: clamp(62px, 7.4vw, 122px); }
+
+  .converge__type {
+    position: absolute;
+    top: clamp(2rem, 5.5vw, 5rem);
+    left: 0;
+    right: 0;
+    z-index: 4;
+    text-align: center;
+    padding: 0 1.5rem;
+    pointer-events: none;
+  }
+
+  .converge__title {
+    font-size: clamp(2.25rem, 6.2vw, 5rem);
+    line-height: 0.98;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+    /* Halo keeps the statement legible as cards pass behind it, without a
+       scrim dulling the whole stage. */
+    text-shadow: 0 0 22px var(--color-paper), 0 0 9px var(--color-paper);
+  }
+
+  .converge__foot {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 1.75rem; padding: 0 1.5rem 3.5rem; text-align: center;
+  }
+  .converge__lede {
+    max-width: 34rem; font-size: 1rem; line-height: 1.6;
+    color: var(--color-soft); text-wrap: pretty;
+  }
+  @media (min-width: 768px) {
+    .converge__lede { font-size: 1.1875rem; }
+    .converge__foot { padding-bottom: 5.5rem; }
+  }
+
+  /* ── Card interiors: full-bleed graphics, all markup ── */
+  .c-display {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1; color: var(--color-paper);
+  }
+  .c-display--sm { font-size: clamp(1.1rem, 2.3vw, 1.9rem); color: var(--color-accent); }
+
+  .c-bands { display: grid; grid-template-rows: repeat(4, 1fr); width: 100%; height: 100%; }
+  .c-bands i { display: block; }
+
+  .c-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 78%; height: 78%; }
+  .c-grid i { display: block; background: rgb(23 22 15 / 0.14); }
+
+  .c-svg { width: 74%; height: 74%; }
+
+  .c-stack { display: flex; flex-direction: column; gap: 7px; width: 74%; }
+  .c-field { display: block; height: 13px; border: 1px solid rgb(23 22 15 / 0.2); border-radius: 2px; }
+  .c-btn { display: block; height: 14px; width: 64%; background: var(--color-accent); border-radius: 2px; }
+  .c-bar { display: block; height: 6px; background: rgb(23 22 15 / 0.16); border-radius: 1px; }
+  .c-status { font-family: var(--font-mono); font-size: 7px; color: #3f7a4f; }
+
+  .c-lines { display: flex; flex-direction: column; gap: 5px; width: 76%; }
+  .c-lines i { display: block; height: 5px; border-radius: 1px; background: #55503f; }
+  .c-lines .t-k { background: #6f6a58; }
+  .c-lines .t-p { background: var(--color-accent); opacity: 0.8; }
+  .c-lines .t-s { background: #55705f; }
+  .c-diff i { background: rgb(23 22 15 / 0.12); }
+  .c-diff .d-add { background: rgb(63 122 79 / 0.5); }
+  .c-diff .d-del { background: rgb(194 97 42 / 0.42); }
+
+  .c-term { display: flex; flex-direction: column; gap: 5px; width: 76%; font-family: var(--font-mono); font-size: 7px; }
+  .c-term b { color: #d9d4c4; font-weight: 400; }
+  .c-term i { display: block; height: 4px; background: #3a382e; border-radius: 1px; }
+  .ok { color: #7fae7a; }
+
+  .c-rows { display: flex; flex-direction: column; gap: 6px; width: 76%; }
+  .c-rows span { display: flex; align-items: center; gap: 5px; }
+  .c-rows em { font-family: var(--font-mono); font-style: normal; font-size: 6px; color: #cfc9b8; }
+  .c-rows i { display: block; height: 4px; flex: 1; background: #3a382e; border-radius: 1px; }
+
+  [data-converge].is-paused .card { animation-play-state: paused; }
+
+  /* Narrow viewports: the travel path shortens with the viewport but the cards
+     do not, so twelve of them pile up. Show half the belt, smaller, and pull
+     the camera in. Delays are proportional to --i, so dropping every second
+     card leaves the remaining three evenly spaced. */
+  @media (max-width: 767px) {
+    .converge__stage { height: clamp(330px, 74vw, 420px); }
+    .converge__streams { perspective: 720px; }
+    .card {
+      width: clamp(62px, 19vw, 96px);
+      box-shadow: 0 18px 34px -20px rgb(23 22 15 / 0.5);
+    }
+    .card:nth-child(even) { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card { animation: none; opacity: 1; }
+    .converge__stream:first-child .card {
+      transform: translate(-50%, -50%) translate3d(calc(-46vw + var(--i) * 7.6vw), 3vh, calc(380px - var(--i) * 340px)) rotateY(34deg);
+    }
+    .converge__stream:last-of-type .card {
+      transform: translate(-50%, -50%) translate3d(calc(45vw - var(--i) * 7.6vw), -3vh, calc(380px - var(--i) * 340px)) rotateY(-34deg);
+    }
+  }
+</style>
+
+<script>
+  // Pause the belt off-screen: twelve animated 3D layers should not run for
+  // the whole page. ~250 bytes.
+  const stage = document.querySelector('[data-converge]');
+  if (stage && 'IntersectionObserver' in window) {
+    new IntersectionObserver(
+      ([e]) => stage.classList.toggle('is-paused', !e.isIntersecting),
+      { rootMargin: '140px' },
+    ).observe(stage);
+  }
+</script>
