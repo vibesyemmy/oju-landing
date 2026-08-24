@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
+import Media from '../components/Media.astro';
 import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
 ---
 
@@ -18,6 +19,16 @@ import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
       title="An interface is a face."
       lede="Ojú means face in Yoruba. Ojú-ìwé means page. The name is the argument: the interface is the only part of a system a person ever meets, and it cannot be separated from what runs underneath it."
     />
+
+    <section class="px-6 pb-12 md:px-20 md:pb-20">
+      <Media
+        label="The studio at work — the room, the wall, people mid-argument over a screen. Not a stock office."
+        ratio="21/9"
+        size="2400×1029"
+        loading="eager"
+        sizes="(max-width: 768px) 100vw, 90vw"
+      />
+    </section>
 
     <!-- THE NAME -->
     <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
@@ -81,7 +92,11 @@ import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
             }
           </dl>
         </div>
-        <div class="placeholder h-64 md:h-full md:min-h-80">[STUDIO PHOTO]</div>
+        <Media
+          label="Somewhere that says Lagos without captioning it — the street, the building, the view from the desk."
+          ratio="4/3"
+          size="1600×1200"
+        />
       </div>
     </section>
 
@@ -93,7 +108,13 @@ import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
           <ul class="grid gap-8 sm:grid-cols-2 md:grid-cols-3 md:gap-12">
             {TEAM.map((m) => (
               <li>
-                <div class="placeholder mb-5 aspect-[4/5] w-full">[PORTRAIT]</div>
+                <Media
+                  label={`${m.name} — portrait`}
+                  ratio="4/5"
+                  size="800×1000"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                  class="mb-5"
+                />
                 <p class="font-display text-[24px] tracking-tight">{m.name}</p>
                 <p class="mt-1 font-mono text-[12.5px] text-faint">{m.role}</p>
               </li>

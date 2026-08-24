@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
+import Media from '../components/Media.astro';
 import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
 ---
 
@@ -54,6 +55,14 @@ import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
                   </ul>
                 </div>
               </div>
+
+              <Media
+                label={s.media.label}
+                kind={s.media.kind}
+                ratio={s.media.ratio}
+                size={s.media.size}
+                class="mt-10 md:mt-14"
+              />
             </div>
           </div>
         </section>

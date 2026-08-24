@@ -1,0 +1,142 @@
+---
+/**
+ * An image or video slot.
+ *
+ * Given `src`, renders the real asset through astro:assets. Given nothing, it
+ * renders a placeholder that states what belongs there, at what aspect, and at
+ * what pixel size — so the gap is a brief rather than a grey box. Swapping in
+ * the real thing is one prop.
+ *
+ * Every media slot on the site goes through here, so there is one place to
+ * change how unfilled slots look and one place that knows the target sizes.
+ */
+import { Image } from 'astro:assets';
+
+interface Props {
+  /** What belongs in this slot. Written as a brief, not a label. */
+  label: string;
+  /** CSS aspect-ratio, e.g. "16/9". Applies to both states so nothing reflows. */
+  ratio?: string;
+  kind?: 'image' | 'video';
+  /** Recommended export size, shown on the placeholder. */
+  size?: string;
+  src?: ImageMetadata;
+  alt?: string;
+  widths?: number[];
+  sizes?: string;
+  loading?: 'eager' | 'lazy';
+  class?: string;
+}
+
+const {
+  label,
+  ratio = '16/9',
+  kind = 'image',
+  size,
+  src,
+  alt = '',
+  widths = [640, 960, 1280, 1920],
+  sizes = '(max-width: 768px) 100vw, 60vw',
+  loading = 'lazy',
+  class: className,
+} = Astro.props;
+---
+
+{
+  src ? (
+    <Image
+      src={src}
+      alt={alt}
+      widths={widths}
+      sizes={sizes}
+      quality={72}
+      loading={loading}
+      decoding="async"
+      class:list={['media media--filled', className]}
+      style={`aspect-ratio:${ratio}`}
+    />
+  ) : (
+    <div class:list={['media media--empty', className]} style={`aspect-ratio:${ratio}`}>
+      <span class="media__icon" aria-hidden="true">
+        {kind === 'video' ? (
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="1.5" y="4.5" width="21" height="15" rx="2.5" />
+            <path d="M10 9.5 L15 12 L10 14.5 Z" class="media__solid" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="1.5" y="4" width="21" height="16" rx="2.5" />
+            <circle cx="8" cy="9.5" r="1.75" class="media__solid" />
+            <path d="M3 17 L9.5 11.5 L14 15 L17.5 12.5 L21 16" />
+          </svg>
+        )}
+      </span>
+      <span class="media__label">{label}</span>
+      <span class="media__meta">
+        {kind === 'video' ? 'Video' : 'Image'} &middot; {ratio.replace('/', ':')}
+        {size ? ` · ${size}` : ''}
+      </span>
+    </div>
+  )
+}
+
+<style>
+  .media {
+    display: block;
+    width: 100%;
+    border-radius: 6px;
+  }
+
+  .media--filled {
+    height: auto;
+    object-fit: cover;
+    border: 1px solid rgb(23 22 15 / 0.09);
+  }
+
+  .media--empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 1.25rem;
+    text-align: center;
+    background: #ece7dc;
+    /* Dashed, so an unfilled slot never reads as a finished design decision. */
+    border: 1px dashed rgb(23 22 15 / 0.22);
+    box-sizing: border-box;
+  }
+
+  .media__icon {
+    display: block;
+    width: 26px;
+    height: 26px;
+    color: var(--color-faint);
+  }
+  .media__icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    stroke-width: 1.4;
+  }
+  .media__solid {
+    fill: var(--color-accent);
+    stroke: none;
+  }
+
+  .media__label {
+    max-width: 34ch;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--color-soft);
+    text-wrap: pretty;
+  }
+
+  .media__meta {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+</style>

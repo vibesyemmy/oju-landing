@@ -1,9 +1,9 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
+import Media from '../../components/Media.astro';
 
 export async function getStaticPaths() {
   const entries = (await getCollection('work', ({ data }) => !data.draft)).sort(
@@ -70,13 +70,16 @@ const meta = [
 
     <!-- HERO -->
     <section class="px-6 pb-12 md:px-20 md:pb-22">
-      {
-        d.hero ? (
-          <Image src={d.hero} alt={`${d.client} — ${d.title}`} widths={[640, 960, 1280, 1920]} sizes="(max-width: 768px) 100vw, 1280px" class="w-full" loading="eager" />
-        ) : (
-          <div class="placeholder h-75 md:h-175">[HERO IMAGE]</div>
-        )
-      }
+      <Media
+        src={d.hero}
+        alt={d.hero ? `${d.client} — ${d.title}` : undefined}
+        label="The one shot that carries this project. A hero still, or a short loop of the thing running."
+        kind="image"
+        ratio="16/9"
+        size="2400×1350"
+        loading="eager"
+        sizes="(max-width: 768px) 100vw, 1280px"
+      />
     </section>
 
     <!-- RESULTS -->
@@ -147,7 +150,7 @@ const meta = [
             “{d.quote.text}”
           </blockquote>
           <figcaption class="mt-8 flex items-center gap-3.5 md:mt-11 md:gap-4.5">
-            <div class="placeholder size-11 shrink-0 rounded-full text-[8px] md:size-13">[PIC]</div>
+            <div class="placeholder size-11 shrink-0 rounded-full text-[8px] md:size-13" aria-hidden="true">[PIC]</div>
             <div class="flex flex-col gap-1">
               <p class="text-[15px] md:text-base">{d.quote.name}</p>
               <p class="font-mono text-[11.5px] text-faint md:text-[12.5px]">{d.quote.role}, {d.client}</p>

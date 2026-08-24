@@ -5,6 +5,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import HeroStatement from '../components/hero/HeroStatement.astro';
 import WorkWall from '../components/WorkWall.astro';
 import CapabilityMark from '../components/CapabilityMark.astro';
+import Media from '../components/Media.astro';
 // Alternatives, one import swap away:
 //   HeroEditorial — original left-aligned statement
 //   HeroConverge  — converging-stream carousel
@@ -100,7 +101,11 @@ import { CAPABILITIES, CLIENTS, SITE } from '../data/site';
             them is where products go wrong.
           </p>
         </div>
-        <div class="placeholder h-60 md:h-100">[STUDIO PHOTO]</div>
+        <Media
+          label="The team, or the room. Something that proves there are people here."
+          ratio="4/3"
+          size="1600×1200"
+        />
       </div>
     </section>
 

@@ -74,6 +74,12 @@ export const SERVICES = [
       'Motion specs that survive handover',
       'Brand assets and usage guidelines',
     ],
+    media: {
+      kind: 'video' as const,
+      ratio: '16/9',
+      size: '1920×1080',
+      label: 'Motion reel — interface transitions, a design system in use, a brand mark animating. Stills cannot show this half of the work.',
+    },
   },
   {
     num: '02',
@@ -93,6 +99,12 @@ export const SERVICES = [
       'Scoped estimates engineering will stand behind',
       'The list of things you decided not to build',
     ],
+    media: {
+      kind: 'image' as const,
+      ratio: '16/9',
+      size: '1600×900',
+      label: 'Research artefacts — a synthesis wall, a before/after flow, a roadmap with the cut items still visible.',
+    },
   },
   {
     num: '03',
@@ -112,6 +124,12 @@ export const SERVICES = [
       'Architecture decisions written down',
       'Monitoring that pages someone when it breaks',
     ],
+    media: {
+      kind: 'image' as const,
+      ratio: '16/9',
+      size: '1600×900',
+      label: 'Something running — a deploy pipeline, a monitoring dashboard, an architecture diagram from a real project.',
+    },
   },
 ] as const;
 

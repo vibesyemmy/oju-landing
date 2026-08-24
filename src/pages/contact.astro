@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
+import Media from '../components/Media.astro';
 import { BUDGET_BANDS, SITE } from '../data/site';
 ---
 
@@ -107,6 +108,13 @@ import { BUDGET_BANDS, SITE } from '../data/site';
               }
             </ol>
           </div>
+
+          <Media
+            label="Whoever reads these enquiries. A face makes a form feel answered by a person."
+            ratio="4/3"
+            size="1200×900"
+            sizes="(max-width: 768px) 100vw, 30vw"
+          />
 
           <div>
             <h2 class="label mb-5">Studio</h2>

@@ -1,6 +1,7 @@
 ---
 import { DISCIPLINES } from '../content.config';
 import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
 
 interface Props {
   entries: CollectionEntry<'work'>[];
@@ -41,7 +42,7 @@ const { entries, showFilter = true } = Astro.props;
   <ul id="work-list">
     {
       entries.map((entry) => (
-        <li data-disciplines={entry.data.disciplines.join(',')} class="border-b border-rule">
+        <li data-disciplines={entry.data.disciplines.join(',')} class="row border-b border-rule">
           <a
             href={`/work/${entry.id}/`}
             class="group grid grid-cols-1 items-baseline gap-2 py-5 md:grid-cols-[3.2fr_2.4fr_1.6fr_0.8fr] md:gap-8 md:py-6.5"
@@ -58,6 +59,19 @@ const { entries, showFilter = true } = Astro.props;
             <span class="font-mono text-[11.5px] text-faint md:text-right md:text-[13px]">
               {entry.data.year}
             </span>
+
+            {entry.data.gallery[0] && (
+              <Image
+                src={entry.data.gallery[0]}
+                alt=""
+                widths={[340, 680]}
+                sizes="340px"
+                quality={64}
+                loading="lazy"
+                decoding="async"
+                class="row__peek"
+              />
+            )}
           </a>
         </li>
       ))
