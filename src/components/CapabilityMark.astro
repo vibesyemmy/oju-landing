@@ -1,0 +1,136 @@
+---
+/**
+ * Discipline marks for the "What we do" cards.
+ *
+ * Drawn in the same vocabulary as the work-wall artefact tiles — thin strokes
+ * on a 60-unit grid, one accent element each — so this section reads as part of
+ * the same page rather than borrowed ornament.
+ *
+ * Decorative: the heading beside each one already names the discipline.
+ */
+interface Props {
+  kind: 'design' | 'product' | 'engineering';
+}
+const { kind } = Astro.props;
+---
+
+<span class="mark" aria-hidden="true">
+  {
+    kind === 'design' && (
+      /* A letterform and its baseline — the smallest true picture of design work. */
+      <svg viewBox="0 0 60 60" fill="none">
+        <text
+          x="30"
+          y="39"
+          text-anchor="middle"
+          class="mark__glyph"
+        >Aa</text>
+        <path d="M8 51 H52" class="mark__rule" />
+        <circle cx="52" cy="51" r="3" class="mark__dot" />
+      </svg>
+    )
+  }
+  {
+    kind === 'product' && (
+      /* A priority stack: three things in, one struck out. Deciding what to
+         build is mostly deciding what to drop. Legible at 46px, which the
+         branching path it replaced was not. */
+      <svg viewBox="0 0 60 60" fill="none">
+        <path d="M14 16 H50" class="mark__rule" />
+        <path d="M14 28 H42" class="mark__rule" />
+        <path d="M14 40 H46" class="mark__rule mark__rule--ghost" />
+        <path d="M11 44 L49 36" class="mark__strike" />
+        <circle cx="6" cy="16" r="3.5" class="mark__dot mark__dot--solid" />
+        <circle cx="6" cy="28" r="3" class="mark__dot" />
+        <circle cx="6" cy="40" r="3" class="mark__dot mark__dot--ghost" />
+      </svg>
+    )
+  }
+  {
+    kind === 'engineering' && (
+      /* Surface on top, two services under it, one datastore. The shape of
+         nearly everything we ship. */
+      <svg viewBox="0 0 60 60" fill="none">
+        <rect x="18" y="8" width="24" height="11" rx="2" class="mark__rule" />
+        <rect x="5" y="27" width="20" height="11" rx="2" class="mark__rule" />
+        <rect x="35" y="27" width="20" height="11" rx="2" class="mark__rule" />
+        <rect x="18" y="46" width="24" height="10" rx="2" class="mark__fill" />
+        <path d="M30 19 V23 M30 23 H15 V27 M30 23 H45 V27 M15 38 V42 H45 V38 M30 42 V46" class="mark__rule" />
+      </svg>
+    )
+  }
+</span>
+
+<style>
+  .mark {
+    display: block;
+    width: 46px;
+    height: 46px;
+  }
+  .mark svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .mark__rule {
+    stroke: var(--color-soft);
+    stroke-width: 1.6;
+    fill: none;
+    transition: stroke 220ms ease;
+  }
+  .mark__rule--ghost {
+    stroke: var(--color-rule);
+    stroke-dasharray: 3 3;
+  }
+
+  .mark__dot {
+    fill: none;
+    stroke: var(--color-soft);
+    stroke-width: 1.6;
+    transition: stroke 220ms ease, fill 220ms ease;
+  }
+  .mark__dot--solid,
+  .mark__fill {
+    fill: var(--color-accent);
+    stroke: none;
+  }
+  .mark__dot--ghost {
+    stroke: var(--color-rule);
+  }
+
+  .mark__strike {
+    stroke: var(--color-rule);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  .mark__glyph {
+    font-family: var(--font-display);
+    font-size: 30px;
+    fill: var(--color-ink);
+    transition: fill 220ms ease;
+  }
+
+  /* The card owns the hover; the mark just responds to it. */
+  :global(.cap:hover) .mark__rule,
+  :global(.cap:focus-visible) .mark__rule {
+    stroke: var(--color-ink);
+  }
+  :global(.cap:hover) .mark__dot,
+  :global(.cap:focus-visible) .mark__dot {
+    stroke: var(--color-accent);
+  }
+  :global(.cap:hover) .mark__glyph,
+  :global(.cap:focus-visible) .mark__glyph {
+    fill: var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mark__rule,
+    .mark__dot,
+    .mark__glyph {
+      transition: none;
+    }
+  }
+</style>

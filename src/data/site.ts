@@ -21,18 +21,21 @@ export const NAV = [
 export const CAPABILITIES = [
   {
     num: '01',
+    id: 'design',
     title: 'Design',
     line: 'From a first identity to a design system a team can actually hold on to.',
     items: ['UI/UX design', 'Brand & identity', 'Motion & graphics', 'Design systems', 'Figma libraries'],
   },
   {
     num: '02',
+    id: 'product',
     title: 'Product',
     line: 'From a vague ambition to a scope somebody can actually build against.',
     items: ['Discovery & research', 'Product strategy', 'Roadmapping', 'Scoping & estimation', 'Usability testing'],
   },
   {
     num: '03',
+    id: 'engineering',
     title: 'Engineering',
     line: 'From prototype to production traffic — and it stays up afterwards.',
     items: ['React / Next.js', 'Swift & React Native', 'Node / Python APIs', 'Postgres & infra', 'CI/CD & monitoring'],
