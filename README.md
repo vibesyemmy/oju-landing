@@ -116,6 +116,23 @@ The Function never runs under `astro dev` — submitting locally always shows th
 failure path. `npm run test:fn` covers it instead (validation, honeypot,
 not-configured, upstream failure, and both no-JS redirects), and CI runs it.
 
+## Invented content
+
+The site no longer shows visible `[BRACKETS]`, which means unfinished content
+can now ship without looking broken. That safety net is replaced by a marker
+convention: anything fabricated is tagged `PLACEHOLDER:` where it is declared.
+
+```bash
+npm run placeholders
+```
+
+lists every one, with file and line. Remove the marker when the value becomes
+true. Add one whenever you invent something.
+
+Currently invented: the team, the entire Northwind case study and its numbers,
+the wall imagery, budget bands, engagement lengths, the response-time promise,
+and the regions worked in.
+
 ## Before launch
 
 - [ ] **Replace the team in `src/data/site.ts`** — Adunni Bakare, Chidi Okafor
@@ -123,7 +140,7 @@ not-configured, upstream failure, and both no-JS redirects), and CI runs it.
       them the most dangerous placeholder here: every other one is a visible
       `[BRACKET]`, this one is not. Set `TEAM = []` to hide the section instead.
 - [ ] Replace the hero wall imagery in `src/assets/wall/` — currently placeholders
-- [ ] Replace every `[BRACKET]` — they are real facts still owed, not styling
+- [ ] Work through `npm run placeholders` until it reports none — they are real facts still owed, not styling
 - [ ] Real project data in `src/content/work/` (delete `project-one.mdx`)
 - [ ] `CLIENTS` in `src/data/site.ts` — empty array currently hides the strip
 - [ ] `/og.png` at 1200×630

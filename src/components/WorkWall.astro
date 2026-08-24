@@ -35,10 +35,10 @@ const projectTiles: Tile[] = projects.flatMap((entry) =>
 );
 
 /**
- * PLACEHOLDER PADDING — the author's own portfolio images, used only to keep
- * the wall full while Ojú has few projects. They link nowhere and are hidden
- * from assistive tech. As real galleries land they push these out; delete the
- * files from src/assets/wall/ once nothing needs padding.
+ * PLACEHOLDER: wall imagery is the author's own portfolio, not Ojú's work.
+ * It keeps the wall full while Ojú has few projects. These tiles link nowhere
+ * and are hidden from assistive tech. Real galleries push them out as they
+ * land; delete src/assets/wall/ once nothing needs padding.
  */
 const files = import.meta.glob<{ default: ImageMetadata }>(
   '../assets/wall/*.{png,jpg,jpeg,webp}',

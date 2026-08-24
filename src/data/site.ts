@@ -138,12 +138,12 @@ export const ENGAGEMENTS = [
   {
     title: 'Project',
     lede: 'A defined outcome with a start and an end. Most first engagements.',
-    detail: 'Fixed scope, fixed timeline, staged payments. Typically [6–12] weeks.',
+    detail: 'Fixed scope, fixed timeline, staged payments. Typically 6–12 weeks.' /* PLACEHOLDER: typical project length */,
   },
   {
     title: 'Retainer',
     lede: 'Continuous design and engineering capacity, month to month.',
-    detail: 'A set number of days each month. For teams shipping continuously. Minimum [3] months.',
+    detail: 'A set number of days each month. For teams shipping continuously. Minimum 3 months.' /* PLACEHOLDER: retainer minimum */,
   },
   {
     title: 'Embedded',
@@ -168,13 +168,13 @@ export const PRINCIPLES = [
 ] as const;
 
 /**
- * PLACEHOLDER PEOPLE — these are invented names standing in so the team
+ * PLACEHOLDER: the team is three invented people. Standing in so the team
  * section lays out correctly. Nobody here exists.
  *
- * Unlike the [BRACKETS] elsewhere, these look real, which makes them the most
- * dangerous placeholder on the site: shipped as-is the studio claims a team it
- * does not have. Replace before launch, or set this to [] to hide the section
- * entirely — the page handles an empty array.
+ * These look real, which makes them the most dangerous invention on the site:
+ * shipped as-is, the studio claims a team it does not have. Replace before
+ * launch, or set this to [] to hide the section — the page handles empty.
+ * `npm run placeholders` lists this and everything like it.
  */
 export const TEAM: readonly { name: string; role: string }[] = [
   { name: 'Adunni Bakare', role: 'Founder, Design' },
@@ -187,16 +187,19 @@ export const STUDIO_FACTS = [
   { k: 'Based in', v: 'Lagos, Nigeria' },
   // Derived from TEAM, so the count cannot drift from the people listed.
   { k: 'Team', v: `${TEAM.length} people` },
-  { k: 'Working with', v: '[REGIONS]' },
+  /* PLACEHOLDER: where clients actually are */
+  { k: 'Working with', v: 'Teams in Nigeria, the UK and the US' },
   { k: 'Languages', v: 'English, Yoruba' },
 ] as const;
 
 
 /* ── /contact ──────────────────────────────────────────────────── */
+/* PLACEHOLDER: invented bands. Set these to what you will actually take on —
+   they filter enquiries harder than any other field on the form. */
 export const BUDGET_BANDS = [
-  'Under [$10k]',
-  '[$10k–25k]',
-  '[$25k–50k]',
-  '[$50k+]',
+  'Under $10k',
+  '$10k–25k',
+  '$25k–50k',
+  '$50k+',
   'Not sure yet',
 ] as const;

@@ -101,7 +101,7 @@ export const onRequestPost = async (ctx: Ctx): Promise<Response> => {
     return reply(ctx, 502, 'upstream_failed', 'We could not send that. Please email us directly.');
   }
 
-  return reply(ctx, 200, 'ok', 'Thanks — we will come back to you within [2 working days].');
+  return reply(ctx, 200, 'ok', 'Thanks — we will come back to you within two working days.');
 };
 
 /**
