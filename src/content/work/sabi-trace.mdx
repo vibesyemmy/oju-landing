@@ -1,0 +1,83 @@
+---
+title: Sabi Trace
+client: Sabi
+sector: Commodity trade
+services: ["Product Design", "Interaction Design", "UX Research", "Design System"]
+disciplines: ["Design", "Product"]
+team: 2 from Ojú
+year: 2024
+order: 1
+draft: false
+outcome: "An operating system for cross-border commodity trade"
+brief: "Africa was trading billions in minerals and agricultural commodities on WhatsApp, PDF contracts and manual bank transfers — with no verification, no audit trail, and no way to trace a mineral back to its source."
+gallery:
+  - ../../assets/wall/sabi-trace-cover.webp
+results:
+  - value: "20,000t"
+    label: "of commodity exports moving through the platform monthly, across three continents"
+  - value: "48 hrs"
+    label: "to verify a counterparty, replacing days of back-channel reference checks"
+  - value: "40+"
+    label: "components holding seven modules and two user perspectives together"
+stack:
+  - group: Design
+    items: ["Figma", "Design tokens", "Component library", "Interactive prototypes"]
+  - group: Research
+    items: ["Trader shadowing", "Prototype walkthroughs", "Domain-expert reviews"]
+  - group: Domains
+    items: ["KYB & compliance", "Negotiation", "Payment milestones", "ESG traceability"]
+decisions:
+  - "Replaced the chat-based negotiation model with a versioned deal slip. Free-form messages gave engineering nothing to enforce and no way to build an audit trail — structured fields did both."
+  - "Made KYB the front door rather than a settings page. A company can browse before verification and trade only after it, so the architecture enforces trust instead of relying on who knows whom."
+  - "Built traceability as a core tab in every executed trade rather than a compliance export, which made ESG reporting structural instead of after the fact."
+---
+
+## Design
+
+### What we found
+
+Two weeks shadowing commodity traders and logistics coordinators across Lagos,
+asking one question repeatedly: show me what happens when a deal goes through.
+The same workflow appeared everywhere. Terms negotiated in voice notes. A PDF
+contract emailed, printed, signed, scanned, returned. Payment confirmed with a
+screenshot. Shipment tracking meant calling the driver.
+
+Three things stood out. The tools were fast but the process was slow —
+a WhatsApp message takes seconds, verifying the person behind it took days.
+Trust was personal rather than systemic, which works until you run out of
+people you know. And every failed deal failed the same way: an informal
+agreement nobody could enforce.
+
+These traders were not missing technology. They were missing structure.
+
+<div class="grid-2">
+  <div class="placeholder" style="height: 380px">Trader shadowing — the WhatsApp-and-PDF workflow mapped</div>
+  <div class="placeholder" style="height: 380px">The trust chain — verify, list, negotiate, trade, track, trace</div>
+</div>
+
+### What we drew
+
+A commodity trade is not one transaction, it is a sequence of trust events. So
+the product is structured around that sequence, with each module gated on the
+one before it. A company that has not cleared KYB can see the platform but
+cannot trade. A product that has not passed verification cannot be listed.
+
+The hardest problem was negotiation: two parties changing the same deal across
+multiple rounds. Both sides see one deal slip, every change is attributed in a
+Changed Terms panel, and every change can be undone. The version history is the
+complete trail from first offer to signed agreement.
+
+<div class="placeholder" style="height: 520px">The versioned deal slip, buyer and seller views</div>
+
+<div class="placeholder" style="height: 260px">Design system — verification, negotiation and milestone states</div>
+
+## Outcome
+
+Trace launched as Sabi's flagship B2B platform and now carries over 20,000 tons
+of commodity exports monthly across three continents, replacing the
+WhatsApp-and-spreadsheet workflow with structured, auditable transactions.
+
+Counterparty risk fell from days of informal checking to a 48-hour verification
+pipeline. Versioned negotiation ended the competing-screenshots problem — both
+parties can see exactly who changed what and when. And traceability stopped
+being a compliance checkbox, becoming a core tab in every executed trade.

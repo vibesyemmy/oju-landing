@@ -16,8 +16,11 @@ const work = defineCollection({
       sector: z.string(),
       services: z.array(z.string()).nonempty(),
       disciplines: z.array(z.enum(DISCIPLINES)).nonempty(),
-      team: z.string(),
-      duration: z.string(),
+      /* Optional because they are frequently not on record. An absent field
+         renders nothing; inventing one to fill the sidebar would put a made-up
+         fact next to real ones. */
+      team: z.string().optional(),
+      duration: z.string().optional(),
       year: z.number().int(),
 
       /** Lower sorts first on the work index. */

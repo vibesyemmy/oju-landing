@@ -27,7 +27,7 @@ const meta = [
   { k: 'Team', v: d.team },
   { k: 'Duration', v: d.duration },
   { k: 'Year', v: String(d.year) },
-];
+].filter((m): m is { k: string; v: string } => Boolean(m.v));
 ---
 
 <Base title={d.title} description={d.brief}>

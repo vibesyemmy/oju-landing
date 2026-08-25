@@ -29,8 +29,11 @@ const slides = projects.map((entry) => ({
   value: entry.data.results[0].value,
   label: entry.data.results[0].label,
   client: entry.data.client,
-  sector: entry.data.sector,
-  duration: entry.data.duration,
+  /* Joined here rather than in the template: duration is optional, and
+     interpolating it directly leaves a dangling separator before the link. */
+  meta: [entry.data.client, entry.data.sector, entry.data.duration]
+    .filter(Boolean)
+    .join(' · '),
 }));
 
 const rotates = slides.length > 1;
@@ -78,9 +81,7 @@ const INTERVAL = 5000;
         >
           <p class="impact__value font-display">{s.value}</p>
           <p class="impact__label font-display text-pretty">{s.label}</p>
-          <p class="impact__meta font-mono">
-            {s.client} &middot; {s.sector} &middot; {s.duration}
-          </p>
+          <p class="impact__meta font-mono">{s.meta}</p>
           <a href={`/work/${s.id}/`} class="cta impact__link">
             <span>Read the case study</span>
             <span class="font-mono" aria-hidden="true">&rarr;</span>
