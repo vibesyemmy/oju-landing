@@ -2,9 +2,9 @@
 /**
  * The work wall — the homepage's single work section.
  *
- * Tiles come from each project's `gallery`, several per project, so a handful
- * of projects fills a wall. Tiles that belong to a project are links and carry
- * a caption on hover; the rest are unlinked placeholders, decorative only.
+ * Every tile comes from a project's `gallery`, links to that case study, and
+ * carries a caption on hover. Nothing decorative: if it is on the wall, there
+ * is a case study behind it.
  *
  * The scannable, filterable text index lives on /work. A grid is the better
  * medium for looking; a list is the better medium for finding. Neither repeats
@@ -13,11 +13,13 @@
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 
+/* Every tile links now — the unlinked padding variant is gone, so none of
+   these are optional any more. */
 type Tile = {
   img: ImageMetadata;
-  href?: string;
-  title?: string;
-  meta?: string;
+  href: string;
+  title: string;
+  meta: string;
 };
 
 const projects = (await getCollection('work', ({ data }) => !data.draft)).sort(
@@ -34,32 +36,12 @@ const projectTiles: Tile[] = projects.flatMap((entry) =>
   })),
 );
 
-/**
- * PLACEHOLDER: wall imagery is the author's own portfolio, not Ojú's work.
- * It keeps the wall full while Ojú has few projects. These tiles link nowhere
- * and are hidden from assistive tech. Real galleries push them out as they
- * land; delete src/assets/wall/ once nothing needs padding.
- */
-const files = import.meta.glob<{ default: ImageMetadata }>(
-  '../assets/wall/*.{png,jpg,jpeg,webp}',
-  { eager: true },
-);
-const used = new Set(projectTiles.map((t) => t.img.src));
-const padding: Tile[] = Object.keys(files)
-  .sort()
-  .map((k) => files[k].default)
-  .filter((img) => !used.has(img.src))
-  .map((img) => ({ img }));
-
-const MIN_TILES = 24;
-const tiles: Tile[] = [
-  ...projectTiles,
-  ...padding.slice(0, Math.max(0, MIN_TILES - projectTiles.length)),
-];
-
-const COLUMN_COUNT = 6;
+/* Three columns, not six. Every tile now links to a case study, so the wall is
+   as big as the work is — six tiles across six columns would read as a broken
+   grid rather than an honest one. Fewer, larger tiles suit real work better. */
+const COLUMN_COUNT = 3;
 const COLUMNS: Tile[][] = Array.from({ length: COLUMN_COUNT }, (_, c) =>
-  tiles.filter((_, i) => i % COLUMN_COUNT === c),
+  projectTiles.filter((_, i) => i % COLUMN_COUNT === c),
 );
 
 const count = String(projects.length).padStart(2, '0');
@@ -78,39 +60,24 @@ const count = String(projects.length).padStart(2, '0');
       COLUMNS.map((col) => (
         <div class="wall__col">
           <div class="wall__track">
-            {col.map((tile) =>
-              tile.href ? (
-                <a href={tile.href} class="tile tile--link">
-                  <Image
-                    src={tile.img}
-                    alt={`${tile.title} — Ojú`}
-                    widths={[342, 684]}
-                    sizes="(max-width: 900px) 50vw, 342px"
-                    quality={58}
-                    loading="lazy"
-                    decoding="async"
-                    class="tile__img"
-                  />
-                  <span class="tile__cap">
-                    <span class="tile__title">{tile.title}</span>
-                    <span class="tile__meta font-mono">{tile.meta}</span>
-                  </span>
-                </a>
-              ) : (
-                <div class="tile" aria-hidden="true">
-                  <Image
-                    src={tile.img}
-                    alt=""
-                    widths={[342, 684]}
-                    sizes="(max-width: 900px) 50vw, 342px"
-                    quality={58}
-                    loading="lazy"
-                    decoding="async"
-                    class="tile__img"
-                  />
-                </div>
-              ),
-            )}
+            {col.map((tile) => (
+              <a href={tile.href} class="tile tile--link">
+                <Image
+                  src={tile.img}
+                  alt={`${tile.title} — Ojú`}
+                  widths={[460, 920]}
+                  sizes="(max-width: 900px) 50vw, 460px"
+                  quality={58}
+                  loading="lazy"
+                  decoding="async"
+                  class="tile__img"
+                />
+                <span class="tile__cap">
+                  <span class="tile__title">{tile.title}</span>
+                  <span class="tile__meta font-mono">{tile.meta}</span>
+                </span>
+              </a>
+            ))}
           </div>
         </div>
       ))
@@ -149,10 +116,12 @@ const count = String(projects.length).padStart(2, '0');
     display: flex;
     justify-content: center;
     gap: 10px;
-    padding: 0 10px;
+    /* Headroom for the upward drift below — without it the tallest-drifting
+       column rides up over the section heading. */
+    padding: 60px 10px 0;
   }
 
-  .wall__col { flex: 1 1 0; max-width: 342px; min-width: 0; }
+  .wall__col { flex: 1 1 0; max-width: 460px; min-width: 0; }
 
   .wall__track {
     display: flex;
@@ -164,19 +133,13 @@ const count = String(projects.length).padStart(2, '0');
   }
 
   /* Staggered starts so the grid reads as masonry, not aligned stacks. */
-  .wall__col:nth-child(2) .wall__track { margin-top: 46px; }
-  .wall__col:nth-child(3) .wall__track { margin-top: 14px; }
-  .wall__col:nth-child(4) .wall__track { margin-top: 62px; }
-  .wall__col:nth-child(5) .wall__track { margin-top: 26px; }
-  .wall__col:nth-child(6) .wall__track { margin-top: 54px; }
+  .wall__col:nth-child(2) .wall__track { margin-top: 56px; }
+  .wall__col:nth-child(3) .wall__track { margin-top: 22px; }
 
-  /* Columns shown by viewport width, at roughly 342px each. */
-  .wall__col:nth-child(n + 5) { display: none; }
-  @media (min-width: 1700px) {
-    .wall__col:nth-child(n + 5) { display: block; }
-  }
+  /* Below the breakpoint the third column would leave a lone orphan tile, so
+     it folds into two and every column keeps a pair. */
   @media (max-width: 900px) {
-    .wall__col:nth-child(n + 3) { display: none !important; }
+    .wall__col:nth-child(3) { display: none; }
   }
 
   .tile {
@@ -223,12 +186,11 @@ const count = String(projects.length).padStart(2, '0');
       animation-range: entry 0% cover 100%;
       will-change: transform;
     }
-    .wall__col:nth-child(1) .wall__track { --d-from: 24px;  --d-to: -104px; }
-    .wall__col:nth-child(2) .wall__track { --d-from: -18px; --d-to: -32px; }
-    .wall__col:nth-child(3) .wall__track { --d-from: 44px;  --d-to: -136px; }
-    .wall__col:nth-child(4) .wall__track { --d-from: -6px;  --d-to: -58px; }
-    .wall__col:nth-child(5) .wall__track { --d-from: 32px;  --d-to: -118px; }
-    .wall__col:nth-child(6) .wall__track { --d-from: -12px; --d-to: -44px; }
+    /* Gentler than the six-column version: the tiles are half again as wide,
+       so the same travel reads as a much bigger movement. */
+    .wall__col:nth-child(1) .wall__track { --d-from: 18px;  --d-to: -46px; }
+    .wall__col:nth-child(2) .wall__track { --d-from: -10px; --d-to: -22px; }
+    .wall__col:nth-child(3) .wall__track { --d-from: 30px;  --d-to: -58px; }
 
     @keyframes wall-drift {
       from { transform: translateY(var(--d-from)); }

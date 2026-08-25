@@ -1,20 +1,15 @@
 #!/usr/bin/env node
 /**
- * Pulls the wall imagery from opeyemi.app into vendor/reference-images/.
- *
- * These are the author's own portfolio pieces, used as placeholders in the Ojú
- * hero wall until Ojú has its own case-study imagery. They are NOT Ojú work —
- * every one should be replaced before launch. See public/fonts/README.md's
- * sibling note in README.md.
+ * Restores the case-study imagery into src/assets/wall/. Only the files a
+ * project's `gallery` actually claims are rendered; the rest sit unused, which
+ * is why most were removed. Re-run this if you need them back.
  *
  *   node scripts/fetch-wall-images.mjs
- *
- * Downloads only; resizing happens afterwards with sips (see README).
  */
 import { mkdir, writeFile, stat } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 
-const OUT = 'vendor/reference-images';
+const OUT = 'src/assets/wall';
 
 const URLS = [
   'https://opeyemi.app/poseidon-grid.webp',

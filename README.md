@@ -85,21 +85,18 @@ Enforced in CI (`lighthouserc.json`), not merely reported:
 | LCP | < 1.5 s | — |
 | Total page weight | < 512 kB | — |
 
-## Placeholder imagery — must be replaced
+## Case-study imagery
 
-The hero wall (`src/assets/wall/`) is filled with the author's own portfolio
-pieces, pulled from opeyemi.app by `scripts/fetch-wall-images.mjs`. **None of it
-is Ojú's work.** It exists so the wall reads as designed before Ojú has case
-studies of its own.
+`src/assets/wall/` holds only images a project's `gallery` actually claims —
+six, one or two per case study. Every tile on the homepage wall links to the
+case study behind it; there are no decorative fillers.
 
-How the wall fills: every image listed in a project's `gallery` frontmatter
-becomes a **linked** tile that opens that case study. Anything left in
-`src/assets/wall/` that no project claims is used as unlinked padding, hidden
-from assistive tech, purely to keep the wall full. As real galleries land they
-push the padding out — delete the leftover files once nothing needs padding.
+Adding work: drop the image in `src/assets/wall/`, list it under `gallery:` in
+the project's `.mdx`, and the wall and work index pick it up. An image nothing
+claims is simply unused, so delete it rather than leaving it.
 
-Some of these images show client projects. Check you still have the right to
-show a given piece before it ships on a company site rather than a personal one.
+`node scripts/fetch-wall-images.mjs` restores the full original set from
+opeyemi.app if you need images that were removed.
 
 ## Contact form — needs one env var
 
