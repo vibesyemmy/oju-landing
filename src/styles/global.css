@@ -7,10 +7,14 @@
   --color-paper:  #f2efe9;
   --color-ink:    #17160f;
   --color-soft:   #55524a;
-  /* >= 4.5:1 on both --color-paper (5.2) and --color-fill (4.6). The old
-     #8f8b81 measured 2.96 and 2.62 — it failed WCAG AA everywhere the
-     mono labels are used, which is most of the site. */
-  --color-faint:  #67635a;
+  /* >= 4.5:1 on both --color-paper and --color-fill. The old #8f8b81
+     measured 2.96 and 2.62 — it failed WCAG AA everywhere the mono labels
+     are used, which is most of the site. #67635a passed (5.2 / 4.6) but
+     had little headroom on cheap panels: a budget TN's contrast floor
+     (~700:1) compresses exactly this grey-on-warm-grey pairing (verified
+     with Obsrv's Budget TN profile). #5d594f measures ~6.1 on paper and
+     ~5.4 on fill, keeping the same warm hue. */
+  --color-faint:  #5d594f;
   --color-rule:   #d8d4ca;
   --color-fill:   #e6e2d9;
   /* Darkened from 0.55: as text on paper it measured 4.47:1, just under
