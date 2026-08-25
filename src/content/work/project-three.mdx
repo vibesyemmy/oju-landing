@@ -1,0 +1,69 @@
+---
+# PLACEHOLDER: invented case study. "Fabrikam" is canonical sample-data naming.
+# Every figure is made up.
+title: Project Three
+client: Fabrikam
+sector: Health
+services: ["Design system", "Web app"]
+disciplines: ["Design", "Engineering"]
+team: 3 from Ojú
+duration: 11 weeks
+year: 2025
+order: 3
+draft: false
+outcome: "How Fabrikam shipped four products from one design system"
+brief: "Fabrikam had four teams building the same patterns four different ways, and a clinical audit that kept failing on contrast and focus order."
+gallery:
+  - ../../assets/wall/poseidon-grid.webp
+  - ../../assets/wall/ui-dashboard-b.png
+  - ../../assets/wall/ux-buddy-hero.webp
+results:
+  - value: "68"
+    label: "components replacing four divergent pattern libraries"
+  - value: "AA"
+    label: "clinical accessibility audit passed on first submission"
+  - value: "3 wks"
+    label: "saved on average per new surface shipped"
+stack:
+  - group: Design
+    items: ["Figma variables", "Token pipeline", "Storybook", "Visual diffs"]
+  - group: Front end
+    items: ["React", "TypeScript", "Radix primitives", "CSS custom properties"]
+  - group: Platform
+    items: ["GitHub Actions", "Chromatic", "Semantic release", "Changesets"]
+decisions:
+  - "Made tokens the single source and generated both the Figma library and the CSS from it, so the two cannot drift apart."
+  - "Built on unstyled accessible primitives rather than writing focus management ourselves — the audit was the deadline, not a nice-to-have."
+  - "Gated every component on a contrast and focus-order check in CI, which is why the audit passed without a remediation round."
+quote:
+  text: "The audit was the thing keeping me awake. We passed first time, and the part I did not expect was that our own designers stopped filing tickets about spacing."
+  name: Chidera Eze
+  role: Director of Product Design
+---
+
+## Design
+
+### What we drew
+
+Four teams, four button components, three of them inaccessible. We audited what
+existed, found the 68 patterns that actually recurred, and drew one set — with
+the failure states the old libraries had never covered.
+
+<div class="placeholder" style="height: 380px">Pattern audit — what four teams had built</div>
+
+<div class="placeholder" style="height: 460px">The component set, with states</div>
+
+## Build
+
+### What we shipped
+
+Tokens generate both the Figma library and the CSS, so design and code cannot
+diverge. Every component ships behind a CI gate that checks contrast and focus
+order — the clinical audit was a deadline, so it became a build step.
+
+<div class="placeholder" style="height: 400px">Token pipeline — Figma to CSS to Storybook</div>
+
+## Outcome
+
+Sixty-eight components replaced four libraries, the clinical accessibility audit
+passed on first submission, and new surfaces now ship about three weeks faster.

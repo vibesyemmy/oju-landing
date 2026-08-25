@@ -1,0 +1,70 @@
+---
+# PLACEHOLDER: invented case study. "Contoso" is canonical sample-data naming,
+# like Northwind — chosen so it reads as fictional. Every figure is made up.
+title: Project Two
+client: Contoso
+sector: Logistics
+services: ["Product", "iOS"]
+disciplines: ["Product", "Engineering"]
+team: 2 from Ojú
+duration: 14 weeks
+year: 2025
+order: 2
+draft: false
+outcome: "How Contoso got drivers off paper and onto one app"
+brief: "Contoso's drivers were reconciling deliveries on paper at the end of each shift, and dispatch found out about failures a day late."
+gallery:
+  - ../../assets/wall/lingawa-hero.webp
+  - ../../assets/wall/ui-mobile-a.webp
+  - ../../assets/wall/hotel-hero.jpg
+results:
+  - value: "6 hrs"
+    label: "of manual reconciliation removed from every shift"
+  - value: "91%"
+    label: "of deliveries confirmed at the door, up from 40%"
+  - value: "0"
+    label: "paper manifests left in the depot"
+stack:
+  - group: Mobile
+    items: ["Swift", "SwiftUI", "Core Data", "Offline sync"]
+  - group: Back end
+    items: ["Node / Fastify", "Postgres", "Event log", "Webhooks"]
+  - group: Platform
+    items: ["Cloudflare", "TestFlight", "Sentry", "Crash reporting"]
+decisions:
+  - "Built the app offline-first — drivers lose signal in the same three places every day, and a queue that survives it removed the entire failure class."
+  - "Made the scan the confirmation, so there is no separate step to forget at the door."
+  - "Streamed depot events to dispatch instead of batching overnight, which is what turned a next-day problem into a same-hour one."
+quote:
+  text: "We expected to be arguing about screens. Most of the work turned out to be about what happens when a driver has no signal in a basement, and they had already thought about it."
+  name: Bilkisu Danjuma
+  role: Head of Operations
+---
+
+## Design
+
+### What we drew
+
+We rode along for two shifts before drawing anything. The paper was not the
+problem — the problem was that confirmation happened once, at the end, from
+memory. We moved it to the doorstep and made it a single gesture.
+
+<div class="placeholder" style="height: 380px">Ride-along notes and shift timeline</div>
+
+<div class="placeholder" style="height: 480px">Driver app — scan, confirm, exception</div>
+
+## Build
+
+### What we shipped
+
+Offline-first, because the depot basement and two underpasses on every route
+have no signal. Actions queue locally and reconcile on reconnect; the driver
+never sees a spinner they cannot escape.
+
+<div class="placeholder" style="height: 420px">Sync architecture — queue, conflict handling, event log</div>
+
+## Outcome
+
+Six hours of end-of-shift reconciliation disappeared, and door-step confirmation
+went from 40% to 91%. Dispatch now sees a failed delivery within the hour rather
+than the next morning.

@@ -1,0 +1,349 @@
+---
+/**
+ * Impact — rotates through each project's headline result.
+ *
+ * Every figure is read from the case studies themselves, so the homepage can
+ * never quote a number a project has stopped claiming.
+ *
+ * Auto-rotation is the awkward part to get right:
+ * - WCAG 2.2.2 requires a pause mechanism for anything that moves on its own
+ *   for more than five seconds, so the pause button is a requirement, not a
+ *   flourish. The dots double as manual control.
+ * - It pauses on hover, on keyboard focus, and when the tab is hidden.
+ * - Under prefers-reduced-motion it never starts; the dots still work.
+ * - With one project it renders static, with no controls and no script.
+ *
+ * Slides stack in one grid cell so the section is as tall as the tallest and
+ * nothing jumps as they change. Inactive slides are `inert`, which also takes
+ * their link out of the tab order — a carousel that tabs into invisible
+ * content is a common and nasty failure.
+ */
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('work', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order || b.data.year - a.data.year,
+);
+
+const slides = projects.map((entry) => ({
+  id: entry.id,
+  value: entry.data.results[0].value,
+  label: entry.data.results[0].label,
+  client: entry.data.client,
+  sector: entry.data.sector,
+  duration: entry.data.duration,
+}));
+
+const rotates = slides.length > 1;
+const INTERVAL = 5000;
+---
+
+<section
+  class="impact"
+  data-impact={rotates ? '' : null}
+  style={`--impact-interval:${INTERVAL}ms`}
+>
+  <div class="impact__head">
+    <h2 class="label" id="impact-heading">Impact</h2>
+
+    {
+      rotates && (
+        <div class="impact__controls">
+          <div class="impact__dots" role="group" aria-label="Choose a project">
+            {slides.map((s, i) => (
+              <button
+                type="button"
+                class="impact__dot"
+                data-goto={i}
+                aria-label={`Show ${s.client}`}
+                aria-current={i === 0 ? 'true' : 'false'}
+              />
+            ))}
+          </div>
+          <button type="button" class="impact__pause" data-toggle aria-label="Pause">
+            <span class="impact__icon" aria-hidden="true" />
+          </button>
+        </div>
+      )
+    }
+  </div>
+
+  <div class="impact__stage">
+    {
+      slides.map((s, i) => (
+        <article
+          class="impact__slide"
+          data-slide={i}
+          aria-hidden={i === 0 ? 'false' : 'true'}
+          inert={i === 0 ? undefined : true}
+        >
+          <p class="impact__value font-display">{s.value}</p>
+          <p class="impact__label font-display text-pretty">{s.label}</p>
+          <p class="impact__meta font-mono">
+            {s.client} &middot; {s.sector} &middot; {s.duration}
+          </p>
+          <a href={`/work/${s.id}/`} class="cta impact__link">
+            <span>Read the case study</span>
+            <span class="font-mono" aria-hidden="true">&rarr;</span>
+          </a>
+        </article>
+      ))
+    }
+  </div>
+
+  {rotates && <div class="impact__progress" aria-hidden="true"><i /></div>}
+</section>
+
+<style>
+  .impact {
+    border-top: 1px solid var(--color-rule);
+    padding: 3.5rem 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .impact { padding: 5.5rem 5rem; }
+  }
+
+  .impact__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  @media (min-width: 768px) {
+    .impact__head { margin-bottom: 3rem; }
+  }
+
+  .impact__controls {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .impact__dots {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* 44px hit area around a 7px mark — the target is the padding, not the dot. */
+  .impact__dot {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .impact__dot::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-rule);
+    transition: background 220ms ease, transform 220ms ease;
+  }
+  .impact__dot:hover::before { background: var(--color-soft); }
+  .impact__dot[aria-current='true']::before {
+    background: var(--color-accent);
+    transform: scale(1.35);
+  }
+
+  .impact__pause {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    color: var(--color-faint);
+  }
+  .impact__pause:hover { color: var(--color-ink); }
+
+  /* Two bars for pause; the paused state swaps to a single triangle. */
+  .impact__icon {
+    width: 9px;
+    height: 11px;
+    border-left: 2.5px solid currentColor;
+    border-right: 2.5px solid currentColor;
+  }
+  .impact.is-paused .impact__icon {
+    width: 0;
+    height: 0;
+    border-left: 9px solid currentColor;
+    border-right: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+  }
+
+  /* One cell, every slide in it: the section is as tall as the tallest slide
+     and nothing below it moves when the slide changes. */
+  .impact__stage {
+    display: grid;
+  }
+
+  .impact__slide {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 520ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .impact__slide[aria-hidden='false'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .impact__value {
+    font-size: clamp(3.5rem, 9vw, 7rem);
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    color: var(--color-accent);
+  }
+
+  .impact__label {
+    max-width: 20ch;
+    font-size: clamp(1.5rem, 3.4vw, 2.5rem);
+    line-height: 1.18;
+    letter-spacing: -0.018em;
+  }
+
+  .impact__meta {
+    font-size: 12.5px;
+    color: var(--color-faint);
+  }
+
+  .impact__link { margin-top: 0.5rem; }
+
+  .impact__progress {
+    margin-top: 2.5rem;
+    height: 1px;
+    background: var(--color-rule);
+    overflow: hidden;
+  }
+  .impact__progress i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: var(--color-accent);
+    transform-origin: left center;
+    transform: scaleX(0);
+  }
+  .impact.is-running .impact__progress i {
+    animation: impact-fill var(--impact-interval) linear;
+  }
+  .impact.is-paused .impact__progress i {
+    animation-play-state: paused;
+  }
+  @keyframes impact-fill {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .impact__slide { transition: none; }
+    .impact__progress { display: none; }
+  }
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-impact]');
+
+  if (root) {
+    const slides = [...root.querySelectorAll<HTMLElement>('[data-slide]')];
+    const dots = [...root.querySelectorAll<HTMLButtonElement>('[data-goto]')];
+    const toggle = root.querySelector<HTMLButtonElement>('[data-toggle]');
+    const bar = root.querySelector<HTMLElement>('.impact__progress i');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const interval = parseInt(getComputedStyle(root).getPropertyValue('--impact-interval')) || 5000;
+
+    let index = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    /** Paused by the button — sticky, unlike hover. */
+    let stopped = reduced.matches;
+
+    const show = (next: number) => {
+      index = (next + slides.length) % slides.length;
+      slides.forEach((s, i) => {
+        const on = i === index;
+        s.setAttribute('aria-hidden', String(!on));
+        // inert keeps the hidden slide's link out of the tab order.
+        s.toggleAttribute('inert', !on);
+      });
+      dots.forEach((d, i) => d.setAttribute('aria-current', String(i === index)));
+    };
+
+    const restartBar = () => {
+      if (!bar) return;
+      // Re-trigger the fill from zero for the new slide.
+      bar.style.animation = 'none';
+      void bar.offsetWidth;
+      bar.style.animation = '';
+    };
+
+    const stop = () => {
+      clearTimeout(timer);
+      timer = undefined;
+      root.classList.remove('is-running');
+    };
+
+    const run = () => {
+      if (stopped || document.hidden) return;
+      stop();
+      root.classList.add('is-running');
+      restartBar();
+      timer = setTimeout(() => {
+        show(index + 1);
+        run();
+      }, interval);
+    };
+
+    /** Hover and focus pause without changing what the button says. */
+    const hold = () => {
+      clearTimeout(timer);
+      root.classList.add('is-paused');
+    };
+    const release = () => {
+      if (stopped) return;
+      root.classList.remove('is-paused');
+      run();
+    };
+
+    dots.forEach((d, i) =>
+      d.addEventListener('click', () => {
+        show(i);
+        if (!stopped) run();
+      }),
+    );
+
+    toggle?.addEventListener('click', () => {
+      stopped = !stopped;
+      root.classList.toggle('is-paused', stopped);
+      toggle.setAttribute('aria-label', stopped ? 'Play' : 'Pause');
+      if (stopped) stop();
+      else run();
+    });
+
+    root.addEventListener('pointerenter', hold);
+    root.addEventListener('pointerleave', release);
+    root.addEventListener('focusin', hold);
+    root.addEventListener('focusout', (e) => {
+      if (!root.contains(e.relatedTarget as Node)) release();
+    });
+
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : release()));
+
+    if (stopped) {
+      root.classList.add('is-paused');
+      toggle?.setAttribute('aria-label', 'Play');
+    } else {
+      run();
+    }
+  }
+</script>

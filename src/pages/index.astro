@@ -1,23 +1,17 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import HeroStatement from '../components/hero/HeroStatement.astro';
 import WorkWall from '../components/WorkWall.astro';
 import CapabilityMark from '../components/CapabilityMark.astro';
+import ImpactCarousel from '../components/ImpactCarousel.astro';
 import Media from '../components/Media.astro';
 // Alternatives, one import swap away:
 //   HeroEditorial — original left-aligned statement
 //   HeroConverge  — converging-stream carousel
 import { CAPABILITIES, CLIENTS, SITE } from '../data/site';
 
-/* The impact claim is the lead project's own headline result. Deriving it
-   means the homepage can never quote a number the case study has stopped
-   saying — a drift that is invisible until a client notices. */
-const featured = (await getCollection('work', ({ data }) => !data.draft)).sort(
-  (a, b) => a.data.order - b.data.order || b.data.year - a.data.year,
-)[0];
 
 ---
 
@@ -82,19 +76,7 @@ const featured = (await getCollection('work', ({ data }) => !data.draft)).sort(
       </div>
     </section>
 
-    <!-- PROOF — replace every bracket before launch. -->
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-24">
-      <h2 class="label mb-7 md:mb-11">Impact</h2>
-      <p class="font-display max-w-[1080px] text-[30px] leading-tight tracking-tight text-pretty md:text-[52px]">
-        {featured.data.client} cut signup drop-off by{' '}
-        <span class="text-accent">{featured.data.results[0].value}</span> after we redesigned
-        and rebuilt their onboarding in{' '}
-        <span class="text-accent">{featured.data.duration}</span>.
-      </p>
-      <a href={`/work/${featured.id}/`} class="cta mt-7 font-mono text-[13px] tracking-wide md:mt-11">
-        Read the case study <span aria-hidden="true">→</span>
-      </a>
-    </section>
+    <ImpactCarousel />
 
     <!-- STUDIO -->
     <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
