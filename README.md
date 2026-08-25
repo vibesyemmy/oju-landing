@@ -126,9 +126,14 @@ npm run placeholders
 lists every one, with file and line. Remove the marker when the value becomes
 true. Add one whenever you invent something.
 
-Currently invented: the team, the entire Northwind case study and its numbers,
-the wall imagery, budget bands, engagement lengths, the response-time promise,
-and the regions worked in.
+Nothing is invented any more — the case studies are real and the team section
+is hidden rather than fictional. What remains is three known-outstanding items,
+all of which the report lists: the `oju.studio` domain and email are not
+registered, there is no `/og.png` so links unfurl bare, and the client strip has
+no names in it.
+
+The report only sees `PLACEHOLDER:`, `TODO:` and `[BRACKET]` markers. It cannot
+vouch for a fact nobody marked, so mark them as you go.
 
 ## Before launch
 
@@ -137,6 +142,8 @@ and the regions worked in.
       them the most dangerous placeholder here: every other one is a visible
       `[BRACKET]`, this one is not. Set `TEAM = []` to hide the section instead.
 - [ ] Replace the hero wall imagery in `src/assets/wall/` — currently placeholders
+- [ ] Register `oju.studio` — the contact email is displayed everywhere and
+      does not resolve, and the contact form's fallback is "email us directly"
 - [ ] Work through `npm run placeholders` until it reports none — they are real facts still owed, not styling
 - [ ] Real project data in `src/content/work/` (delete `project-one.mdx`)
 - [ ] `CLIENTS` in `src/data/site.ts` — empty array currently hides the strip

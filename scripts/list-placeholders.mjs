@@ -55,6 +55,11 @@ for (const root of ROOTS) {
       const marker = l.match(/PLACEHOLDER:\s*(.*?)\s*(\*\/|-->|$)/);
       if (marker) add(relative('.', file), i + 1, marker[1] || '(unlabelled)', 'marked');
 
+      // TODOs are unfinished facts too. Without these the report can claim
+      // the site is real while an unregistered domain sits on the contact page.
+      const todo = l.match(/(?:TODO|FIXME):?\s*(.*?)\s*(\*\/|-->|$)/);
+      if (todo) add(relative('.', file), i + 1, todo[1] || '(unlabelled)', 'todo');
+
       for (const { re, note } of HARD) {
         // Skip Tailwind arbitrary values and code, which legitimately use brackets.
         if (/class=|class:list|grid-cols|text-\[|max-w-\[|widths|aspect-|:\s*\[/.test(l)) continue;
@@ -66,26 +71,28 @@ for (const root of ROOTS) {
 }
 
 if (found.size === 0) {
-  console.log('\nNo placeholders left. Everything on this site is real.\n');
+  console.log('\nNothing flagged. Note this only sees PLACEHOLDER:, TODO: and\n[BRACKET] markers — it cannot vouch for facts nobody marked.\n');
   process.exit(0);
 }
 
 let marked = 0;
 let hard = 0;
-console.log('\nInvented content still on the site\n');
+let todo = 0;
+console.log('\nUnfinished content still on the site\n');
 
 for (const [file, items] of [...found.entries()].sort()) {
   console.log(`  ${file}`);
   for (const it of items) {
-    const tag = it.kind === 'marked' ? '·' : '!';
+    const tag = it.kind === 'marked' ? '·' : it.kind === 'todo' ? '›' : '!';
     if (it.kind === 'marked') marked++;
+    else if (it.kind === 'todo') todo++;
     else hard++;
     console.log(`    ${tag} ${String(it.line).padStart(4)}  ${it.text}`);
   }
   console.log('');
 }
 
-console.log(`  ${marked} marked placeholder${marked === 1 ? '' : 's'}, ${hard} unfilled bracket${hard === 1 ? '' : 's'}`);
-console.log('  · = invented but deliberate    ! = still visibly unfinished\n');
+console.log(`  ${marked} invented, ${todo} outstanding, ${hard} unfilled bracket${hard === 1 ? '' : 's'}`);
+console.log('  · = invented but deliberate   › = known outstanding   ! = visibly unfinished\n');
 
 // Informational: never fails a build. The point is visibility, not a gate.

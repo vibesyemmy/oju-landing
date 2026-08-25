@@ -83,7 +83,9 @@ import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
           <h2 class="label mb-8">The facts</h2>
           <dl>
             {
-              STUDIO_FACTS.map((f) => (
+              /* An empty value means the fact does not apply — drop the row rather
+                 than rendering a label with nothing beside it. */
+              STUDIO_FACTS.filter((f) => f.v).map((f) => (
                 <div class="flex justify-between gap-6 border-b border-rule py-4">
                   <dt class="label whitespace-nowrap">{f.k}</dt>
                   <dd class="text-right font-mono text-[13px] text-ink">{f.v}</dd>

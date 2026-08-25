@@ -138,12 +138,12 @@ export const ENGAGEMENTS = [
   {
     title: 'Project',
     lede: 'A defined outcome with a start and an end. Most first engagements.',
-    detail: 'Fixed scope, fixed timeline, staged payments. Typically 6–12 weeks.' /* PLACEHOLDER: typical project length */,
+    detail: 'Fixed scope, fixed timeline, staged payments. Typically 6–12 weeks.',
   },
   {
     title: 'Retainer',
     lede: 'Continuous design and engineering capacity, month to month.',
-    detail: 'A set number of days each month. For teams shipping continuously. Minimum 3 months.' /* PLACEHOLDER: retainer minimum */,
+    detail: 'A set number of days each month. For teams shipping continuously. Minimum 3 months.',
   },
   {
     title: 'Embedded',
@@ -168,34 +168,27 @@ export const PRINCIPLES = [
 ] as const;
 
 /**
- * PLACEHOLDER: the team is three invented people. Standing in so the team
- * section lays out correctly. Nobody here exists.
+ * Deliberately empty. The studio page hides the team section entirely when
+ * this is, and the head-count fact drops out with it — an unremarkable
+ * omission, where three invented people would have been a liability.
  *
- * These look real, which makes them the most dangerous invention on the site:
- * shipped as-is, the studio claims a team it does not have. Replace before
- * launch, or set this to [] to hide the section — the page handles empty.
- * `npm run placeholders` lists this and everything like it.
+ * Add real people and both come back automatically.
  */
-export const TEAM: readonly { name: string; role: string }[] = [
-  { name: 'Adunni Bakare', role: 'Founder, Design' },
-  { name: 'Chidi Okafor', role: 'Engineering Lead' },
-  { name: 'Temilade Adeyemi', role: 'Product' },
-];
+export const TEAM: readonly { name: string; role: string }[] = [];
 
 export const STUDIO_FACTS = [
   { k: 'Founded', v: '2023' },
   { k: 'Based in', v: 'Lagos, Nigeria' },
   // Derived from TEAM, so the count cannot drift from the people listed.
-  { k: 'Team', v: `${TEAM.length} people` },
-  /* PLACEHOLDER: where clients actually are */
-  { k: 'Working with', v: 'Teams in Nigeria, the UK and the US' },
+  // Empty string drops the row rather than announcing "0 people".
+  { k: 'Team', v: TEAM.length ? `${TEAM.length} people` : '' },
+  { k: 'Working with', v: 'Teams in Nigeria, the UK, Germany and the US' },
   { k: 'Languages', v: 'English, Yoruba' },
 ] as const;
 
 
 /* ── /contact ──────────────────────────────────────────────────── */
-/* PLACEHOLDER: invented bands. Set these to what you will actually take on —
-   they filter enquiries harder than any other field on the form. */
+/* These filter enquiries harder than any other field on the form. */
 export const BUDGET_BANDS = [
   'Under $10k',
   '$10k–25k',
