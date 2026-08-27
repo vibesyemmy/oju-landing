@@ -32,7 +32,7 @@ const { entries, showFilter = true } = Astro.props;
     }
   </div>
 
-  <div class="grid grid-cols-[3.2fr_2.4fr_1.6fr_0.8fr] gap-8 border-b border-rule pb-3.5 max-md:hidden">
+  <div class="grid grid-cols-[3.2fr_2.4fr_1.6fr_0.8fr] gap-8 border-b border-rule pb-3.5 max-lg:hidden">
     <p class="label">Project</p>
     <p class="label">Discipline</p>
     <p class="label">Sector</p>
@@ -45,18 +45,18 @@ const { entries, showFilter = true } = Astro.props;
         <li data-disciplines={entry.data.disciplines.join(',')} class="row border-b border-rule">
           <a
             href={`/work/${entry.id}/`}
-            class="group grid grid-cols-1 items-baseline gap-2 py-5 md:grid-cols-[3.2fr_2.4fr_1.6fr_0.8fr] md:gap-8 md:py-6.5"
+            class="group grid grid-cols-1 items-baseline gap-2 py-5 lg:grid-cols-[3.2fr_2.4fr_1.6fr_0.8fr] lg:gap-8 lg:py-6.5"
           >
-            <span class="font-display text-[26px] tracking-tight transition-colors group-hover:text-accent md:text-[34px]">
+            <span class="font-display text-[26px] tracking-tight transition-colors group-hover:text-accent lg:text-[34px]">
               {entry.data.title}
             </span>
-            <span class="font-mono text-[11.5px] text-soft md:text-[13px]">
+            <span class="font-mono text-[11.5px] text-soft lg:text-[13px]">
               {entry.data.services.join(', ')}
             </span>
-            <span class="font-mono text-[11.5px] text-soft max-md:hidden md:text-[13px]">
+            <span class="font-mono text-[11.5px] text-soft max-lg:hidden lg:text-[13px]">
               {entry.data.sector}
             </span>
-            <span class="font-mono text-[11.5px] text-faint md:text-right md:text-[13px]">
+            <span class="font-mono text-[11.5px] text-faint lg:text-right lg:text-[13px]">
               {entry.data.year}
             </span>
 
