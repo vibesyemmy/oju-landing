@@ -154,7 +154,7 @@ const teamSnapKeyframes = (() => {
                   ratio="1/1"
                   size="800×800"
                   widths={[400, 640, 800]}
-                  sizes="(max-width: 640px) 78vw, 340px"
+                  sizes="(max-width: 767px) 78vw, 460px"
                   class="mb-6"
                 />
                 <p
@@ -249,7 +249,12 @@ const teamSnapKeyframes = (() => {
 
   @media (min-width: 768px) {
     .team {
-      --card-w: 340px;
+      /* Grows with the screen, so a wide desktop gets bigger cards rather than
+         a row that fits with room to spare — which would leave the section
+         pinned for a pan of zero. Height has a vote too: the card is pinned
+         against a whole screen, so a wide but short window must not be handed
+         a card taller than it. */
+      --card-w: clamp(340px, min(24vw, 52vh), 460px);
       --gap: 3rem;
       --edge: 10rem;
     }
