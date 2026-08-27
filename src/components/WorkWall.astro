@@ -49,7 +49,7 @@ const count = String(projects.length).padStart(2, '0');
 
 <section class="workwall">
   <div class="workwall__head">
-    <h2 class="label">Selected work <span class="text-ink">&mdash; {count}</span></h2>
+    <h2 class="label">Selected work <span class="text-ink">· {count}</span></h2>
     <a href="/work" class="workwall__all font-mono">
       All projects <span aria-hidden="true">&rarr;</span>
     </a>
@@ -64,7 +64,7 @@ const count = String(projects.length).padStart(2, '0');
               <a href={tile.href} class="tile tile--link">
                 <Image
                   src={tile.img}
-                  alt={`${tile.title} — Ojú`}
+                  alt={`${tile.title} · Ojú`}
                   widths={[460, 920]}
                   sizes="(max-width: 900px) 50vw, 460px"
                   quality={58}

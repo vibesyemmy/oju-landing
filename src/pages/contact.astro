@@ -17,7 +17,7 @@ import { BUDGET_BANDS, SITE } from '../data/site';
     <PageHero
       label="Contact"
       title="Tell us what you are trying to build."
-      lede="The more concrete you are about the problem, the more useful our first reply will be. We answer every enquiry — including the ones we think we are wrong for."
+      lede="The more concrete you are about the problem, the more useful our first reply will be. We answer every enquiry, even the ones we are not right for."
     />
 
     <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
@@ -93,7 +93,7 @@ import { BUDGET_BANDS, SITE } from '../data/site';
             <ol class="flex flex-col gap-4">
               {
                 [
-                  'We read it properly — a person, not a filter.',
+                  'We read it properly: a person, not a filter.',
                   /* Repeated in thanks.astro and the contact Function — keep the three in step. */
                   'You get a reply within two working days, even if it is a no.',
                   'If it looks like a fit, we book 45 minutes to dig into the problem.',
@@ -121,7 +121,7 @@ import { BUDGET_BANDS, SITE } from '../data/site';
             <h2 class="label mb-5">Studio</h2>
             <p class="text-[15px] leading-relaxed text-soft">
               {SITE.city}, {SITE.country}<br />
-              Working with teams in Nigeria, the UK and the US
+              Working with teams in Nigeria, the UK, Germany and the US
             </p>
           </div>
         </div>
@@ -230,7 +230,7 @@ import { BUDGET_BANDS, SITE } from '../data/site';
 
       status.dataset.tone = ok ? 'ok' : 'bad';
       status.textContent =
-        data.message ?? (ok ? 'Thanks — we will be in touch.' : 'Something went wrong. Please email us directly.');
+        data.message ?? (ok ? 'Thanks. We will be in touch.' : 'Something went wrong. Please email us directly.');
       if (ok) form.reset();
     } catch {
       status.dataset.tone = 'bad';

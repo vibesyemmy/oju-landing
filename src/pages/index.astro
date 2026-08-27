@@ -53,7 +53,7 @@ import { CAPABILITIES, CLIENTS, SITE } from '../data/site';
              the entire card — heading, lede and all five list items read aloud
              as one run-on string. */
           CAPABILITIES.map((cap) => (
-            <a class="cap" href={`/services#${cap.id}`} aria-label={`${cap.title} — what this covers`}>
+            <a class="cap" href={`/services#${cap.id}`} aria-label={`${cap.title}: what this covers`}>
               <CapabilityMark kind={cap.id as 'design' | 'product' | 'engineering'} />
 
               <h3 class="cap__head">
@@ -91,15 +91,14 @@ import { CAPABILITIES, CLIENTS, SITE } from '../data/site';
             <span lang="yo" class="whitespace-nowrap">Ojú-ìwé</span> means <em>page</em>.
           </p>
           <p class="max-w-[500px] text-base leading-relaxed text-soft text-pretty md:text-[18px]">
-            An interface is the face of a system — the only part a person ever meets. Most studios
-            draw the face and hand the rest to someone else. We keep both, because the seam between
-            them is where products go wrong.
+            An interface is the face of a system. We design the face and build the system behind it
+            as one thing, because that seam is where products come apart.
           </p>
         </div>
         <Media
           label="The team, or the room. Something that proves there are people here."
           src={poseidonGrid}
-          alt="A page of the Poseidon design system — components and tokens laid out in a grid."
+          alt="A page of the Poseidon design system: components and tokens laid out in a grid."
           ratio="4/3"
           size="1600×1200"
           sizes="(max-width: 767px) 100vw, 42vw"

@@ -1,14 +1,14 @@
 export const SITE = {
   name: 'Ojú',
-  tagline: 'Design and product studio',
+  tagline: 'Design, product and engineering studio',
   city: 'Lagos',
   country: 'Nigeria',
   timezone: 'Africa/Lagos',
   // TODO: real address once the domain is registered.
   email: 'hello@oju.studio',
   description:
-    'Ojú is a design and product studio in Lagos. Interfaces, brand systems, ' +
-    'and the software underneath — drawn and shipped by one team.',
+    'Ojú is a design, product and engineering studio in Lagos. Interfaces, brand systems, ' +
+    'and the software underneath, drawn and shipped by one team.',
 } as const;
 
 export const NAV = [
@@ -37,13 +37,13 @@ export const CAPABILITIES = [
     num: '03',
     id: 'engineering',
     title: 'Engineering',
-    line: 'From prototype to production traffic — and it stays up afterwards.',
+    line: 'From prototype to production traffic, and it stays up afterwards.',
     items: ['React / Next.js', 'Swift & React Native', 'Node / Python APIs', 'Postgres & infra', 'CI/CD & monitoring'],
   },
 ] as const;
 
 export const FOOTER_COLUMNS = [
-  { title: 'Studio', items: ['Work', 'Services', 'About', 'Journal'] },
+  { title: 'Studio', items: ['Work', 'Services', 'Contact'] },
   { title: 'Design', items: ['UI/UX', 'Brand & identity', 'Motion', 'Design systems'] },
   { title: 'Build', items: ['Web applications', 'Mobile apps', 'APIs', 'Infrastructure'] },
 ] as const;
@@ -60,7 +60,7 @@ export const SERVICES = [
     num: '01',
     id: 'design',
     title: 'Design',
-    lede: 'The face of the thing — what a person sees, touches, and judges you by before they read a word.',
+    lede: 'The face of the thing: what a person sees, touches, and judges you by before they read a word.',
     includes: [
       'Product UI and UX',
       'Brand identity and art direction',
@@ -78,14 +78,14 @@ export const SERVICES = [
       kind: 'video' as const,
       ratio: '16/9',
       size: '1920×1080',
-      label: 'Motion reel — interface transitions, a design system in use, a brand mark animating. Stills cannot show this half of the work.',
+      label: 'Motion reel: interface transitions, a design system in use, a brand mark animating. Stills cannot show this half of the work.',
     },
   },
   {
     num: '02',
     id: 'product',
     title: 'Product',
-    lede: 'Working out what is worth building — and what to leave out — before anybody writes code.',
+    lede: 'Working out what is worth building, and what to leave out, before anybody writes code.',
     includes: [
       'Discovery and user research',
       'Product strategy and positioning',
@@ -103,7 +103,7 @@ export const SERVICES = [
       kind: 'image' as const,
       ratio: '16/9',
       size: '1600×900',
-      label: 'Research artefacts — a synthesis wall, a before/after flow, a roadmap with the cut items still visible.',
+      label: 'Research artefacts: a synthesis wall, a before/after flow, a roadmap with the cut items still visible.',
     },
   },
   {
@@ -112,8 +112,8 @@ export const SERVICES = [
     title: 'Engineering',
     lede: 'The part behind the face. Shipped, monitored, and still standing at month six.',
     includes: [
-      'Web applications — React, Next.js, TypeScript',
-      'Mobile — Swift and React Native',
+      'Web applications: React, Next.js, TypeScript',
+      'Mobile: Swift and React Native',
       'APIs and third-party integrations',
       'Infrastructure, CI/CD and monitoring',
       'Performance and accessibility work',
@@ -128,7 +128,7 @@ export const SERVICES = [
       kind: 'image' as const,
       ratio: '16/9',
       size: '1600×900',
-      label: 'Something running — a deploy pipeline, a monitoring dashboard, an architecture diagram from a real project.',
+      label: 'Something running: a deploy pipeline, a monitoring dashboard, an architecture diagram from a real project.',
     },
   },
 ] as const;
@@ -138,7 +138,7 @@ export const ENGAGEMENTS = [
   {
     title: 'Project',
     lede: 'A defined outcome with a start and an end. Most first engagements.',
-    detail: 'Fixed scope, fixed timeline, staged payments. Typically 6–12 weeks.',
+    detail: 'Fixed scope, fixed timeline, staged payments. Typically 6 to 12 weeks.',
   },
   {
     title: 'Retainer',
@@ -156,13 +156,13 @@ export const PROCESS = [
   { num: '01', title: 'Discovery', body: 'We work out what the actual problem is, which is rarely the one in the brief. Research, stakeholder interviews, a look at what you already have.' },
   { num: '02', title: 'Design', body: 'Flows, then screens, then a system. We test the risky parts early and cheaply, before they are expensive to change.' },
   { num: '03', title: 'Build', body: 'The same team that drew it builds it, so nothing is lost at handover. Shipped in increments you can see, not one reveal at the end.' },
-  { num: '04', title: 'Support', body: 'Launch is the middle, not the end. We monitor, fix, and hand over cleanly — or stay on if you want us to.' },
+  { num: '04', title: 'Support', body: 'Launch is the middle, not the end. We monitor, fix, and hand over cleanly, or stay on if you want us to.' },
 ] as const;
 
 /* ── /studio ───────────────────────────────────────────────────── */
 export const PRINCIPLES = [
   { title: 'One team, both crafts', body: 'The people who design it are the people who build it. No translation layer, no drawings thrown over a wall.' },
-  { title: 'The seam is where products fail', body: 'Most work goes wrong between design and engineering — in the states nobody specced and the edge cases nobody drew. We own that gap because we are on both sides of it.' },
+  { title: 'The seam is where products fail', body: 'Most work goes wrong between design and engineering, in the states nobody specced and the edge cases nobody drew. We own that gap because we are on both sides of it.' },
   { title: 'Show the build, not just the picture', body: 'Anyone can produce a beautiful mockup. We would rather show you the architecture, the load time, and the thing running.' },
   { title: 'Ship, then learn', body: 'A real thing in front of real users teaches more in a week than another month of internal debate.' },
 ] as const;
@@ -205,7 +205,7 @@ export const TEAM: readonly TeamMember[] = [
     role: 'Creative Technology & Product Design',
     portrait: 'akinyemi-ogungbaro.webp',
     summary:
-      'Brand designer, product designer and creative director who also leads technology delivery — turning ideas into brands, digital products and working systems. Sits where design, technology, business and strategy meet.',
+      'Brand designer, product designer and creative director who also leads technology delivery, turning ideas into brands, digital products and working systems. Sits where design, technology, business and strategy meet.',
   },
   {
     name: 'Third member',
@@ -240,8 +240,8 @@ export const STUDIO_FACTS = [
 /* These filter enquiries harder than any other field on the form. */
 export const BUDGET_BANDS = [
   'Under $10k',
-  '$10k–25k',
-  '$25k–50k',
+  '$10k to $25k',
+  '$25k to $50k',
   '$50k+',
   'Not sure yet',
 ] as const;

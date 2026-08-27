@@ -55,7 +55,7 @@ export const onRequestPost = async (ctx: Ctx): Promise<Response> => {
   // Honeypot: a real person never fills a hidden field.
   if (clean(form.get('website'), 200)) {
     // Look successful to the bot; send nothing on.
-    return reply(ctx, 200, 'ok', 'Thanks — we will be in touch.');
+    return reply(ctx, 200, 'ok', 'Thanks. We will be in touch.');
   }
 
   const name = clean(form.get('name'), MAX.name);
@@ -101,7 +101,7 @@ export const onRequestPost = async (ctx: Ctx): Promise<Response> => {
     return reply(ctx, 502, 'upstream_failed', 'We could not send that. Please email us directly.');
   }
 
-  return reply(ctx, 200, 'ok', 'Thanks — we will come back to you within two working days.');
+  return reply(ctx, 200, 'ok', 'Thanks. We will come back to you within two working days.');
 };
 
 /**
