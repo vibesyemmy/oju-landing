@@ -7,6 +7,9 @@ import WorkWall from '../components/WorkWall.astro';
 import CapabilityMark from '../components/CapabilityMark.astro';
 import ImpactCarousel from '../components/ImpactCarousel.astro';
 import Media from '../components/Media.astro';
+/* Standing in for a photograph of the room, which does not exist yet. Real work
+   beats a stock office, and this is a page of the design system we shipped. */
+import poseidonGrid from '../assets/wall/poseidon-grid.webp';
 // Alternatives, one import swap away:
 //   HeroEditorial — original left-aligned statement
 //   HeroConverge  — converging-stream carousel
@@ -95,8 +98,11 @@ import { CAPABILITIES, CLIENTS, SITE } from '../data/site';
         </div>
         <Media
           label="The team, or the room. Something that proves there are people here."
+          src={poseidonGrid}
+          alt="A page of the Poseidon design system — components and tokens laid out in a grid."
           ratio="4/3"
           size="1600×1200"
+          sizes="(max-width: 767px) 100vw, 42vw"
         />
       </div>
     </section>
