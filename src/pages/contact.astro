@@ -4,6 +4,10 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
 import Media from '../components/Media.astro';
+/* Licensed stock standing in for a real photo of whoever reads enquiries.
+   Pexels licence, free for commercial use. RDNE Stock project,
+   pexels.com/photo/10375901 */
+import contactImage from '../assets/contact/contact.webp';
 import { BUDGET_BANDS, SITE } from '../data/site';
 ---
 
@@ -111,6 +115,8 @@ import { BUDGET_BANDS, SITE } from '../data/site';
           </div>
 
           <Media
+            src={contactImage}
+            alt="A woman smiling at a desk with a laptop and phone, surrounded by plants."
             label="Whoever reads these enquiries. A face makes a form feel answered by a person."
             ratio="4/3"
             size="1200×900"
