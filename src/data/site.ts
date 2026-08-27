@@ -178,6 +178,13 @@ export interface TeamMember {
    * breaking the build.
    */
   portrait?: string;
+  /**
+   * A seat that is filled but not yet written up. Renders as a stated gap —
+   * dashed, captioned with what is missing — rather than as a person, and is
+   * excluded from the head-count so the fact stays true. Delete the flag once
+   * the real name, role and summary land.
+   */
+  pending?: true;
 }
 
 /**
@@ -200,14 +207,30 @@ export const TEAM: readonly TeamMember[] = [
     summary:
       'Brand designer, product designer and creative director who also leads technology delivery — turning ideas into brands, digital products and working systems. Sits where design, technology, business and strategy meet.',
   },
+  {
+    name: 'Third member',
+    role: 'Role to come',
+    summary: 'Name, role and two sentences. Portrait square, 1200×1200, same framing as the others.',
+    pending: true,
+  },
+  {
+    name: 'Fourth member',
+    role: 'Role to come',
+    summary: 'Name, role and two sentences. Portrait square, 1200×1200, same framing as the others.',
+    pending: true,
+  },
 ];
+
+/** The people who are actually on record — what the head-count fact counts. */
+const NAMED_TEAM = TEAM.filter((m) => !m.pending);
 
 export const STUDIO_FACTS = [
   { k: 'Founded', v: '2023' },
   { k: 'Based in', v: 'Lagos, Nigeria' },
   // Derived from TEAM, so the count cannot drift from the people listed.
   // Empty string drops the row rather than announcing "0 people".
-  { k: 'Team', v: TEAM.length ? `${TEAM.length} ${TEAM.length === 1 ? 'person' : 'people'}` : '' },
+  // Pending seats are not people yet, so they do not count.
+  { k: 'Team', v: NAMED_TEAM.length ? `${NAMED_TEAM.length} ${NAMED_TEAM.length === 1 ? 'person' : 'people'}` : '' },
   { k: 'Working with', v: 'Teams in Nigeria, the UK, Germany and the US' },
   { k: 'Languages', v: 'English, Yoruba' },
 ] as const;

@@ -114,11 +114,12 @@ const portraitFor = (file?: string) =>
     <!-- TEAM -->
     {
       TEAM.length > 0 && (
-        <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
+        <section class="team border-t border-rule px-6 py-12 md:px-20 md:py-20">
           <h2 class="label mb-9 md:mb-14">The team</h2>
-          <ul class="grid gap-10 sm:grid-cols-2 md:grid-cols-3 md:gap-x-12 md:gap-y-16">
+          <div class="team__viewport">
+            <ul class="team__track" tabindex="0" aria-label="The team, scrollable" style={`--count:${TEAM.length}`}>
             {TEAM.map((m) => (
-              <li>
+              <li class="team__card">
                 <Media
                   label={`${m.name} — portrait`}
                   src={portraitFor(m.portrait)}
@@ -126,19 +127,31 @@ const portraitFor = (file?: string) =>
                   ratio="1/1"
                   size="800×800"
                   widths={[400, 640, 800]}
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                  sizes="(max-width: 640px) 78vw, 340px"
                   class="mb-6"
                 />
-                <p class="font-display text-[24px] leading-tight tracking-tight md:text-[26px]">
+                <p
+                  class:list={[
+                    'font-display text-[24px] leading-tight tracking-tight md:text-[26px]',
+                    /* A seat awaiting its person reads as a gap, not as someone. */
+                    m.pending && 'text-faint',
+                  ]}
+                >
                   {m.name}
                 </p>
                 <p class="mt-2 font-mono text-[12.5px] leading-relaxed text-faint">{m.role}</p>
-                <p class="mt-4 text-[15.5px] leading-relaxed text-soft text-pretty md:text-[16px]">
+                <p
+                  class:list={[
+                    'mt-4 text-[15.5px] leading-relaxed text-pretty md:text-[16px]',
+                    m.pending ? 'text-faint' : 'text-soft',
+                  ]}
+                >
                   {m.summary}
                 </p>
               </li>
             ))}
-          </ul>
+            </ul>
+          </div>
         </section>
       )
     }
@@ -162,3 +175,76 @@ const portraitFor = (file?: string) =>
 
   <SiteFooter />
 </Base>
+
+<style>
+  /*
+   * The row pans sideways as the section travels through the viewport — one
+   * gesture, no second scrollbar to hunt for. A scroll-driven CSS animation, so
+   * it costs no JavaScript and simply does not run where it is unsupported.
+   */
+  .team__viewport {
+    /* clip, not hidden: hidden would make this a scroll container and fight the
+       pan. Cards slide in and out at the section's padding edge. */
+    overflow-x: clip;
+  }
+
+  .team__track {
+    /* Card and gap are fixed, so the track's width — and with it the distance
+       worth panning — is arithmetic rather than a measurement. --count comes
+       from the data, so adding a member lengthens the pan on its own. */
+    --card-w: min(78vw, 340px);
+    --gap: 2rem;
+    /* The section's own horizontal padding, both sides. */
+    --edge: 3rem;
+    --track-w: calc(var(--count) * var(--card-w) + (var(--count) - 1) * var(--gap));
+    /* Zero when the row already fits, so a short team never drifts. */
+    --pan: min(0px, calc(100vw - var(--edge) - var(--track-w)));
+
+    display: flex;
+    gap: var(--gap);
+    /* The fallback wherever the pan does not run: an ordinary swipeable row. */
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+
+  .team__card {
+    flex: 0 0 auto;
+    width: var(--card-w);
+    scroll-snap-align: start;
+  }
+
+  @media (min-width: 768px) {
+    .team__track {
+      --card-w: 340px;
+      --gap: 3rem;
+      --edge: 10rem;
+    }
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .team__track {
+        /* The pan replaces manual scrolling, so the two cannot disagree. */
+        overflow-x: visible;
+        animation: team-pan linear both;
+        animation-timeline: view();
+        /* Nothing moves until the section has all but finished entering, and
+           the row lands before it starts to leave — so the first card is
+           readable on arrival and the last one is readable on the way out,
+           rather than both being caught mid-flight. */
+        animation-range: entry 90% exit 10%;
+      }
+    }
+  }
+
+  @keyframes team-pan {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(var(--pan));
+    }
+  }
+</style>
