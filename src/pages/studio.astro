@@ -14,6 +14,28 @@ const portraits = import.meta.glob<{ default: ImageMetadata }>(
 );
 const portraitFor = (file?: string) =>
   file ? portraits[`../assets/team/${file}`]?.default : undefined;
+
+/*
+ * The phone-sized pan lands on one card at a time, which means one keyframe per
+ * card — a count only the data knows. Each card holds the leading edge for the
+ * first part of its turn, then glides to the next, so the movement is watched
+ * rather than jumped through. Segments ease individually (see the mobile rule
+ * in the stylesheet); the holds are pairs of identical stops, so easing across
+ * them changes nothing.
+ */
+const SNAP_HOLD = 0.55;
+const teamSnapKeyframes = (() => {
+  const moves = TEAM.length - 1;
+  if (moves < 1) return '';
+  const stops: string[] = [];
+  for (let i = 0; i < moves; i++) {
+    const from = ((i / moves) * 100).toFixed(3);
+    const held = (((i + SNAP_HOLD) / moves) * 100).toFixed(3);
+    stops.push(`${from}%,${held}%{transform:translateX(calc(${-i} * var(--step)))}`);
+  }
+  stops.push(`100%{transform:translateX(calc(${-moves} * var(--step)))}`);
+  return `@keyframes team-pan-snap{${stops.join('')}}`;
+})();
 ---
 
 <Base
@@ -114,10 +136,15 @@ const portraitFor = (file?: string) =>
     <!-- TEAM -->
     {
       TEAM.length > 0 && (
-        <section class="team border-t border-rule px-6 py-12 md:px-20 md:py-20">
-          <h2 class="label mb-9 md:mb-14">The team</h2>
-          <div class="team__viewport">
-            <ul class="team__track" tabindex="0" aria-label="The team, scrollable" style={`--count:${TEAM.length}`}>
+        <section
+          class="team border-t border-rule px-6 py-12 md:px-20 md:py-20"
+          style={`--count:${TEAM.length}`}
+        >
+          <div class="team__stage">
+            <div class="team__pin">
+              <h2 class="label mb-9 md:mb-14">The team</h2>
+              <div class="team__viewport">
+                <ul class="team__track" tabindex="0" aria-label="The team, scrollable">
             {TEAM.map((m) => (
               <li class="team__card">
                 <Media
@@ -150,7 +177,9 @@ const portraitFor = (file?: string) =>
                 </p>
               </li>
             ))}
-            </ul>
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
       )
@@ -178,10 +207,54 @@ const portraitFor = (file?: string) =>
 
 <style>
   /*
-   * The row pans sideways as the section travels through the viewport — one
-   * gesture, no second scrollbar to hunt for. A scroll-driven CSS animation, so
-   * it costs no JavaScript and simply does not run where it is unsupported.
+   * The section holds still while the row walks sideways, then releases and the
+   * page carries on. Mechanically: the stage is a viewport taller than the pin
+   * inside it, the pin sticks, and the row is panned by the stage's own
+   * view timeline over its `contain` range — the exact window during which a
+   * subject taller than the screen is covering it, which is the same window the
+   * pin is stuck for. So the pan starts and ends with the pin, by construction
+   * rather than by tuning.
+   *
+   * All of it is CSS. No scroll listener, no scrolljacking library, and nothing
+   * that can leave the page stranded if a frame is missed.
    */
+  .team {
+    /* Card and gap are fixed, so the travel is arithmetic rather than a
+       measurement. --count comes from the data: adding a member lengthens both
+       the pan and the stage that drives it, with nothing to keep in sync. */
+    --card-w: min(78vw, 340px);
+    --gap: 2rem;
+    /* The section's own horizontal padding, both sides. */
+    --edge: 3rem;
+    --track-w: calc(var(--count) * var(--card-w) + (var(--count) - 1) * var(--gap));
+    /* One card plus the gap after it — the distance from a card to the next. */
+    --step: calc(var(--card-w) + var(--gap));
+    /* Zero when the row already fits — a short team pins nothing and pans
+       nothing, because the stage is then exactly as tall as the pin. */
+    --pan-abs: max(0px, calc(var(--track-w) - (100vw - var(--edge))));
+  }
+
+  /*
+   * On a phone a card is nearly the whole screen, so a continuous pan leaves
+   * the reader looking at two half cards for most of the scroll. Below the
+   * breakpoint the row moves a card at a time instead: it travels far enough to
+   * bring the last card to the leading edge, and holds each card there for its
+   * share of the scroll (see the stepped timing function further down).
+   */
+  @media (max-width: 767px) {
+    .team {
+      --pan-abs: calc((var(--count) - 1) * var(--step));
+    }
+  }
+
+  @media (min-width: 768px) {
+    .team {
+      --card-w: 340px;
+      --gap: 3rem;
+      --edge: 10rem;
+    }
+  }
+
   .team__viewport {
     /* clip, not hidden: hidden would make this a scroll container and fight the
        pan. Cards slide in and out at the section's padding edge. */
@@ -189,17 +262,6 @@ const portraitFor = (file?: string) =>
   }
 
   .team__track {
-    /* Card and gap are fixed, so the track's width — and with it the distance
-       worth panning — is arithmetic rather than a measurement. --count comes
-       from the data, so adding a member lengthens the pan on its own. */
-    --card-w: min(78vw, 340px);
-    --gap: 2rem;
-    /* The section's own horizontal padding, both sides. */
-    --edge: 3rem;
-    --track-w: calc(var(--count) * var(--card-w) + (var(--count) - 1) * var(--gap));
-    /* Zero when the row already fits, so a short team never drifts. */
-    --pan: min(0px, calc(100vw - var(--edge) - var(--track-w)));
-
     display: flex;
     gap: var(--gap);
     /* The fallback wherever the pan does not run: an ordinary swipeable row. */
@@ -215,26 +277,43 @@ const portraitFor = (file?: string) =>
     scroll-snap-align: start;
   }
 
-  @media (min-width: 768px) {
-    .team__track {
-      --card-w: 340px;
-      --gap: 3rem;
-      --edge: 10rem;
-    }
-  }
-
   @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
+    /* A pin only works while the card fits the screen it is pinned to. Below
+       that the section stays an ordinary scrollable row rather than clipping
+       its own content. */
+    @media (prefers-reduced-motion: no-preference) and (min-height: 620px) {
+      .team__stage {
+        view-timeline-name: --team-stage;
+        view-timeline-axis: block;
+        /* One screen to hold, plus exactly the distance the row must travel. */
+        height: calc(100svh + var(--pan-abs));
+      }
+
+      .team__pin {
+        position: sticky;
+        top: 0;
+        height: 100svh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
       .team__track {
         /* The pan replaces manual scrolling, so the two cannot disagree. */
         overflow-x: visible;
         animation: team-pan linear both;
-        animation-timeline: view();
-        /* Nothing moves until the section has all but finished entering, and
-           the row lands before it starts to leave — so the first card is
-           readable on arrival and the last one is readable on the way out,
-           rather than both being caught mid-flight. */
-        animation-range: entry 90% exit 10%;
+        animation-timeline: --team-stage;
+        animation-range: contain 0% contain 100%;
+      }
+
+      @media (max-width: 767px) {
+        .team__track {
+          /* Card-at-a-time, but travelled rather than cut to: the keyframes
+             hold each card and then glide to the next, and ease-in-out applies
+             to each of those segments in turn. */
+          animation-name: team-pan-snap;
+          animation-timing-function: ease-in-out;
+        }
       }
     }
   }
@@ -244,7 +323,9 @@ const portraitFor = (file?: string) =>
       transform: translateX(0);
     }
     to {
-      transform: translateX(var(--pan));
+      transform: translateX(calc(-1 * var(--pan-abs)));
     }
   }
 </style>
+
+<style is:inline set:html={teamSnapKeyframes} />
