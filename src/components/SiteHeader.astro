@@ -43,7 +43,13 @@ const { current } = Astro.props;
   </button>
 </header>
 
-<nav id="mobile-nav" hidden class="border-t border-rule px-6 py-6 md:hidden" aria-label="Primary">
+<!-- Fixed, not in flow: an open menu covers the page rather than shoving it down. -->
+<nav
+  id="mobile-nav"
+  hidden
+  class="fixed inset-x-0 top-22 z-40 max-h-[calc(100dvh-5.5rem)] overflow-y-auto border-y border-rule bg-paper px-6 py-6 md:hidden"
+  aria-label="Primary"
+>
   <ul class="flex flex-col gap-1">
     {
       NAV.map((item) => (
@@ -78,10 +84,27 @@ const { current } = Astro.props;
 
   const toggle = document.getElementById('menu-toggle');
   const nav = document.getElementById('mobile-nav');
+  const setMenu = (open: boolean) => {
+    toggle?.setAttribute('aria-expanded', String(open));
+    toggle?.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    nav?.toggleAttribute('hidden', !open);
+  };
+
   toggle?.addEventListener('click', () => {
-    const open = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', String(!open));
-    toggle.setAttribute('aria-label', open ? 'Open menu' : 'Close menu');
-    nav?.toggleAttribute('hidden', open);
+    setMenu(toggle.getAttribute('aria-expanded') !== 'true');
+  });
+
+  // The panel now floats over the page, so it needs the usual ways out of one.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') {
+      setMenu(false);
+      toggle.focus();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (toggle?.getAttribute('aria-expanded') !== 'true') return;
+    const target = e.target as Node;
+    if (!nav?.contains(target) && !toggle.contains(target)) setMenu(false);
   });
 </script>
