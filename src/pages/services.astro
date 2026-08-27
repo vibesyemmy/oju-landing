@@ -4,6 +4,30 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
 import Media from '../components/Media.astro';
+/* Licensed stock, standing in until real artefacts can be exported from the
+   projects themselves. Pexels licence, free for commercial use.
+     design      — Md Mahdi, pexels.com/photo/36747234
+     product     — Bruno Scramgnon, pexels.com/photo/12797275
+     engineering — Markus Spiske, pexels.com/photo/159299 */
+import designShot from '../assets/services/design.webp';
+import productShot from '../assets/services/product.webp';
+import engineeringShot from '../assets/services/engineering.webp';
+
+/* Keyed by service id, so a service without a picture simply keeps its brief. */
+const MEDIA: Record<string, { src: ImageMetadata; alt: string }> = {
+  design: {
+    src: designShot,
+    alt: 'A designer laying out app screens on a large monitor.',
+  },
+  product: {
+    src: productShot,
+    alt: 'A wall covered edge to edge in handwritten notes.',
+  },
+  engineering: {
+    src: engineeringShot,
+    alt: 'Stylesheet code open across two monitors in a dark room.',
+  },
+};
 import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
 ---
 
@@ -29,6 +53,20 @@ import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
                 <span class="font-mono text-[11px] text-accent">{s.num}</span>
                 <span class="font-display text-[30px] tracking-tight md:text-[38px]">{s.title}</span>
               </h2>
+
+              {/* Under the title rather than below the lists: the title column is
+                  otherwise empty for the height of the section, and the picture
+                  fills it instead of adding to the page. */}
+              <Media
+                label={s.media.label}
+                kind={MEDIA[s.id] ? 'image' : s.media.kind}
+                src={MEDIA[s.id]?.src}
+                alt={MEDIA[s.id]?.alt}
+                ratio={s.media.ratio}
+                size={s.media.size}
+                sizes="(max-width: 1023px) 100vw, 28vw"
+                class="mt-8 lg:mt-10"
+              />
             </div>
 
             <div class="max-w-[62ch]">
@@ -55,14 +93,6 @@ import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
                   </ul>
                 </div>
               </div>
-
-              <Media
-                label={s.media.label}
-                kind={s.media.kind}
-                ratio={s.media.ratio}
-                size={s.media.size}
-                class="mt-10 md:mt-14"
-              />
             </div>
           </div>
         </section>
