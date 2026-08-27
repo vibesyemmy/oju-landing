@@ -94,6 +94,13 @@ const {
   }
 
   .media--empty {
+    /*
+     * A filled slot is a replaced element, so it takes its height from its own
+     * ratio and ignores a stretch. This one is a div and would obey the stretch
+     * — height from the row, width from the ratio — and blow out of a narrow
+     * column. Starting it keeps both states sized from their width.
+     */
+    align-self: start;
     display: flex;
     flex-direction: column;
     align-items: center;

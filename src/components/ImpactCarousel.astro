@@ -109,6 +109,10 @@ const INTERVAL = 5000;
     justify-content: space-between;
     gap: 1.5rem;
     margin-bottom: 2rem;
+    /* Five 44px targets plus the pause button outgrow a phone once the heading
+       has taken its share. Wrapping gives the controls the full width rather
+       than pushing them off the screen. */
+    flex-wrap: wrap;
   }
   @media (min-width: 768px) {
     .impact__head { margin-bottom: 3rem; }
@@ -118,18 +122,27 @@ const INTERVAL = 5000;
     display: flex;
     align-items: center;
     gap: 1.25rem;
+    /* Shrinkable in its own right, otherwise the row it wrapped onto still
+       refuses to give and the dots never get the chance to compress. */
+    min-width: 0;
+    max-width: 100%;
   }
 
   .impact__dots {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    /* Shrinkable, so the row gives way on a narrow screen instead of overflowing. */
+    min-width: 0;
   }
 
   /* 44px hit area around a 7px mark — the target is the padding, not the dot. */
   .impact__dot {
     width: 44px;
     height: 44px;
+    /* Full size wherever it fits; never below the 24px minimum target. */
+    flex-shrink: 1;
+    min-width: 24px;
     padding: 0;
     border: 0;
     background: none;
@@ -154,6 +167,7 @@ const INTERVAL = 5000;
   .impact__pause {
     width: 44px;
     height: 44px;
+    flex-shrink: 0;
     padding: 0;
     border: 0;
     background: none;
