@@ -4,6 +4,12 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
 import Media from '../components/Media.astro';
+/* Licensed stock, standing in until the real room and street are photographed.
+   Pexels licence, free for commercial use.
+     studio-room   — Skylar Kang, pexels.com/photo/6044844
+     lagos-theatre — Paul Uchechukwu, pexels.com/photo/38327849 */
+import studioRoom from '../assets/studio/studio-room.webp';
+import lagosTheatre from '../assets/studio/lagos-theatre.webp';
 import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
 
 /* Portraits resolve by filename rather than by static import, so a member whose
@@ -54,6 +60,8 @@ const teamSnapKeyframes = (() => {
     <section class="px-6 pb-12 md:px-20 md:pb-20">
       <Media
         label="The studio at work — the room, the wall, people mid-argument over a screen. Not a stock office."
+        src={studioRoom}
+        alt="Desks, screens and drawn curtains in a working studio."
         ratio="21/9"
         size="2400×1029"
         loading="eager"
@@ -127,8 +135,11 @@ const teamSnapKeyframes = (() => {
         </div>
         <Media
           label="Somewhere that says Lagos without captioning it — the street, the building, the view from the desk."
+          src={lagosTheatre}
+          alt="The National Arts Theatre in Lagos, mirrored in the water in front of it."
           ratio="4/3"
           size="1600×1200"
+          sizes="(max-width: 767px) 100vw, 48vw"
         />
       </div>
     </section>
