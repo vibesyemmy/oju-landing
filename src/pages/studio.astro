@@ -5,6 +5,15 @@ import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
 import Media from '../components/Media.astro';
 import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
+
+/* Portraits resolve by filename rather than by static import, so a member whose
+   photo has not landed yet still renders — the Media brief stands in for it. */
+const portraits = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/team/*.{webp,avif,jpg,jpeg,png}',
+  { eager: true },
+);
+const portraitFor = (file?: string) =>
+  file ? portraits[`../assets/team/${file}`]?.default : undefined;
 ---
 
 <Base
@@ -107,18 +116,26 @@ import { PRINCIPLES, STUDIO_FACTS, TEAM } from '../data/site';
       TEAM.length > 0 && (
         <section class="border-t border-rule px-6 py-12 md:px-20 md:py-20">
           <h2 class="label mb-9 md:mb-14">The team</h2>
-          <ul class="grid gap-8 sm:grid-cols-2 md:grid-cols-3 md:gap-12">
+          <ul class="grid gap-10 sm:grid-cols-2 md:grid-cols-3 md:gap-x-12 md:gap-y-16">
             {TEAM.map((m) => (
               <li>
                 <Media
                   label={`${m.name} — portrait`}
-                  ratio="4/5"
-                  size="800×1000"
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                  class="mb-5"
+                  src={portraitFor(m.portrait)}
+                  alt={`${m.name}, ${m.role}`}
+                  ratio="1/1"
+                  size="800×800"
+                  widths={[400, 640, 800]}
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                  class="mb-6"
                 />
-                <p class="font-display text-[24px] tracking-tight">{m.name}</p>
-                <p class="mt-1 font-mono text-[12.5px] text-faint">{m.role}</p>
+                <p class="font-display text-[24px] leading-tight tracking-tight md:text-[26px]">
+                  {m.name}
+                </p>
+                <p class="mt-2 font-mono text-[12.5px] leading-relaxed text-faint">{m.role}</p>
+                <p class="mt-4 text-[15.5px] leading-relaxed text-soft text-pretty md:text-[16px]">
+                  {m.summary}
+                </p>
               </li>
             ))}
           </ul>

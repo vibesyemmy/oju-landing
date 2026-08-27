@@ -167,21 +167,47 @@ export const PRINCIPLES = [
   { title: 'Ship, then learn', body: 'A real thing in front of real users teaches more in a week than another month of internal debate.' },
 ] as const;
 
+export interface TeamMember {
+  name: string;
+  role: string;
+  /** Card-length. Two sentences at most — the grid puts these side by side. */
+  summary: string;
+  /**
+   * Filename inside src/assets/team, e.g. "dami-oloye.webp". Resolved on the
+   * studio page, so a missing file falls back to the Media brief rather than
+   * breaking the build.
+   */
+  portrait?: string;
+}
+
 /**
- * Deliberately empty. The studio page hides the team section entirely when
- * this is, and the head-count fact drops out with it — an unremarkable
- * omission, where three invented people would have been a liability.
- *
- * Add real people and both come back automatically.
+ * Real people only. The studio page hides the team section when this is empty,
+ * and the head-count fact drops out with it — an unremarkable omission, where
+ * invented people would have been a liability.
  */
-export const TEAM: readonly { name: string; role: string }[] = [];
+export const TEAM: readonly TeamMember[] = [
+  {
+    name: 'Dami Oloye',
+    role: 'Managing Director | Technical Program Manager',
+    portrait: 'dami-oloye.webp',
+    summary:
+      'Technology leader with 10+ years delivering large-scale enterprise programs across AI, data, digital commerce and SaaS. Founder of the studio, translating business objectives into roadmaps teams can actually execute.',
+  },
+  {
+    name: 'Akinyemi Ogungbaro',
+    role: 'Creative Technology & Product Design',
+    portrait: 'akinyemi-ogungbaro.webp',
+    summary:
+      'Brand designer, product designer and creative director who also leads technology delivery — turning ideas into brands, digital products and working systems. Sits where design, technology, business and strategy meet.',
+  },
+];
 
 export const STUDIO_FACTS = [
   { k: 'Founded', v: '2023' },
   { k: 'Based in', v: 'Lagos, Nigeria' },
   // Derived from TEAM, so the count cannot drift from the people listed.
   // Empty string drops the row rather than announcing "0 people".
-  { k: 'Team', v: TEAM.length ? `${TEAM.length} people` : '' },
+  { k: 'Team', v: TEAM.length ? `${TEAM.length} ${TEAM.length === 1 ? 'person' : 'people'}` : '' },
   { k: 'Working with', v: 'Teams in Nigeria, the UK, Germany and the US' },
   { k: 'Languages', v: 'English, Yoruba' },
 ] as const;
