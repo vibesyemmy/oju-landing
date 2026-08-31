@@ -18,13 +18,21 @@ stays complete while logos are still being collected.
 - **Trim the whitespace.** Padding baked into the file makes that logo look
   smaller than its neighbours no matter what the CSS says.
 
-## Why not extract them from the portfolio PDF
+## What the portfolio PDF can and cannot give you
 
-Tried it. PDF stores transparency as a separate soft mask, so every image
-extracts as an opaque rectangle — the logos come out on solid backgrounds
-unless each is recomposited with its mask by hand. The results are also
-inconsistent in resolution, since each was placed at whatever size that
-layout needed. Source logos from the brands instead.
+`scripts/extract-logos.mjs` pulls logo candidates out of a PDF. It recomposites
+each image with its soft mask, because pdfimages writes the two separately and a
+naive extract leaves every logo on an opaque rectangle.
+
+It works, and on the Akinyemi portfolio it recovered exactly one usable client
+logo: KFC. The rest of the marks in that document are **vector artwork** — drawn
+with PDF path operators rather than embedded as bitmaps — so they do not appear
+in a raster extract at all. Of 427 images, 15 had real transparency and 14 of
+those were laptop shadows, photo cutouts and confetti.
+
+So the script is worth running against any new PDF, but do not expect it to
+supply a logo wall. Source the rest from the clients' own brand assets, or from
+the original project files if the studio still holds them.
 
 ## Rendering
 

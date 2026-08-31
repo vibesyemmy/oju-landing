@@ -71,7 +71,7 @@ export const CLIENTS: readonly Client[] = [
   { name: 'MTN' },
   { name: 'Union Bank' },
   { name: 'Sterling Bank' },
-  { name: 'KFC' },
+  { name: 'KFC', logo: 'kfc.png' },
   { name: 'Sabi' },
   { name: 'HydrogenPay' },
   { name: 'VFD Microfinance Bank' },
