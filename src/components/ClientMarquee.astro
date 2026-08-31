@@ -56,7 +56,7 @@ const DURATION = Math.max(40, clients.length * 4);
                       densities={[1, 2]}
                       loading="lazy"
                       decoding="async"
-                      class="client__logo"
+                      class:list={['client__logo', c.tile && 'client__logo--tile']}
                     />
                   ) : (
                     <span class="client__name font-display">{c.name}</span>
@@ -146,6 +146,16 @@ const DURATION = Math.max(40, clients.length * 4);
     filter: none;
     opacity: 1;
   }
+
+  /* A tile is a mark inside a filled square. Desaturating the whole block at
+     55% turns it into a faint grey rectangle with the mark lost inside it, so
+     these keep full opacity and get the site's corner radius to read as a
+     deliberate tile rather than a clipped screenshot. */
+  .client__logo--tile {
+    opacity: 0.75;
+    border-radius: 4px;
+  }
+  .client:hover .client__logo--tile { opacity: 1; }
 
   /* The fallback for a client whose logo has not arrived. Sized to sit at the
      same optical weight as the logos beside it. */

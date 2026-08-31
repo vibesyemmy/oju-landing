@@ -56,6 +56,12 @@ export interface Client {
    * missing logo degrades to something deliberate rather than a gap.
    */
   logo?: string;
+  /**
+   * Solid-background logos — a mark locked inside a filled square rather than
+   * floating on transparency. The row's mono treatment flattens these into grey
+   * blocks, so they keep their weight instead.
+   */
+  tile?: boolean;
 }
 
 /**
@@ -69,7 +75,7 @@ export interface Client {
 export const CLIENTS: readonly Client[] = [
   { name: 'GTBank', logo: 'gtbank.svg' },
   { name: 'MTN', logo: 'mtn.svg' },
-  { name: 'Union Bank' },
+  { name: 'Union Bank', logo: 'union-bank.png', tile: true },
   { name: 'Sterling Bank', logo: 'sterling-bank.png' },
   { name: 'KFC', logo: 'kfc.png' },
   { name: 'Sabi' },
