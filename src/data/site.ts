@@ -84,7 +84,7 @@ export const CLIENTS: readonly Client[] = [
   { name: 'Consolidated Hallmark Insurance' },
   { name: 'Kairos Capital' },
   { name: 'Lingawa' },
-  { name: 'Gangan' },
+  { name: 'Gangan', logo: 'gangan.png' },
   { name: 'Harcourt Hotels & Resorts' },
   { name: 'GeoTravel' },
   { name: 'NEPAL Oil & Gas' },

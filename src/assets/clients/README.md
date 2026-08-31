@@ -56,6 +56,8 @@ superseded mark as the current one, so every candidate needs looking at.
 | `mtn.svg` | File:MTN 2022 logo.svg | Public domain |
 | `sterling-bank.png` | File:Sterling Bank Logo Straight.png | Public domain |
 | `kfc.png` | Extracted from the portfolio PDF | — |
+| `union-bank.png` | File:Union Bank of Nigeria Logo.png | CC BY 4.0 |
+| `gangan.png` | opeyemi.app brand board, keyed to transparency | own work |
 
 **Rejected: Union Bank.** The Commons file is correct — leaping horse,
 `unionbank` wordmark — but it is a solid blue tile with no transparency. Among
@@ -65,3 +67,19 @@ horizontal transparent variant turns up.
 **Not on Commons:** VFD Microfinance Bank, Consolidated Hallmark Insurance,
 Kairos Capital. Too small to have articles. These need the client's own asset,
 or the original project files.
+
+## Lifting a logo off a brand board
+
+`scripts/fetch-portfolio-logos.mjs` pulls logo assets published on opeyemi.app.
+A website serves its images as files, so unlike the PDF the marks are reachable.
+
+They arrive as spec boards, not bare logos — a lockup shown light and dark side
+by side, or an app icon at five sizes. Gangan was lifted from its lockup board:
+crop well inside the neighbouring panel, key the black mark to transparency by
+inverting luminance (which preserves antialiasing where a threshold shreds it),
+then take the bounding box from *strong* ink only so registration marks do not
+inflate it.
+
+Not everything on a board is a logo. Lingawa's "new brand" file is phone
+screenshots on pink, and Gangan's main logo file is a wall of applications.
+Look before cropping.
