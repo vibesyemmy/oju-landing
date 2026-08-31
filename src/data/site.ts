@@ -67,10 +67,10 @@ export interface Client {
  * name you cannot stand behind.
  */
 export const CLIENTS: readonly Client[] = [
-  { name: 'GTBank' },
-  { name: 'MTN' },
+  { name: 'GTBank', logo: 'gtbank.svg' },
+  { name: 'MTN', logo: 'mtn.svg' },
   { name: 'Union Bank' },
-  { name: 'Sterling Bank' },
+  { name: 'Sterling Bank', logo: 'sterling-bank.png' },
   { name: 'KFC', logo: 'kfc.png' },
   { name: 'Sabi' },
   { name: 'HydrogenPay' },

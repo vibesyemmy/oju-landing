@@ -39,3 +39,29 @@ the original project files if the studio still holds them.
 The row renders every logo in a single ink tone at a uniform optical height,
 because eighteen brand palettes side by side would fight both each other and
 this site. Colour returns on hover.
+
+## Where the current logos came from
+
+`scripts/fetch-client-logos.mjs` pulls candidates from Wikimedia Commons —
+chosen because every file there carries a licence and a provenance trail, which
+the logo-aggregator sites do not. It throttles to one request a second; Commons
+is a free service and will 429 you otherwise.
+
+It does not decide anything. The top hit for a bank is as likely to be a
+superseded mark as the current one, so every candidate needs looking at.
+
+| Logo | Source | Licence |
+|---|---|---|
+| `gtbank.svg` | File:GTBank logo.svg | Public domain |
+| `mtn.svg` | File:MTN 2022 logo.svg | Public domain |
+| `sterling-bank.png` | File:Sterling Bank Logo Straight.png | Public domain |
+| `kfc.png` | Extracted from the portfolio PDF | — |
+
+**Rejected: Union Bank.** The Commons file is correct — leaping horse,
+`unionbank` wordmark — but it is a solid blue tile with no transparency. Among
+marks that float, it renders as a grey block. Left as a wordmark until a
+horizontal transparent variant turns up.
+
+**Not on Commons:** VFD Microfinance Bank, Consolidated Hallmark Insurance,
+Kairos Capital. Too small to have articles. These need the client's own asset,
+or the original project files.
