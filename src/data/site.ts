@@ -48,32 +48,43 @@ export const FOOTER_COLUMNS = [
   { title: 'Build', items: ['Web applications', 'Mobile apps', 'APIs', 'Infrastructure'] },
 ] as const;
 
+export interface Client {
+  name: string;
+  /**
+   * Filename in src/assets/clients/ — svg preferred, then png with real
+   * transparency. Absent means the row renders the name as a wordmark, so a
+   * missing logo degrades to something deliberate rather than a gap.
+   */
+  logo?: string;
+}
+
 /**
- * Real clients, ordered by how much recognition the name carries on its own —
- * the strip is read left to right and most visitors stop after the first line.
+ * Real clients, ordered by how much recognition the name carries on its own.
+ * The row scrolls, so first position matters less than it did for a static
+ * list, but a visitor glancing once still reads left to right.
  *
- * An empty array hides the section entirely, so remove rather than blank out
- * any name you cannot stand behind.
+ * An empty array hides the section entirely. Remove rather than blank out any
+ * name you cannot stand behind.
  */
-export const CLIENTS: readonly string[] = [
-  'GTBank',
-  'MTN',
-  'Union Bank',
-  'Sterling Bank',
-  'KFC',
-  'Sabi',
-  'HydrogenPay',
-  'VFD Microfinance Bank',
-  'Consolidated Hallmark Insurance',
-  'Kairos Capital',
-  'Lingawa',
-  'Gangan',
-  'Harcourt Hotels & Resorts',
-  'GeoTravel',
-  'NEPAL Oil & Gas',
-  'Insidify',
-  'Country Homes',
-  'Butchers & Bakers',
+export const CLIENTS: readonly Client[] = [
+  { name: 'GTBank' },
+  { name: 'MTN' },
+  { name: 'Union Bank' },
+  { name: 'Sterling Bank' },
+  { name: 'KFC' },
+  { name: 'Sabi' },
+  { name: 'HydrogenPay' },
+  { name: 'VFD Microfinance Bank' },
+  { name: 'Consolidated Hallmark Insurance' },
+  { name: 'Kairos Capital' },
+  { name: 'Lingawa' },
+  { name: 'Gangan' },
+  { name: 'Harcourt Hotels & Resorts' },
+  { name: 'GeoTravel' },
+  { name: 'NEPAL Oil & Gas' },
+  { name: 'Insidify' },
+  { name: 'Country Homes' },
+  { name: 'Butchers & Bakers' },
 ];
 
 /* ── /services ─────────────────────────────────────────────────

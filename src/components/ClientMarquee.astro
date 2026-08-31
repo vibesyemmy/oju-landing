@@ -1,0 +1,188 @@
+---
+/**
+ * Client row — one line, scrolling slowly.
+ *
+ * Two identical tracks sit side by side and the pair translates by exactly
+ * -50%. At the end of the cycle track two is where track one started, so the
+ * loop is seamless without measuring anything in JavaScript. It also means the
+ * list must be duplicated in the DOM; the copy is aria-hidden so assistive tech
+ * reads each client once.
+ *
+ * Logos are optional. A client without one renders as a wordmark, so the row is
+ * complete from the first day and improves as logos arrive rather than showing
+ * gaps. See src/assets/clients/README.md.
+ *
+ * No JavaScript: the scroll is a CSS animation, hover-pause is
+ * animation-play-state, and prefers-reduced-motion falls back to a static
+ * wrapped list.
+ */
+import { Image } from 'astro:assets';
+import { CLIENTS } from '../data/site';
+
+const files = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/clients/*.{svg,png,webp,jpg,jpeg}',
+  { eager: true },
+);
+
+/** Resolve `logo: 'gtbank.svg'` against whatever is actually in the folder. */
+const resolve = (logo?: string) => {
+  if (!logo) return undefined;
+  const hit = Object.keys(files).find((k) => k.endsWith(`/${logo}`));
+  return hit ? files[hit].default : undefined;
+};
+
+const clients = CLIENTS.map((c) => ({ ...c, img: resolve(c.logo) }));
+
+/** Slow enough to read, and scaled to the list so adding clients does not speed it up. */
+const DURATION = Math.max(40, clients.length * 4);
+---
+
+{
+  clients.length > 0 && (
+    <section class="clients" aria-labelledby="clients-heading">
+      <h2 class="label clients__head" id="clients-heading">Trusted by</h2>
+
+      <div class="marquee" style={`--marquee-duration:${DURATION}s`}>
+        <div class="marquee__inner">
+          {[0, 1].map((copy) => (
+            <ul class="marquee__track" aria-hidden={copy === 1 ? 'true' : undefined}>
+              {clients.map((c) => (
+                <li class="client">
+                  {c.img ? (
+                    <Image
+                      src={c.img}
+                      alt={c.name}
+                      height={40}
+                      densities={[1, 2]}
+                      loading="lazy"
+                      decoding="async"
+                      class="client__logo"
+                    />
+                  ) : (
+                    <span class="client__name font-display">{c.name}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .clients {
+    border-top: 1px solid var(--color-rule);
+    padding: 1.75rem 0 2rem;
+  }
+  @media (min-width: 768px) {
+    .clients { padding: 2.25rem 0 2.5rem; }
+  }
+
+  .clients__head {
+    padding: 0 1.5rem 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .clients__head { padding-left: 5rem; padding-right: 5rem; }
+  }
+
+  .marquee {
+    overflow: hidden;
+    /* Fades both ends so logos arrive and leave rather than being chopped at
+       the viewport edge. */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  .marquee__inner {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll var(--marquee-duration, 60s) linear infinite;
+  }
+
+  /* Exactly half: the second track lands where the first began. */
+  @keyframes marquee-scroll {
+    to { transform: translateX(-50%); }
+  }
+
+  /* Hovering to read a name should not mean chasing it across the screen. */
+  .marquee:hover .marquee__inner,
+  .marquee:focus-within .marquee__inner {
+    animation-play-state: paused;
+  }
+
+  .marquee__track {
+    display: flex;
+    align-items: center;
+    gap: clamp(2.5rem, 5vw, 4.5rem);
+    padding-right: clamp(2.5rem, 5vw, 4.5rem);
+    flex: none;
+    /* Fixed height whether the row holds 34px logos or 22px wordmarks, so the
+       section does not resize as logos arrive — and so hovering to pause has a
+       target worth aiming at rather than a 22px band. */
+    min-height: 56px;
+  }
+
+  .client {
+    display: flex;
+    align-items: center;
+    flex: none;
+  }
+
+  /* Eighteen brand palettes side by side would fight each other and this page.
+     One ink tone at rest; colour on hover for anyone who looks closer. */
+  .client__logo {
+    height: 28px;
+    width: auto;
+    filter: grayscale(1) contrast(0.85);
+    opacity: 0.55;
+    transition: filter 260ms ease, opacity 260ms ease;
+  }
+  @media (min-width: 768px) {
+    .client__logo { height: 34px; }
+  }
+  .client:hover .client__logo {
+    filter: none;
+    opacity: 1;
+  }
+
+  /* The fallback for a client whose logo has not arrived. Sized to sit at the
+     same optical weight as the logos beside it. */
+  .client__name {
+    font-size: 1.125rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--color-soft);
+    white-space: nowrap;
+    transition: color 260ms ease;
+  }
+  @media (min-width: 768px) {
+    .client__name { font-size: 1.375rem; }
+  }
+  .client:hover .client__name { color: var(--color-ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee {
+      -webkit-mask-image: none;
+      mask-image: none;
+      padding: 0 1.5rem;
+    }
+    .marquee__inner {
+      animation: none;
+      width: auto;
+      flex-wrap: wrap;
+    }
+    /* The duplicate exists only to make the loop seamless; static, it is
+       eighteen names printed twice. */
+    .marquee__track[aria-hidden='true'] { display: none; }
+    .marquee__track {
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      padding-right: 0;
+    }
+    @media (min-width: 768px) {
+      .marquee { padding: 0 5rem; }
+    }
+  }
+</style>
