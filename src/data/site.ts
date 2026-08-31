@@ -48,8 +48,33 @@ export const FOOTER_COLUMNS = [
   { title: 'Build', items: ['Web applications', 'Mobile apps', 'APIs', 'Infrastructure'] },
 ] as const;
 
-/** TODO: replace with real client names. Empty array hides the strip entirely. */
-export const CLIENTS: readonly string[] = [];
+/**
+ * Real clients, ordered by how much recognition the name carries on its own —
+ * the strip is read left to right and most visitors stop after the first line.
+ *
+ * An empty array hides the section entirely, so remove rather than blank out
+ * any name you cannot stand behind.
+ */
+export const CLIENTS: readonly string[] = [
+  'GTBank',
+  'MTN',
+  'Union Bank',
+  'Sterling Bank',
+  'KFC',
+  'Sabi',
+  'HydrogenPay',
+  'VFD Microfinance Bank',
+  'Consolidated Hallmark Insurance',
+  'Kairos Capital',
+  'Lingawa',
+  'Gangan',
+  'Harcourt Hotels & Resorts',
+  'GeoTravel',
+  'NEPAL Oil & Gas',
+  'Insidify',
+  'Country Homes',
+  'Butchers & Bakers',
+];
 
 /* ── /services ─────────────────────────────────────────────────
    The three capability columns from the homepage, expanded. Same
@@ -221,16 +246,11 @@ export const TEAM: readonly TeamMember[] = [
   },
 ];
 
-/** The people who are actually on record — what the head-count fact counts. */
-const NAMED_TEAM = TEAM.filter((m) => !m.pending);
-
 export const STUDIO_FACTS = [
   { k: 'Founded', v: '2023' },
   { k: 'Based in', v: 'Lagos, Nigeria' },
-  // Derived from TEAM, so the count cannot drift from the people listed.
-  // Empty string drops the row rather than announcing "0 people".
-  // Pending seats are not people yet, so they do not count.
-  { k: 'Team', v: NAMED_TEAM.length ? `${NAMED_TEAM.length} ${NAMED_TEAM.length === 1 ? 'person' : 'people'}` : '' },
+  // No head-count here. The team section below the facts already names
+  // everyone, so a number restating it only invites the "only two?" read.
   { k: 'Working with', v: 'Teams in Nigeria, the UK, Germany and the US' },
   { k: 'Languages', v: 'English, Yoruba' },
 ] as const;
