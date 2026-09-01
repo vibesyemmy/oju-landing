@@ -108,23 +108,13 @@ import { HONEST, PROCESS, SITE } from '../data/site';
     <!-- Honest limits. -->
     <section class="rule-t gutter py-14 md:py-21" aria-labelledby="honest">
       <p class="label" id="honest">Being straight about it</p>
-      <div class="mt-9 grid gap-10 md:mt-12 md:grid-cols-2 md:gap-20">
-        <div>
-          <h2 class="font-display text-[26px] leading-[1.15] tracking-[-0.025em] md:text-[30px]">
-            Worth hiring us for
-          </h2>
-          <ul class="honest">
-            {HONEST.good.map((line) => <li>{line}</li>)}
-          </ul>
-        </div>
-        <div>
-          <h2 class="font-display text-soft text-[26px] leading-[1.15] tracking-[-0.025em] md:text-[30px]">
-            Not worth hiring us for
-          </h2>
-          <ul class="honest honest--muted">
-            {HONEST.bad.map((line) => <li>{line}</li>)}
-          </ul>
-        </div>
+      <div class="mt-9 max-w-[42rem] md:mt-12">
+        <h2 class="font-display text-[26px] leading-[1.15] tracking-[-0.025em] md:text-[30px]">
+          Worth hiring us for
+        </h2>
+        <ul class="honest">
+          {HONEST.good.map((line) => <li>{line}</li>)}
+        </ul>
       </div>
     </section>
 
@@ -245,10 +235,6 @@ import { HONEST, PROCESS, SITE } from '../data/site';
     line-height: 1.6;
     text-wrap: pretty;
   }
-  .honest--muted {
-    color: var(--color-soft);
-  }
-
   /* method */
   /* Sized like the argument statements rather than by hand. At a fixed 44px in
      a 5fr column this broke as "Draw it. Build / it." — the forced line break
