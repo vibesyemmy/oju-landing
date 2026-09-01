@@ -19,8 +19,12 @@
  *
  *   · the core stretches along its direction of travel and squeezes across it,
  *     so a fast flame is a streak and a resting one is a ball;
- *   · embers are shed at a rate that climbs with speed, inheriting a share of
- *     the core's velocity, so the faster the pointer the longer the tail;
+ *   · embers are laid one per few pixels of path rather than per unit of
+ *     time, so a fast sweep lays down more of them instead of the same few
+ *     spread thinner — the tail gets longer without getting sparser;
+ *   · speed is also heat. The core burns through more of the upper colour
+ *     bands as it is dragged, and an ember's brightness is fixed at birth
+ *     from the speed that threw it, so a fast streak stays bright as it cools;
  *   · every ember is then on its own: buoyancy up, drag against its velocity,
  *     heat falling with age. Nothing follows the cursor — they are simply lit
  *     things that were thrown.
@@ -91,7 +95,15 @@
     const DRAG = 4.6;
     const INHERIT = 0.26;
     const SPREAD = 40;
-    const MAX_EMBERS = 200;
+    const MAX_EMBERS = 440;
+    /** One ember per this many pixels travelled. Emission by distance rather
+        than by time is what keeps the tail the same density at any speed: a
+        rate per second thins out exactly when the pointer moves fastest. */
+    const SPACING = 2.2;
+    /** Embers per second while the pointer is still. */
+    const IDLE_RATE = 26;
+    /** Speed at which the fire reaches full heat, in px/s. */
+    const WHITE_HOT = 1500;
 
     const WHITE = '#fffbe8';
     const YELLOW = '#ffe500';
@@ -134,7 +146,7 @@
       return top + (bottom - top) * v;
     };
 
-    type Ember = { x: number; y: number; vx: number; vy: number; age: number; life: number };
+    type Ember = { x: number; y: number; vx: number; vy: number; age: number; life: number; hot: number };
 
     let dpr = 1;
     let cols = 0;
@@ -201,6 +213,9 @@
       const uy = speed > 1 ? cvy / speed : -1;
       const radius = 3.5;
       const span = Math.ceil(radius * stretch) + 1;
+      // Work heats it: the faster it is dragged, the more of the core clears
+      // the upper colour bands instead of sitting in orange.
+      const fuel = 1.2 + Math.min(0.9, speed / WHITE_HOT);
 
       const bx = Math.round(cx / CELL);
       const by = Math.round(cy / CELL);
@@ -215,7 +230,7 @@
           const a = along < 0 ? along / stretch : along;
           const r = Math.hypot(a, across * squeeze);
           if (r > radius) continue;
-          add(bx + gx, by + gy, (1 - r / radius) ** 1.5 * 1.25);
+          add(bx + gx, by + gy, (1 - r / radius) ** 1.5 * fuel);
         }
       }
     };
@@ -233,7 +248,7 @@
         for (let gy = -span; gy <= span; gy += 1) {
           const r = Math.hypot(gx, gy);
           if (r > radius) continue;
-          add(bx + gx, by + gy, (1 - r / radius) * strength * 0.62);
+          add(bx + gx, by + gy, (1 - r / radius) * strength * e.hot);
         }
       }
     };
@@ -266,8 +281,13 @@
         if (e.age >= e.life) embers.splice(i, 1);
       }
 
-      // Shed faster when travelling faster: that is what lengthens the tail.
-      debt += (26 + Math.min(190, speed * 0.3)) * dt;
+      // A ticking idle rate plus one ember per SPACING px of path. The second
+      // term is the one that matters: it fixes the gap between embers in
+      // space, so a fast sweep lays down more of them rather than the same
+      // number spread thinner.
+      const travel = Math.hypot(cx - px, cy - py);
+      const birthHeat = 0.66 + Math.min(0.6, speed / 1400);
+      debt += IDLE_RATE * dt + travel / SPACING;
       while (debt >= 1 && embers.length < MAX_EMBERS) {
         debt -= 1;
         // Placed along the path actually covered since the last frame, not
@@ -281,9 +301,12 @@
           vy: cvy * INHERIT + (Math.random() - 0.5) * SPREAD,
           age: 0,
           life: 0.2 + Math.random() * 0.2,
+          // Fixed at birth, so an ember thrown off a fast sweep stays the
+          // brighter thing it was thrown as while it cools.
+          hot: birthHeat,
         });
       }
-      if (debt > 4) debt = 4;
+      if (debt > 6) debt = 6;
     };
 
     const paint = () => {
@@ -305,17 +328,30 @@
         const n =
           (noise(gx * 0.42, gy * 0.42 - rise) - 0.5) * 0.62 +
           (noise(gx * 0.9 + 40, gy * 0.9 - rise * 1.7) - 0.5) * 0.26;
-        const h = heat[i] + n * Math.min(1, heat[i] * 2.4);
+        const raw = heat[i] + n * Math.min(1, heat[i] * 2.4);
+        if (raw <= 0) continue;
+
+        /* Accumulated heat has no ceiling — a dense tail piles a dozen embers
+           into one cell — so it is compressed into 0..1 before banding.
+           Without this, coverage and temperature are the same number: adding
+           embers to make the tail denser also drove every cell into the top
+           band, and the fire got whiter instead of fuller. Compressed, density
+           is how much is lit and the fuel terms are how hot it is. */
+        const h = 1 - Math.exp(-raw * 1.15);
 
         const threshold = BAYER[gy % 4][gx % 4];
-        if (h < threshold * 0.2) continue;
+        if (h < threshold * 0.15) continue;
 
         let colour: string;
         let alpha = 1;
+        // White is deliberately hard to reach. The ground is cream, so a
+        // white-hot body reads as a pale smear rather than an intense one —
+        // on this paper the hot end of the palette is yellow, and white is
+        // only ever a spark at the very centre.
         if (h > 0.95) colour = WHITE;
-        else if (h > 0.68) colour = YELLOW;
-        else if (h > 0.46) colour = ORANGE;
-        else if (h > 0.3) colour = RED;
+        else if (h > 0.74) colour = YELLOW;
+        else if (h > 0.5) colour = ORANGE;
+        else if (h > 0.32) colour = RED;
         else if (h > 0.16) { colour = BLUE; alpha = 0.9; }
         else { colour = NAVY; alpha = 0.62; }
 
