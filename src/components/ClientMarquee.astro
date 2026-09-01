@@ -59,12 +59,49 @@ const BRANDFETCH = import.meta.env.PUBLIC_BRANDFETCH_CLIENT_ID;
 const remoteLogo = (domain: string) =>
   `https://cdn.brandfetch.io/domain/${domain}/h/68/fallback/404/type/logo?c=${BRANDFETCH}`;
 
-const clients = CLIENTS.map((c) => ({
-  ...c,
-  img: resolve(c.logo),
-  // Self-hosted always wins; remote only fills gaps.
-  remote: !c.logo && c.domain && BRANDFETCH ? remoteLogo(c.domain) : undefined,
-}));
+/**
+ * Optical sizing.
+ *
+ * Setting every logo to the same height only works while they share a shape.
+ * These do not: Consolidated Hallmark is a stacked mark at 0.65:1, FundPatients
+ * a long wordmark at 6.7:1. At a flat 34px that is 22px against 228px — the
+ * stacked mark reads as a speck and the wordmark as a banner, though both are
+ * "the same size".
+ *
+ * Equal *area* is the fair comparison, but applying it in full sends the tall
+ * marks to 70px and blows out the row. So compensate partially: pull heights
+ * toward equal area with an exponent well under the 0.5 that would equalise it,
+ * then clamp. Wide marks lose a little height, stacked marks gain some, and
+ * nothing escapes the band.
+ *
+ * Derived from each file's own dimensions rather than a hand-set flag, so
+ * replacing a logo re-balances it without anyone remembering to.
+ *
+ * Tiles are exempt. The whole argument above assumes a mark floating in empty
+ * space, where a square outline encloses mostly nothing and needs the height to
+ * carry equal weight. A tile is ink edge to edge, so the same 48px square that
+ * rescues a stacked mark turns a tile into the heaviest object in the row.
+ * Those stay at the baseline.
+ */
+const REF_RATIO = 4; // a typical horizontal lockup
+const [MIN_H, MAX_H] = [30, 48];
+const opticalHeight = (img?: ImageMetadata, tile?: boolean) => {
+  if (tile || !img?.width || !img?.height) return 34;
+  const ratio = img.width / img.height;
+  const h = 34 * Math.pow(REF_RATIO / ratio, 0.4);
+  return Math.round(Math.min(MAX_H, Math.max(MIN_H, h)));
+};
+
+const clients = CLIENTS.map((c) => {
+  const img = resolve(c.logo);
+  return {
+    ...c,
+    img,
+    h: opticalHeight(img, c.tile),
+    // Self-hosted always wins; remote only fills gaps.
+    remote: !c.logo && c.domain && BRANDFETCH ? remoteLogo(c.domain) : undefined,
+  };
+});
 
 /** Slow enough to read, and scaled to the list so adding clients does not speed it up. */
 const DURATION = Math.max(40, clients.length * 4);
@@ -80,12 +117,12 @@ const DURATION = Math.max(40, clients.length * 4);
           {[0, 1].map((copy) => (
             <ul class="marquee__track" aria-hidden={copy === 1 ? 'true' : undefined}>
               {clients.map((c) => (
-                <li class="client" data-remote={c.remote ? '' : undefined}>
+                <li class="client" data-remote={c.remote ? '' : undefined} style={`--logo-h:${c.h}px`}>
                   {c.img ? (
                     <Image
                       src={c.img}
                       alt={c.name}
-                      height={40}
+                      height={c.h}
                       densities={[1, 2]}
                       loading="lazy"
                       decoding="async"
@@ -171,7 +208,8 @@ const DURATION = Math.max(40, clients.length * 4);
     /* Fixed height whether the row holds 34px logos or 22px wordmarks, so the
        section does not resize as logos arrive — and so hovering to pause has a
        target worth aiming at rather than a 22px band. */
-    min-height: 56px;
+    /* Tallest optical height is 48px; this leaves it air on both sides. */
+    min-height: 64px;
   }
 
   .client {
@@ -183,7 +221,10 @@ const DURATION = Math.max(40, clients.length * 4);
   /* Eighteen brand palettes side by side would fight each other and this page.
      One ink tone at rest; colour on hover for anyone who looks closer. */
   .client__logo {
-    height: 28px;
+    /* Per-logo, computed above from the file's own proportions. Mobile keeps
+       the same relative sizing rather than a flat height, so the balance the
+       calculation bought does not collapse on small screens. */
+    height: calc(var(--logo-h, 34px) * 0.82);
     width: auto;
     filter: grayscale(1) contrast(0.85);
     /* Weighted to match the wordmarks beside them. At 0.55 the logos read
@@ -194,7 +235,7 @@ const DURATION = Math.max(40, clients.length * 4);
     transition: filter 260ms ease, opacity 260ms ease;
   }
   @media (min-width: 768px) {
-    .client__logo { height: 34px; }
+    .client__logo { height: var(--logo-h, 34px); }
   }
   .client:hover .client__logo {
     filter: none;

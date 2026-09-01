@@ -34,6 +34,24 @@ So the script is worth running against any new PDF, but do not expect it to
 supply a logo wall. Source the rest from the clients' own brand assets, or from
 the original project files if the studio still holds them.
 
+## Sizing
+
+The row does not use one height for everything. These marks run from 0.65:1
+(Consolidated Hallmark, stacked) to 6.7:1 (FundPatients, a long wordmark); at a
+flat 34px that is a 22px mark beside a 228px one, and the stacked mark reads as
+a speck though both are nominally "the same size".
+
+`opticalHeight()` in `ClientMarquee.astro` pulls heights part-way toward equal
+*area* — an exponent well under the 0.5 that would equalise it outright, then
+clamped to 30–48px. It reads each file's own dimensions, so replacing a logo
+re-balances it with no flag to remember.
+
+**Tiles are exempt.** That whole argument assumes a mark floating in space,
+where a square outline encloses mostly nothing. A tile is ink edge to edge, so
+the 48px square that rescues a stacked mark makes a tile the heaviest object in
+the row. Tiles stay at the 34px baseline. Flag them with `tile: true`; both
+GTBank and Union Bank are ones.
+
 ## Rendering
 
 The row renders every logo in a single ink tone at a uniform optical height,
@@ -61,6 +79,13 @@ superseded mark as the current one, so every candidate needs looking at.
 | `sabi.svg` | opeyemi.app `/logos/` — vector, as served | own work |
 | `lingawa.svg` | opeyemi.app `/logos/` — vector, as served | own work |
 | `hydrogen.svg` | Hydrogen-booking repo, `public/HydrogenLogo.svg` | own work |
+| `vfd.png` | supplied | own work |
+| `consolidated-hallmark.svg` | supplied | own work |
+| `harcourt.svg` | supplied | own work |
+| `insidify.svg` | supplied | own work |
+| `country-homes.svg` | supplied | own work |
+| `belvia.svg` | supplied | own work |
+| `fundpatients.svg` | supplied | own work |
 
 The opeyemi.app landing page serves its client row as individual logo files
 rather than compositing them into a screenshot, so those are a straight

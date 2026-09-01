@@ -83,23 +83,25 @@ export interface Client {
  * name you cannot stand behind.
  */
 export const CLIENTS: readonly Client[] = [
-  { name: 'GTBank', logo: 'gtbank.svg' },
+  { name: 'GTBank', logo: 'gtbank.svg', tile: true },
   { name: 'MTN', logo: 'mtn.svg' },
   { name: 'Union Bank', logo: 'union-bank.png', tile: true },
   { name: 'Sterling Bank', logo: 'sterling-bank.png' },
   { name: 'KFC', logo: 'kfc.png' },
   { name: 'Sabi', logo: 'sabi.svg' },
   { name: 'HydrogenPay', logo: 'hydrogen.svg' },
-  { name: 'VFD Microfinance Bank', domain: 'vfdbank.com' },
-  { name: 'Consolidated Hallmark Insurance' },
+  { name: 'VFD Microfinance Bank', logo: 'vfd.png' },
+  { name: 'Consolidated Hallmark Insurance', logo: 'consolidated-hallmark.svg' },
   { name: 'Kairos Capital', domain: 'kairoscapitalng.com' },
   { name: 'Lingawa', logo: 'lingawa.svg' },
   { name: 'Gangan', logo: 'gangan.png' },
-  { name: 'Harcourt Hotels & Resorts', domain: 'harcourt.com' },
+  { name: 'Harcourt Hotels & Resorts', logo: 'harcourt.svg' },
   { name: 'GeoTravel', domain: 'geotravel.tours' },
   { name: 'NEPAL Oil & Gas' },
-  { name: 'Insidify', domain: 'insidify.com' },
-  { name: 'Country Homes' },
+  { name: 'Belvia', logo: 'belvia.svg' },
+  { name: 'FundPatients', logo: 'fundpatients.svg' },
+  { name: 'Insidify', logo: 'insidify.svg' },
+  { name: 'Country Homes', logo: 'country-homes.svg' },
   { name: 'Butchers & Bakers' },
 ];
 
