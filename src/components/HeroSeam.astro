@@ -1,0 +1,187 @@
+---
+/**
+ * Homepage hero — the claim, not a description.
+ *
+ * Replaces HeroStatement, which said what the studio does. This says what the
+ * studio believes, which is the thing a visitor can actually repeat to someone
+ * else. The rest of the page argues it.
+ *
+ * The device below the headline is the argument drawn: two rules, design and
+ * engineering, running out of alignment, stepping toward each other, closing at
+ * a marked join. It is the site's own mark rather than a borrowed texture — it
+ * only makes sense for a studio that does both halves.
+ */
+import { SITE } from '../data/site';
+---
+
+<section class="hero" aria-labelledby="hero-claim">
+  <div class="hero__top">
+    <h1 id="hero-claim" class="hero__claim font-display">
+      The seam is where products fail.
+    </h1>
+
+    <div class="hero__aside">
+      <p class="label hero__meta">
+        A design, product<br />&amp; engineering studio<br />{SITE.city}, since 2023
+      </p>
+      <hr class="hero__rule" />
+      <p class="hero__line text-soft">
+        Interfaces, brand systems, and the software underneath &mdash; drawn and
+        shipped by one team.
+      </p>
+    </div>
+  </div>
+
+  <div class="hero__device">
+    <svg
+      class="seam"
+      viewBox="0 0 1280 264"
+      fill="none"
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="Two lines, design and engineering, running out of alignment and closing to a single seam"
+    >
+      <text class="seam__text" x="0" y="30">DESIGN</text>
+      <text class="seam__text" x="0" y="252">ENGINEERING</text>
+
+      <path class="seam__design" d="M0 58 H236 V84 H452 V106 H720 V132 H1280" />
+      <path class="seam__build" d="M0 206 H236 V180 H452 V158 H720 V132 H1280" />
+
+      <g class="seam__gap">
+        <path d="M72 58 V206" /><path d="M154 58 V206" />
+        <path d="M300 84 V180" /><path d="M376 84 V180" />
+        <path d="M520 106 V158" /><path d="M614 106 V158" />
+      </g>
+
+      <circle class="seam__join" cx="720" cy="132" r="5" />
+      <text class="seam__text seam__text--join" x="744" y="126">THE JOIN</text>
+    </svg>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 3rem 1.5rem 0;
+  }
+  @media (min-width: 768px) {
+    .hero { padding: 4.75rem 5rem 0; }
+  }
+
+  .hero__top {
+    display: grid;
+    gap: 1.75rem;
+  }
+  @media (min-width: 1024px) {
+    .hero__top {
+      grid-template-columns: minmax(0, 1fr) 19rem;
+      gap: 3.5rem;
+      align-items: start;
+    }
+  }
+
+  .hero__claim {
+    margin: 0;
+    font-size: clamp(2.75rem, 8.4vw, 6.5rem);
+    line-height: 0.94;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .hero__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  @media (min-width: 1024px) {
+    .hero__aside { padding-top: 0.75rem; }
+  }
+
+  .hero__meta {
+    line-height: 1.9;
+  }
+
+  .hero__rule {
+    border: 0;
+    border-top: 1px solid var(--color-rule);
+    margin: 0;
+  }
+
+  .hero__line {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    max-width: 30ch;
+  }
+
+  .hero__device {
+    padding: 2.75rem 0 0;
+  }
+  @media (min-width: 768px) {
+    .hero__device { padding-top: 4rem; }
+  }
+
+  .seam {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Hairlines scale with the artwork, so the stroke is set in viewBox units and
+     bumped on small screens where the whole drawing is a third of the width. */
+  .seam__design,
+  .seam__build {
+    stroke-width: 4;
+    fill: none;
+  }
+  .seam__gap path {
+    stroke: var(--color-rule);
+    stroke-width: 3;
+  }
+  @media (min-width: 768px) {
+    .seam__design,
+    .seam__build { stroke-width: 2; }
+    .seam__gap path { stroke-width: 1.25; }
+  }
+
+  .seam__design { stroke: var(--color-ink); }
+  .seam__build { stroke: var(--color-accent); }
+  .seam__join { fill: var(--color-accent); }
+
+  /* Sized in viewBox units so the labels scale with the drawing instead of
+     shrinking to nothing as the artwork gets wider. */
+  .seam__text {
+    font-family: var(--font-mono);
+    font-size: 19px;
+    letter-spacing: 2.6px;
+    fill: var(--color-faint);
+  }
+  .seam__text--join { fill: var(--color-accent); }
+
+  /* At phone widths the whole drawing is a third of the width and the labels
+     would set at four illegible pixels. The two colours carry it alone there. */
+  .seam__text { display: none; }
+  @media (min-width: 768px) {
+    .seam__text { display: block; }
+  }
+
+  /* The join closing is the whole point, so it draws itself once on arrival. */
+  @media (prefers-reduced-motion: no-preference) {
+    .seam__design,
+    .seam__build {
+      stroke-dasharray: 1600;
+      stroke-dashoffset: 1600;
+      animation: seam-draw 1400ms cubic-bezier(0.22, 0.68, 0.3, 1) 200ms forwards;
+    }
+    .seam__build { animation-delay: 320ms; }
+    .seam__join {
+      opacity: 0;
+      animation: seam-join 400ms ease 1500ms forwards;
+    }
+  }
+
+  @keyframes seam-draw {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes seam-join {
+    to { opacity: 1; }
+  }
+</style>

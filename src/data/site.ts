@@ -20,6 +20,12 @@ export const NAV = [
   { label: 'Contact', href: '/contact' },
 ] as const;
 
+/**
+ * Kept, unused. The homepage capability cards were removed when it was rebuilt
+ * as an argument — three columns of things we can do was the clearest instance
+ * of stating capabilities where a belief was needed. /services carries the
+ * detail now. This stays because restoring the cards is an import away.
+ */
 export const CAPABILITIES = [
   {
     num: '01',
@@ -129,6 +135,25 @@ export const CLIENTS: readonly Client[] = [
   { name: 'Country Homes', logo: 'country-homes.svg' },
   { name: 'Butchers & Bakers' },
 ];
+
+/* ── homepage argument ─────────────────────────────────────────
+   The honest-limits block. Publishing what the studio is wrong
+   for buys more trust than another list of things it can do —
+   and it filters enquiries before they become meetings. Keep
+   both columns the same length; a short "wrong for" list reads
+   as false modesty. */
+export const HONEST = {
+  good: [
+    'Teams where design and engineering keep missing each other, and the same class of bug keeps arriving.',
+    'Products that have to survive real traffic, not just a demo and a screenshot.',
+    'Work where one group owning both halves beats two specialist agencies and a translation layer.',
+  ],
+  bad: [
+    'A mark on its own, with no product behind it. Plenty of people do that better than we would.',
+    'Anything needing twelve people in the room next week. We are small on purpose, and we would rather say so than staff up and hope.',
+    'A rescue two weeks before launch. By then the seams are already sewn shut.',
+  ],
+} as const;
 
 /* ── /work, second tier ────────────────────────────────────────
    Brand and interface projects that have a brief but not a case

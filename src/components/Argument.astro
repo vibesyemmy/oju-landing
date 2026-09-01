@@ -1,0 +1,104 @@
+---
+/**
+ * One beat of the homepage argument: a statement on the left with a small mono
+ * kicker beneath it, the reasoning on the right.
+ *
+ * The same shape carries every section of the case, which is what makes it read
+ * as one piece of writing rather than a stack of unrelated blocks. Statement and
+ * kicker are props; the reasoning is a slot, because it is prose and belongs in
+ * the page next to the rest of the copy.
+ */
+interface Props {
+  /** The claim. Kept short enough to land on two or three lines. */
+  statement: string;
+  /** Mono label under the statement — where you are in the argument. */
+  kicker: string;
+  /** Fills the section behind the text, for the beats that need separating. */
+  tone?: 'paper' | 'fill';
+  id?: string;
+}
+
+const { statement, kicker, tone = 'paper', id } = Astro.props;
+const headingId = id ? `${id}-heading` : undefined;
+---
+
+<section
+  class:list={['argument', tone === 'fill' && 'argument--fill']}
+  aria-labelledby={headingId}
+  id={id}
+>
+  <div class="argument__inner">
+    <div class="argument__lead">
+      <h2 id={headingId} class="argument__statement font-display" set:html={statement} />
+      <p class="label argument__kicker">{kicker}</p>
+    </div>
+
+    <div class="argument__body">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .argument {
+    border-top: 1px solid var(--color-rule);
+  }
+  .argument--fill {
+    background: var(--color-fill);
+  }
+
+  .argument__inner {
+    display: grid;
+    gap: 1.75rem;
+    padding: 3.5rem 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .argument__inner {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: 4rem;
+      padding: 5.25rem 5rem;
+    }
+  }
+  @media (min-width: 1280px) {
+    .argument__inner { gap: 6rem; }
+  }
+
+  .argument__statement {
+    margin: 0;
+    font-size: clamp(1.875rem, 4.2vw, 2.75rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  .argument__kicker {
+    margin-top: 1rem;
+  }
+  @media (min-width: 768px) {
+    .argument__kicker { margin-top: 1.375rem; }
+  }
+
+  .argument__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+  @media (min-width: 768px) {
+    .argument__body {
+      gap: 1.375rem;
+      padding-top: 0.375rem;
+      font-size: 1.0625rem;
+    }
+  }
+
+  /* The closing paragraph of a beat steps back — it is the aside, not the
+     claim. Applied by position so the page copy stays plain prose. */
+  .argument__body :global(p:last-child) {
+    color: var(--color-soft);
+  }
+  .argument__body :global(p.keep) {
+    color: var(--color-ink);
+  }
+</style>

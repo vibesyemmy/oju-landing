@@ -1,113 +1,198 @@
 ---
+/**
+ * The homepage, rebuilt as an argument.
+ *
+ * It used to be a catalogue: hero, work, clients, three capability cards,
+ * numbers, campaigns, a studio note, a CTA. Every agency site has those
+ * sections, and none of them is a sentence a visitor could repeat to a
+ * colleague afterwards. The page stated capabilities where it needed to state
+ * a belief.
+ *
+ * So it now runs one case, in order: the claim, the work as evidence, where the
+ * name comes from, what actually breaks, the outcomes, what we are wrong for,
+ * how the work runs, and one named practice. The proof sections that already
+ * earned their place — the wall, the client row, the outcomes, the campaign
+ * strip — are the evidence inside it rather than items in a list.
+ *
+ * The capability cards are gone. They were the clearest instance of the problem
+ * (three columns of things we can do), the method section covers the same
+ * ground as part of the argument, and /services holds the detail for anyone who
+ * wants it. `HeroStatement` is still in the tree, one import swap away.
+ */
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import HeroStatement from '../components/hero/HeroStatement.astro';
+import HeroSeam from '../components/HeroSeam.astro';
+import Argument from '../components/Argument.astro';
 import WorkWall from '../components/WorkWall.astro';
-import CapabilityMark from '../components/CapabilityMark.astro';
 import ImpactCarousel from '../components/ImpactCarousel.astro';
 import CampaignStrip from '../components/CampaignStrip.astro';
-import Media from '../components/Media.astro';
 import ClientMarquee from '../components/ClientMarquee.astro';
-/* Standing in for a photograph of the room, which does not exist yet. Real work
-   beats a stock office, and this is a page of the design system we shipped. */
-import poseidonGrid from '../assets/wall/poseidon-grid.webp';
-// Alternatives, one import swap away:
-//   HeroEditorial — original left-aligned statement
-//   HeroConverge  — converging-stream carousel
-import { CAPABILITIES, SITE } from '../data/site';
-
-
+import { HONEST, PROCESS, SITE } from '../data/site';
 ---
 
 <Base>
   <SiteHeader />
 
   <main id="main">
-    <!-- HERO -->
-    <HeroStatement />
+    <HeroSeam />
+
+    <!-- The claim, then the evidence, before any of the reasoning. -->
+    <section class="border-t border-rule px-6 pt-12 md:px-20 md:pt-18">
+      <p class="font-display max-w-[46ch] text-[22px] leading-[1.4] tracking-[-0.015em] text-pretty md:text-[27px]">
+        A short piece on why products break in the same place every time, and what
+        one team standing on both sides of it does about that. But first, some work:
+      </p>
+    </section>
     <WorkWall />
 
     <ClientMarquee />
 
-    <!-- CAPABILITIES -->
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
-      <div class="mb-8 flex items-baseline justify-between gap-4 md:mb-13">
-        <h2 class="label">What we do</h2>
-        <a href="/services" class="caps__all font-mono">
-          All services <span aria-hidden="true">&rarr;</span>
-        </a>
+    <Argument
+      id="origin"
+      statement="<span lang='yo'>Ojú</span> means <em>face</em>.<br /><span lang='yo' style='white-space:nowrap'>Ojú-ìwé</span> means <em>page</em>."
+      kicker="Where the name comes from"
+    >
+      <p>
+        In Yoruba, <span lang="yo"><em>ojú</em></span> is the face, and also the eye.
+        <span lang="yo"><em>Ojú-ìwé</em></span> &mdash; the face of a leaf &mdash; is how
+        you say page. The word for a surface someone reads is built from the word for
+        the part of a person that does the reading.
+      </p>
+      <p class="keep">
+        That is an interface, described precisely, a very long time before anyone
+        needed the English word. A face is not decoration laid over a body. It is
+        where a thing meets you, and it is honest about what sits behind it.
+      </p>
+      <p>
+        We took the name because we build both halves &mdash; and because a studio
+        that only drew the face would have no business using it.
+      </p>
+    </Argument>
+
+    <Argument
+      id="thesis"
+      statement="Nothing breaks in the middle of a screen."
+      kicker="What actually goes wrong"
+    >
+      <p>
+        The happy path gets drawn, reviewed, approved and built. It is nearly always
+        fine. What fails is everything at the join: the empty state nobody specced,
+        the error copy written in a ticket at 6pm, the loading behaviour that was a
+        designer's assumption and a developer's guess, and the fourteen edge cases
+        that only exist once real data arrives.
+      </p>
+      <p>
+        None of those are design problems, and none of them are engineering problems.
+        They are handover problems &mdash; invisible to whichever side does not own them.
+      </p>
+
+      <div class="split">
+        <div class="split__col">
+          <p class="label">What gets drawn</p>
+          <p class="split__text">Every screen in the deck, in the states somebody thought of.</p>
+        </div>
+        <div class="split__col split__col--accent">
+          <p class="label split__label--accent">What gets reached</p>
+          <p class="split__text">
+            Every state the product can actually enter, including the ones nobody drew.
+          </p>
+        </div>
       </div>
+    </Argument>
 
-      <div class="grid gap-4 md:grid-cols-3 md:gap-5">
-        {
-          /* The aria-label matters: without it each link's accessible name is
-             the entire card — heading, lede and all five list items read aloud
-             as one run-on string. */
-          CAPABILITIES.map((cap) => (
-            <a class="cap" href={`/services#${cap.id}`} aria-label={`${cap.title}: what this covers`}>
-              <CapabilityMark kind={cap.id as 'design' | 'product' | 'engineering'} />
+    <!-- The outcomes stand as the proof of the beat above. -->
+    <ImpactCarousel />
 
-              <h3 class="cap__head">
-                <span class="font-mono text-[11px] text-accent">{cap.num}</span>
-                <span class="font-display text-[26px] tracking-tight md:text-[30px]">{cap.title}</span>
-              </h3>
-
-              <p class="cap__lede text-pretty">{cap.line}</p>
-
-              <ul class="cap__items">
-                {cap.items.map((item) => (
-                  <li>{item}</li>
-                ))}
-              </ul>
-
-              <span class="cap__go font-mono" aria-hidden="true">
-                <span>What this covers</span>
-                <span class="cap__arrow">&rarr;</span>
-              </span>
-            </a>
-          ))
-        }
+    <!-- Honest limits. -->
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-21" aria-labelledby="honest">
+      <p class="label" id="honest">Being straight about it</p>
+      <div class="mt-9 grid gap-10 md:mt-12 md:grid-cols-2 md:gap-20">
+        <div>
+          <h2 class="font-display text-[26px] leading-[1.15] tracking-[-0.025em] md:text-[30px]">
+            Worth hiring us for
+          </h2>
+          <ul class="honest">
+            {HONEST.good.map((line) => <li>{line}</li>)}
+          </ul>
+        </div>
+        <div>
+          <h2 class="font-display text-soft text-[26px] leading-[1.15] tracking-[-0.025em] md:text-[30px]">
+            Not worth hiring us for
+          </h2>
+          <ul class="honest honest--muted">
+            {HONEST.bad.map((line) => <li>{line}</li>)}
+          </ul>
+        </div>
       </div>
     </section>
 
-    <ImpactCarousel />
+    <!-- How the work runs. Same four stages as /services, stated as method. -->
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-21" aria-labelledby="method">
+      <div class="md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-16 xl:gap-24">
+        <div>
+          <h2 id="method" class="method__head font-display">
+            Draw it. Build it.<br />Ship it. Stay.
+          </h2>
+          <p class="label mt-4 md:mt-5">How the work runs</p>
+        </div>
+        <p class="mt-6 max-w-[52ch] text-base leading-relaxed text-soft md:mt-1 md:text-[17px]">
+          Four stages, one team across all of them. The people who draw it are the
+          people who build it, which is the only reason the join holds.
+        </p>
+      </div>
+
+      <ol class="steps">
+        {
+          PROCESS.map((step) => (
+            <li class="step">
+              <span class="font-mono text-[11px] tracking-[0.16em] text-accent">{step.num}</span>
+              <h3 class="font-display mt-3 text-[20px] tracking-[-0.02em] md:text-[22px]">
+                {step.title}
+              </h3>
+              <p class="mt-2.5 text-[15px] leading-[1.55] text-soft">{step.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
 
     <CampaignStrip />
 
-    <!-- STUDIO -->
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
-      <div class="grid gap-8 md:grid-cols-[1.15fr_1fr] md:gap-22">
-        <div>
-          <h2 class="label mb-7 md:mb-11">Studio</h2>
-          <p class="font-display mb-6 text-[30px] leading-snug tracking-tight text-pretty md:mb-8 md:text-[42px]">
-            <span lang="yo">Ojú</span> means <em>face</em> in Yoruba.
-            <span lang="yo" class="whitespace-nowrap">Ojú-ìwé</span> means <em>page</em>.
-          </p>
-          <p class="max-w-[500px] text-base leading-relaxed text-soft text-pretty md:text-[18px]">
-            An interface is the face of a system. We design the face and build the system behind it
-            as one thing, because that seam is where products come apart.
-          </p>
-        </div>
-        <Media
-          label="The team, or the room. Something that proves there are people here."
-          src={poseidonGrid}
-          alt="A page of the Poseidon design system: components and tokens laid out in a grid."
-          ratio="4/3"
-          size="1600×1200"
-          sizes="(max-width: 767px) 100vw, 42vw"
-        />
-      </div>
-    </section>
+    <Argument
+      id="seam-review"
+      statement="The Seam Review"
+      kicker="One thing we do that most studios do not"
+      tone="fill"
+    >
+      <p>
+        Before anything ships we walk the whole product looking only for joins:
+        every state a screen can enter, every place a design decision quietly became
+        a developer's judgement call, every string written in a hurry and never read
+        again.
+      </p>
+      <p class="keep">
+        It takes half a day. It is where most of the bugs a user would have found
+        instead get found.
+      </p>
+      <p>
+        We will run one on a product we did not build.
+        <a href="/contact" class="inline-cta">Ask about it &rarr;</a>
+      </p>
+    </Argument>
 
     <!-- CONTACT -->
     <section class="border-t border-rule px-6 py-16 md:px-20 md:py-28">
       <h2 class="font-display max-w-[1000px] text-[44px] leading-[1.04] tracking-[-0.022em] md:text-[88px] md:leading-[1.02] md:tracking-[-0.028em]">
-        Have something worth building?
+        Tell us where it is breaking.
       </h2>
-      <div class="mt-9 flex flex-col items-start gap-7 md:mt-16 md:flex-row md:items-end md:justify-between md:gap-16">
+      <p class="mt-6 max-w-[46ch] text-base leading-relaxed text-soft md:mt-8 md:text-[17px]">
+        Bring the part that keeps going wrong. We would rather start there than with
+        a brief.
+      </p>
+      <div class="mt-9 flex flex-col items-start gap-7 md:mt-14 md:flex-row md:items-end md:justify-between md:gap-16">
         <a href="/contact" class="cta">
-          <span class="text-base md:text-[17px]">Start a project</span>
+          <span class="text-base md:text-[17px]">Start a conversation</span>
           <span class="font-mono text-[15px]" aria-hidden="true">→</span>
         </a>
         <a href={`mailto:${SITE.email}`} class="font-mono text-[13px] text-soft hover:text-ink md:text-sm">
@@ -119,3 +204,89 @@ import { CAPABILITIES, SITE } from '../data/site';
 
   <SiteFooter />
 </Base>
+
+<style>
+  /* drawn vs reached — the thesis, stated twice in four words */
+  .split {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .split { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+  }
+  .split__col {
+    border-top: 1px solid var(--color-ink);
+    padding-top: 1rem;
+  }
+  .split__col--accent {
+    border-top-color: var(--color-accent);
+  }
+  .split__label--accent {
+    color: var(--color-accent);
+  }
+  .split__text {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--color-ink);
+  }
+
+  /* honest limits */
+  .honest {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    margin-top: 1.375rem;
+    list-style: none;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+  .honest--muted {
+    color: var(--color-soft);
+  }
+
+  /* method */
+  /* Sized like the argument statements rather than by hand. At a fixed 44px in
+     a 5fr column this broke as "Draw it. Build / it." — the forced line break
+     only holds if the line before it fits. */
+  .method__head {
+    font-size: clamp(1.875rem, 4.2vw, 2.75rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  .steps {
+    display: grid;
+    gap: 2rem 1.5rem;
+    margin: 2.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+  }
+  @media (min-width: 640px) {
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1024px) {
+    .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; margin-top: 3.5rem; }
+  }
+  .step {
+    border-top: 1px solid var(--color-rule);
+    padding-top: 1.125rem;
+  }
+
+  .inline-cta {
+    color: var(--color-ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+    transition: border-color 200ms ease;
+    white-space: nowrap;
+  }
+  .inline-cta:hover,
+  .inline-cta:focus-visible {
+    border-color: var(--color-ink);
+  }
+</style>
