@@ -20,6 +20,7 @@
 import { getCollection } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import { SELECTED_WORK, CAMPAIGNS } from '../data/site';
+import Lightbox from './Lightbox.astro';
 
 const entries = (await getCollection('work', ({ data }) => !data.draft)).sort(
   (a, b) => a.data.order - b.data.order || b.data.year - a.data.year,
@@ -104,6 +105,16 @@ const slides = sets.flatMap((set, si) =>
 const shotUrls = await Promise.all(
   slides.map((s) => getImage({ src: s.img, widths: [600, 900, 1400], format: 'webp' })),
 );
+
+const lbSlides = slides.map((s, i) => ({
+  src: shotUrls[i].src,
+  srcSet: shotUrls[i].srcSet.attribute,
+  alt: `${s.title} — ${s.caption}`,
+  width: s.img.width,
+  height: s.img.height,
+  caption: s.caption,
+  data: { set: String(s.set) },
+}));
 ---
 
 <section class="gallery-wrap rule-t gutter py-14 md:py-22" aria-labelledby="work-heading">
@@ -174,64 +185,19 @@ const shotUrls = await Promise.all(
     <span class="magnet__label" data-magnet-label></span>
   </div>
 
-  {/* Everything the studio has for one company. A native <dialog> for Esc, the
-      focus trap, the inert background and the backdrop. */}
-  <dialog class="pv" aria-label="Project viewer" data-viewer>
-    <div class="pv__bar">
-      <p class="pv__counter font-mono">
-        <span data-pv-title></span>
-        <span class="pv__count" data-pv-count></span>
-      </p>
-      <button type="button" class="pv__btn" data-pv-close aria-label="Close viewer">
-        <svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-          <path d="M1 1 L14 14 M14 1 L1 14" />
-        </svg>
-      </button>
-    </div>
-
-    <div class="pv__stage">
-      <button type="button" class="pv__btn pv__btn--nav" data-pv-prev aria-label="Previous piece">
-        <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-          <path d="M10.5 2 L4 8.5 L10.5 15" />
-        </svg>
-      </button>
-
-      <div class="pv__frame">
-        {
-          slides.map((s, i) => (
-            <img
-              class="pv__img"
-              alt={`${s.title} — ${s.caption}`}
-              width={s.img.width}
-              height={s.img.height}
-              sizes="(min-width: 1024px) 62vw, 92vw"
-              decoding="async"
-              data-pv-slide={i}
-              data-set={s.set}
-              data-src={shotUrls[i].src}
-              data-srcset={shotUrls[i].srcSet.attribute}
-              data-caption={s.caption}
-              hidden
-            />
-          ))
-        }
-      </div>
-
-      <button type="button" class="pv__btn pv__btn--nav" data-pv-next aria-label="Next piece">
-        <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-          <path d="M6.5 2 L13 8.5 L6.5 15" />
-        </svg>
-      </button>
-    </div>
-
-    <div class="pv__meta">
+  {/* Everything the studio has for one company. */}
+  <Lightbox label="Project viewer" slides={lbSlides} sizes="(min-width: 1024px) 62vw, 92vw">
+    <Fragment slot="bar">
+      <span data-pv-title></span><span class="pv__count" data-pv-count></span>
+    </Fragment>
+    <Fragment slot="meta">
       <p class="pv__caption" data-pv-caption></p>
       <p class="pv__line" data-pv-line></p>
       <a class="pv__proto" data-pv-proto href="#" target="_blank" rel="noopener noreferrer" hidden>
         View the prototype <span aria-hidden="true">&#8599;</span>
       </a>
-    </div>
-  </dialog>
+    </Fragment>
+  </Lightbox>
 </section>
 
 <script is:inline define:vars={{ setMeta: sets.map((s) => ({ title: s.title, line: s.line, prototype: s.prototype ?? null, count: s.shots.length })) }}>
@@ -332,149 +298,22 @@ const shotUrls = await Promise.all(
   }
 
 
-  /* ── the project viewer ─────────────────────────────────────────── */
-  .pv {
-    width: 100vw;
-    max-width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    /* Transparent, so the scrim is the backdrop and the gallery stays legible
-       behind it — the viewer is a layer over the page, not a new place. */
-    background: transparent;
-    color: var(--color-paper);
-    overflow: hidden;
-  }
-  .pv::backdrop {
-    background: rgb(23 22 15 / 0.84);
-    backdrop-filter: blur(4px) saturate(0.85);
-    -webkit-backdrop-filter: blur(4px) saturate(0.85);
-  }
-  .pv:not([open]) { display: none; }
+  /* Page-specific viewer copy. The shell owns everything structural. */
+  :global(.pv__count) { color: rgb(242 239 233 / 0.55); }
+  :global(.lb.is-single .pv__count) { display: none; }
 
-  .pv__bar {
-    position: absolute;
-    inset: 0 0 auto 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.875rem 1rem;
-    z-index: 3;
-  }
+  :global(.pv__caption) { font-size: 0.9375rem; line-height: 1.5; }
   @media (min-width: 768px) {
-    .pv__bar { padding: 1.5rem 2rem; }
+    :global(.pv__caption) { font-size: 1.0625rem; }
   }
-
-  .pv__counter {
-    font-size: 0.6875rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-  .pv__count { color: rgb(242 239 233 / 0.55); }
-
-  .pv__btn {
-    width: 44px;
-    height: 44px;
-    flex: none;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    border: 1px solid rgb(242 239 233 / 0.22);
-    border-radius: 50%;
-    background: none;
-    color: var(--color-paper);
-    cursor: pointer;
-    transition: border-color 200ms ease;
-  }
-  @media (min-width: 768px) {
-    .pv__btn { width: 56px; height: 56px; }
-  }
-  .pv__btn svg { width: 15px; height: 15px; }
-  .pv__btn:hover { border-color: rgb(242 239 233 / 0.55); }
-  .pv__btn:focus-visible { outline: 2px solid var(--color-paper); outline-offset: 3px; }
-  /* On a phone two 44px arrows flanking the frame take 88px of 375 and the
-     piece is left width-starved. They come out of the row and sit over the
-     artwork's edges instead — safe here, because a tap on the artwork does
-     nothing: only the stage and the ground around it close the viewer. */
-  @media (max-width: 767px) {
-    .pv__btn--nav {
-      position: absolute;
-      top: 44%;
-      background: rgb(23 22 15 / 0.5);
-      backdrop-filter: blur(2px);
-    }
-    .pv__stage > .pv__btn--nav:first-of-type { left: 0.5rem; }
-    .pv__stage > .pv__btn--nav:last-of-type { right: 0.5rem; }
-  }
-
-  /* A set of one has nowhere to go. */
-  .pv.is-single .pv__btn--nav { display: none; }
-  .pv.is-single .pv__count { display: none; }
-
-  .pv__stage {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 4.5rem 0.75rem 8rem;
-  }
-  @media (min-width: 768px) {
-    .pv__stage { gap: 2.75rem; padding: 6rem 2rem 8.5rem; }
-  }
-
-  .pv__frame {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 0;
-    display: grid;
-    place-items: center;
-  }
-
-  .pv__img {
-    grid-area: 1 / 1;
-    max-width: 100%;
-    /* Against the viewport, not the frame: a percentage height on a centred
-       flex item does not resolve against the stage's padded box. */
-    max-height: calc(100dvh - 12.5rem);
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    box-shadow: 0 40px 90px rgb(0 0 0 / 0.5);
-    opacity: 0;
-    transition: opacity 260ms ease, transform 440ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  @media (min-width: 768px) {
-    .pv__img { max-height: calc(100dvh - 14.5rem); }
-  }
-  .pv__img.is-current { opacity: 1; transform: none; }
-
-  .pv__meta {
-    position: absolute;
-    inset: auto 0 2.25rem 0;
-    text-align: center;
-    padding: 0 4.75rem;
-    z-index: 2;
-  }
-  @media (min-width: 768px) {
-    .pv__meta { padding: 0 2rem; bottom: 2.75rem; }
-  }
-  .pv__caption { font-size: 0.9375rem; line-height: 1.5; }
-  @media (min-width: 768px) {
-    .pv__caption { font-size: 1.0625rem; }
-  }
-  .pv__line {
+  :global(.pv__line) {
     margin: 0.5rem auto 0;
     max-width: 56ch;
     font-size: 0.8125rem;
     line-height: 1.5;
     color: rgb(242 239 233 / 0.55);
   }
-  .pv__proto {
+  :global(.pv__proto) {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -488,13 +327,8 @@ const shotUrls = await Promise.all(
     text-decoration: none;
     border-bottom: 1px solid rgb(242 239 233 / 0.4);
   }
-  .pv__proto:hover { border-color: var(--color-paper); }
-  .pv__proto[hidden] { display: none; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .pv__btn,
-    .pv__img { transition: none; }
-  }
+  :global(.pv__proto:hover) { border-color: var(--color-paper); }
+  :global(.pv__proto[hidden]) { display: none; }
 
   /* ── the cursor ─────────────────────────────────────────────────── */
   .magnet {
@@ -559,106 +393,57 @@ const shotUrls = await Promise.all(
    * The project viewer.
    *
    * A company without a case study still has work: its project image, plus any
-   * campaign pieces run for the same client. Opening a tile shows that set.
-   *
-   * Every slide for every project lives in the one dialog and is filtered to the
-   * open set, which keeps the markup static and the navigation trivial. None of
-   * them carries a src until it is wanted — an image inside a closed dialog is
-   * fetched like any other, so parking the URLs is what stops fifteen of them
-   * loading on a page nobody has interacted with.
+   * campaign pieces run for the same client. Opening a tile shows that set, and
+   * the set is the scope — the shared viewer walks whatever indices it is given.
    */
-  const viewer = document.querySelector<HTMLDialogElement>('[data-viewer]');
-  const shots = [...document.querySelectorAll<HTMLImageElement>('[data-pv-slide]')];
+  import { createLightbox } from '../lib/lightbox';
+
+  const root = document.querySelector<HTMLDialogElement>('[data-lightbox]');
   const meta = (window as any).__ojuSets as
     | { title: string; line: string; prototype: string | null; count: number }[]
     | undefined;
 
-  if (viewer && shots.length && meta) {
-    const titleEl = viewer.querySelector<HTMLElement>('[data-pv-title]');
-    const countEl = viewer.querySelector<HTMLElement>('[data-pv-count]');
-    const captionEl = viewer.querySelector<HTMLElement>('[data-pv-caption]');
-    const lineEl = viewer.querySelector<HTMLElement>('[data-pv-line]');
-    const protoEl = viewer.querySelector<HTMLAnchorElement>('[data-pv-proto]');
+  if (root && meta) {
+    const titleEl = root.querySelector<HTMLElement>('[data-pv-title]');
+    const countEl = root.querySelector<HTMLElement>('[data-pv-count]');
+    const captionEl = root.querySelector<HTMLElement>('[data-pv-caption]');
+    const lineEl = root.querySelector<HTMLElement>('[data-pv-line]');
+    const protoEl = root.querySelector<HTMLAnchorElement>('[data-pv-proto]');
 
-    let opener: HTMLElement | null = null;
-    let inSet: HTMLImageElement[] = [];
-    let at = 0;
+    /** Which project's set is open. The scope follows it. */
+    let openSet = 0;
 
-    const attach = (img?: HTMLImageElement) => {
-      if (!img || img.getAttribute('src')) return;
-      const { src, srcset } = img.dataset;
-      if (srcset) img.setAttribute('srcset', srcset);
-      if (src) img.setAttribute('src', src);
-    };
-
-    const render = () => {
-      const img = inSet[at];
-      attach(img);
-      attach(inSet[(at + 1) % inSet.length]);
-
-      shots.forEach((s) => {
-        const on = s === img;
-        s.hidden = !on;
-        s.classList.toggle('is-current', on);
-      });
-
-      if (countEl) countEl.textContent = inSet.length > 1 ? `  ${at + 1} / ${inSet.length}` : '';
-      if (captionEl) captionEl.textContent = img.dataset.caption ?? '';
-    };
-
-    const step = (d: number) => {
-      at = (at + d + inSet.length) % inSet.length;
-      render();
-    };
-
-    const open = (setIndex: number, from: HTMLElement) => {
-      const info = meta[setIndex];
-      inSet = shots.filter((s) => Number(s.dataset.set) === setIndex);
-      if (!inSet.length) return;
-
-      opener = from;
-      at = 0;
-      viewer.classList.toggle('is-single', inSet.length === 1);
-      if (titleEl) titleEl.textContent = info.title;
-      if (lineEl) lineEl.textContent = info.line ?? '';
-      if (protoEl) {
-        protoEl.hidden = !info.prototype;
-        if (info.prototype) protoEl.href = info.prototype;
-      }
-      render();
-      viewer.showModal();
-    };
-
-    document.querySelectorAll<HTMLButtonElement>('[data-open-set]').forEach((b) =>
-      b.addEventListener('click', () => open(Number(b.dataset.openSet), b)),
-    );
-
-    viewer.querySelector('[data-pv-prev]')?.addEventListener('click', () => step(-1));
-    viewer.querySelector('[data-pv-next]')?.addEventListener('click', () => step(1));
-    viewer.querySelector('[data-pv-close]')?.addEventListener('click', () => viewer.close());
-
-    viewer.addEventListener('keydown', (e) => {
-      if (inSet.length < 2) return;
-      if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    const lb = createLightbox(root, {
+      scope: () =>
+        [...root.querySelectorAll<HTMLElement>('[data-lb-slide]')]
+          .map((el, i) => ({ el, i }))
+          .filter(({ el }) => Number(el.dataset.set) === openSet)
+          .map(({ i }) => i),
+      onShow: ({ slide, position, total }) => {
+        if (countEl) countEl.textContent = total > 1 ? `  ${position} / ${total}` : '';
+        if (captionEl) captionEl.textContent = slide.dataset.caption ?? '';
+      },
     });
 
-    /* The ground around the artwork closes. The dialog fills the viewport, so
-       the backdrop never gets the click — the target is the dialog or the
-       padding around the frame. */
-    viewer.addEventListener('click', (e) => {
-      const t = e.target as HTMLElement;
-      if (t === viewer || t.classList.contains('pv__stage') || t.classList.contains('pv__frame')) {
-        viewer.close();
-      }
-    });
+    if (lb) {
+      document.querySelectorAll<HTMLButtonElement>('[data-open-set]').forEach((b) =>
+        b.addEventListener('click', () => {
+          openSet = Number(b.dataset.openSet);
+          const info = meta[openSet];
+          const first = lb.slides.findIndex((s) => Number(s.dataset.set) === openSet);
+          if (first === -1) return;
 
-    /* Back to the tile that opened it, so a keyboard user lands where they
-       were rather than at the top of the gallery. */
-    viewer.addEventListener('close', () => {
-      opener?.focus();
-      opener = null;
-    });
+          root.classList.toggle('is-single', info.count === 1);
+          if (titleEl) titleEl.textContent = info.title;
+          if (lineEl) lineEl.textContent = info.line ?? '';
+          if (protoEl) {
+            protoEl.hidden = !info.prototype;
+            if (info.prototype) protoEl.href = info.prototype;
+          }
+          lb.open(first, b);
+        }),
+      );
+    }
   }
 </script>
 

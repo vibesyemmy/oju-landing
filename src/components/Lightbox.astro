@@ -1,0 +1,265 @@
+---
+/**
+ * The viewer shell, shared by the campaign wall and the work gallery.
+ *
+ * Holds the dialog, the stage, the navigation and every style both had in
+ * common. What differs between the two — what the bar says, what sits under the
+ * artwork, whether there is a filmstrip — comes in through slots, so a page
+ * supplies its own copy without the shell knowing anything about it.
+ *
+ * The behaviour lives in src/lib/lightbox.ts. This file is markup and styles.
+ *
+ * Slides are declared here but carry no `src`: the URLs are parked in data
+ * attributes and attached when a slide is first shown. A hidden image is
+ * fetched like any other, so a src in this markup would pull every slide on
+ * every visit for a dialog most people never open.
+ */
+export type LightboxSlide = {
+  /** Resolved at build time with getImage(). */
+  src: string;
+  srcSet: string;
+  alt: string;
+  width: number;
+  height: number;
+  caption: string;
+  /**
+   * Arbitrary extras the page reads back off the element. Keys must be
+   * kebab-case: they become `data-<key>`, HTML lowercases attribute names, and
+   * `dataset.someThing` maps to `data-some-thing`. A camelCase key here emits
+   * `data-something` and reads back as undefined.
+   */
+  data?: Record<string, string>;
+};
+
+interface Props {
+  /** Names the dialog for assistive tech. */
+  label: string;
+  slides: LightboxSlide[];
+  sizes?: string;
+  /** Shown top-right beside the close button on wider screens. */
+  hint?: string;
+}
+
+const { label, slides, sizes = '(min-width: 1024px) 60vw, 92vw', hint = 'Esc to close' } = Astro.props;
+---
+
+<dialog class="lb" aria-label={label} data-lightbox>
+  <div class="lb__bar">
+    <div class="lb__lead"><slot name="bar" /></div>
+    <div class="lb__actions">
+      {hint && <p class="lb__hint font-mono">{hint}</p>}
+      <button type="button" class="lb__btn" data-lb-close aria-label="Close viewer">
+        <svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <path d="M1 1 L14 14 M14 1 L1 14" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="lb__stage">
+    <button type="button" class="lb__btn lb__btn--nav" data-lb-prev aria-label="Previous piece">
+      <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <path d="M10.5 2 L4 8.5 L10.5 15" />
+      </svg>
+    </button>
+
+    <div class="lb__frame">
+      {
+        slides.map((s, i) => (
+          <img
+            class="lb__img"
+            alt={s.alt}
+            width={s.width}
+            height={s.height}
+            sizes={sizes}
+            decoding="async"
+            data-lb-slide={i}
+            data-src={s.src}
+            data-srcset={s.srcSet}
+            data-caption={s.caption}
+            {...Object.fromEntries(Object.entries(s.data ?? {}).map(([k, v]) => [`data-${k}`, v]))}
+            hidden
+          />
+        ))
+      }
+    </div>
+
+    <button type="button" class="lb__btn lb__btn--nav" data-lb-next aria-label="Next piece">
+      <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <path d="M6.5 2 L13 8.5 L6.5 15" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="lb__meta"><slot name="meta" /></div>
+
+  <slot name="strip" />
+</dialog>
+
+<style is:global>
+  /* Global rather than scoped: the slots are filled by the calling page, whose
+     scoped styles cannot reach in here and whose markup this file cannot see. */
+  .lb {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    /* Transparent, so the scrim is the ::backdrop and the page stays legible
+       behind it — the viewer reads as a layer over the page rather than a
+       different place, which is what makes closing it feel like stepping back. */
+    background: transparent;
+    color: var(--color-paper);
+    overflow: hidden;
+  }
+  .lb::backdrop {
+    background: rgb(23 22 15 / 0.84);
+    /* Cheap at this radius, and it degrades to plain dimming where it is
+       unsupported. */
+    backdrop-filter: blur(4px) saturate(0.85);
+    -webkit-backdrop-filter: blur(4px) saturate(0.85);
+  }
+  .lb:not([open]) { display: none; }
+
+  .lb__bar {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    z-index: 3;
+  }
+  @media (min-width: 768px) {
+    .lb__bar { padding: 1.5rem 2rem; }
+  }
+
+  .lb__lead {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(242 239 233 / 0.62);
+    min-width: 0;
+  }
+
+  .lb__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .lb__hint {
+    display: none;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(242 239 233 / 0.42);
+  }
+  @media (min-width: 768px) {
+    .lb__hint { display: block; }
+  }
+
+  .lb__btn {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgb(242 239 233 / 0.22);
+    border-radius: 50%;
+    background: none;
+    color: var(--color-paper);
+    cursor: pointer;
+    transition: border-color 200ms ease;
+  }
+  @media (min-width: 768px) {
+    .lb__btn { width: 56px; height: 56px; }
+  }
+  .lb__btn svg { width: 15px; height: 15px; }
+  .lb__btn:hover { border-color: rgb(242 239 233 / 0.55); }
+  .lb__btn:focus-visible { outline: 2px solid var(--color-paper); outline-offset: 3px; }
+
+  /* A scope of one has nowhere to go. */
+  .lb.is-single .lb__btn--nav { display: none; }
+
+  .lb__stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 4.5rem 0.75rem 8.5rem;
+  }
+  @media (min-width: 768px) {
+    .lb__stage { gap: 2.75rem; padding: 6rem 2rem 9.5rem; }
+  }
+
+  /* On a phone two 44px arrows flanking the frame take 88px of 375 and leave
+     the piece starved. They come out of the row and sit over the artwork's
+     edges — safe, because a tap on the artwork does nothing: only the stage and
+     the ground around it close the viewer. */
+  @media (max-width: 767px) {
+    .lb__btn--nav {
+      position: absolute;
+      top: 44%;
+      background: rgb(23 22 15 / 0.5);
+      backdrop-filter: blur(2px);
+    }
+    .lb__stage > .lb__btn--nav:first-of-type { left: 0.5rem; }
+    .lb__stage > .lb__btn--nav:last-of-type { right: 0.5rem; }
+  }
+
+  .lb__frame {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  /* Every slide sits in the one cell; only the current one is opaque. `hidden`
+     still does the hiding at rest, which is what keeps the others unfetched. */
+  .lb__img {
+    grid-area: 1 / 1;
+    max-width: 100%;
+    /* Measured against the viewport, not the frame: a percentage height on a
+       centred flex item does not resolve against the stage's padded box, so the
+       artwork runs under the caption and off the bottom. */
+    max-height: calc(100dvh - 13rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    box-shadow: 0 40px 90px rgb(0 0 0 / 0.5);
+    opacity: 0;
+    transition:
+      opacity 280ms ease,
+      transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (min-width: 768px) {
+    .lb__img { max-height: calc(100dvh - 15.5rem); }
+  }
+  .lb__img.is-current { opacity: 1; transform: none; }
+
+  .lb__meta {
+    position: absolute;
+    inset: auto 0 6.25rem 0;
+    text-align: center;
+    /* Clears the arrows, which sit in this band on a phone. */
+    padding: 0 4.75rem;
+    z-index: 2;
+  }
+  @media (min-width: 768px) {
+    .lb__meta { padding: 0 1.5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lb__btn,
+    .lb__img { transition: none; }
+  }
+</style>
