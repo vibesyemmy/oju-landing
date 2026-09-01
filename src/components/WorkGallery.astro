@@ -1,0 +1,365 @@
+---
+/**
+ * Every project, in one gallery.
+ *
+ * /work used to run two sections: a table of case studies, then a card grid
+ * headed "Also from the studio" — which told a visitor the second batch was
+ * lesser before they had looked at it. Nobody arrives caring about the
+ * studio's internal taxonomy.
+ *
+ * The table was what made merging hard: it had Year and Sector columns, and the
+ * brand work carries neither. A gallery has no columns, so those gaps stop
+ * existing rather than needing filling or hiding.
+ *
+ * What the split *was* protecting is real: five projects open a case study and
+ * the rest do not, and a uniform grid hides that until someone clicks and gets
+ * nothing. The cursor solves it. It carries what happens on click, so the
+ * difference is legible before the click rather than after — tiles that lead
+ * somewhere say so, tiles that do not just carry their name.
+ */
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import { SELECTED_WORK } from '../data/site';
+
+const entries = (await getCollection('work', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order || b.data.year - a.data.year,
+);
+
+const files = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/work-selected/*.{webp,png,jpg,jpeg}',
+  { eager: true },
+);
+
+type Tile = {
+  title: string;
+  meta: string;
+  img?: ImageMetadata;
+  href?: string;
+  /** What the cursor promises. Absent means the tile is not a link. */
+  action?: string;
+  external?: boolean;
+};
+
+const caseStudies: Tile[] = entries.map((e) => ({
+  title: e.data.title,
+  meta: `${e.data.client} · ${e.data.sector}`,
+  img: e.data.gallery?.[0],
+  href: `/work/${e.id}/`,
+  action: 'Read the case study',
+}));
+
+const projects: Tile[] = SELECTED_WORK.map((p) => {
+  const hit = Object.keys(files).find((k) => k.endsWith(`/${p.image}`));
+  return {
+    title: p.name,
+    meta: p.services.join(' · '),
+    img: hit ? files[hit].default : undefined,
+    href: p.prototype,
+    action: p.prototype ? 'View the prototype' : undefined,
+    external: Boolean(p.prototype),
+  };
+});
+
+const tiles = [...caseStudies, ...projects].filter((t) => t.img);
+const withPages = tiles.filter((t) => t.href).length;
+---
+
+<section class="gallery-wrap rule-t gutter py-14 md:py-22" aria-labelledby="work-heading">
+  <div class="mb-9 flex flex-wrap items-baseline justify-between gap-4 md:mb-14">
+    <h1 id="work-heading" class="font-display text-[44px] leading-tight tracking-tight md:text-[78px]">
+      Selected work
+    </h1>
+    <p class="label">
+      {String(tiles.length).padStart(2, '0')} projects
+      <span aria-hidden="true"> · </span>
+      {withPages} you can open
+    </p>
+  </div>
+
+  <ul class="gallery" data-gallery>
+    {
+      tiles.map((t, i) => {
+        const inner = (
+          <>
+            <div class="tile__frame">
+              <Image
+                src={t.img!}
+                alt=""
+                widths={[400, 800, 1200]}
+                sizes="(min-width: 1024px) 46vw, 92vw"
+                loading={i < 2 ? 'eager' : 'lazy'}
+                decoding="async"
+                class="tile__img"
+              />
+            </div>
+            <span class="tile__num font-mono" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span class="tile__name font-display">{t.title}</span>
+            <span class="tile__meta label">{t.meta}</span>
+          </>
+        );
+
+        return (
+          <li
+            class:list={['tile', !t.href && 'tile--flat']}
+            data-label={t.title}
+            data-action={t.action ?? ''}
+          >
+            {t.href ? (
+              <a
+                class="tile__link"
+                href={t.href}
+                target={t.external ? '_blank' : undefined}
+                rel={t.external ? 'noopener noreferrer' : undefined}
+                aria-label={`${t.title} — ${t.action}`}
+              >
+                {inner}
+              </a>
+            ) : (
+              <div class="tile__link">{inner}</div>
+            )}
+          </li>
+        );
+      })
+    }
+  </ul>
+
+  {/* Follows the pointer and says what a click will do. Built here rather than
+      per-tile so one element trails the cursor across the whole gallery. */}
+  <div class="magnet" data-magnet aria-hidden="true">
+    <span class="magnet__label" data-magnet-label></span>
+  </div>
+</section>
+
+<style>
+  .gallery-wrap {
+    position: relative;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 640px) {
+    .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+  }
+  @media (min-width: 1180px) {
+    .gallery { gap: 2rem; }
+  }
+
+  .tile {
+    position: relative;
+  }
+
+  .tile__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .tile__frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--color-fill);
+    aspect-ratio: 4 / 3;
+  }
+
+  .tile__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.001);
+    transition: transform 900ms cubic-bezier(0.16, 0.84, 0.28, 1);
+  }
+  /* The zoom happens inside a fixed frame, so the tile never moves and the
+     grid never reflows — only what you see through it changes. */
+  .tile:hover .tile__img,
+  .tile:focus-within .tile__img {
+    transform: scale(1.07);
+  }
+
+  .tile__num {
+    position: absolute;
+    top: 0.875rem;
+    right: 1rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    color: rgb(242 239 233 / 0.75);
+    mix-blend-mode: difference;
+  }
+
+  .tile__name {
+    display: block;
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+  @media (min-width: 768px) {
+    .tile__name { font-size: 1.5rem; }
+  }
+
+  .tile__meta {
+    display: block;
+    margin-top: 0.5rem;
+  }
+
+  /* A tile with nowhere to go still belongs in the gallery, but it should not
+     invite a click it cannot answer. */
+  .tile--flat .tile__link { cursor: default; }
+
+  .tile__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 6px;
+    border-radius: 4px;
+  }
+
+  /* ── the cursor ─────────────────────────────────────────────────── */
+  .magnet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    min-width: 104px;
+    min-height: 104px;
+    padding: 0 1.25rem;
+    border-radius: 999px;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) scale(0.6);
+    transition: opacity 260ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .magnet.is-on {
+    opacity: 1;
+    transform: translate3d(-50%, -50%, 0) scale(1);
+  }
+  /* Nothing to promise: the disc shrinks to a dot rather than showing an empty
+     pill, so a tile that leads nowhere still reads as deliberate. */
+  .magnet.is-bare {
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0;
+  }
+
+  .magnet__label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  /* A cursor follower is meaningless without a cursor, and the tiles carry
+     their own names anyway. */
+  @media (hover: none) {
+    .magnet { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile__img,
+    .tile:hover .tile__img,
+    .magnet {
+      transition: none;
+      transform: translate3d(-50%, -50%, 0);
+    }
+    .tile:hover .tile__img { transform: none; }
+  }
+</style>
+
+<script>
+  /**
+   * The cursor follower.
+   *
+   * It trails the pointer rather than tracking it exactly — the lag is the
+   * whole effect — so position is eased toward the target on a frame loop
+   * instead of being written on every pointermove.
+   *
+   * The loop only runs while the pointer is over the gallery. A follower that
+   * animates all the time costs a frame budget on every page it appears on for
+   * no visible reason.
+   */
+  const wrap = document.querySelector<HTMLElement>('.gallery-wrap');
+  const gallery = document.querySelector<HTMLElement>('[data-gallery]');
+  const magnet = document.querySelector<HTMLElement>('[data-magnet]');
+  const label = document.querySelector<HTMLElement>('[data-magnet-label]');
+
+  if (wrap && gallery && magnet && label && matchMedia('(hover: hover)').matches) {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+    let targetX = 0;
+    let targetY = 0;
+    let x = 0;
+    let y = 0;
+    let frame: number | undefined;
+    let inside = false;
+
+    const tick = () => {
+      // Ease toward the pointer. Higher is snappier; this trails by enough to
+      // read as weight without feeling broken.
+      const k = reduced.matches ? 1 : 0.16;
+      x += (targetX - x) * k;
+      y += (targetY - y) * k;
+      magnet.style.left = `${x}px`;
+      magnet.style.top = `${y}px`;
+      if (inside) frame = requestAnimationFrame(tick);
+      else frame = undefined;
+    };
+
+    const start = () => {
+      if (frame === undefined) frame = requestAnimationFrame(tick);
+    };
+
+    gallery.addEventListener('pointermove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+
+      const tile = (e.target as HTMLElement).closest<HTMLElement>('.tile');
+      const action = tile?.dataset.action ?? '';
+      const name = tile?.dataset.label ?? '';
+
+      if (tile) {
+        // The action is the point of the thing: it says whether a click leads
+        // anywhere, which the grid alone cannot show.
+        label.textContent = action || name;
+        magnet.classList.toggle('is-bare', !action);
+      }
+      magnet.classList.add('is-on');
+
+      if (!inside) {
+        inside = true;
+        // Jump to the pointer on entry, or it slides in from wherever it was
+        // left, which reads as a stray object rather than the cursor.
+        x = targetX;
+        y = targetY;
+      }
+      start();
+    });
+
+    gallery.addEventListener('pointerleave', () => {
+      inside = false;
+      magnet.classList.remove('is-on');
+    });
+
+    // A tab away with the pointer still over the gallery would otherwise leave
+    // the loop running against a pointer that is no longer moving.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        inside = false;
+        magnet.classList.remove('is-on');
+      }
+    });
+  }
+</script>
