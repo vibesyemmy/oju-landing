@@ -23,7 +23,7 @@
 import Base from '../../layouts/Base.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { CAMPAIGNS } from '../../data/site';
 
 const files = import.meta.glob<{ default: ImageMetadata }>(
@@ -71,6 +71,31 @@ for (const p of pieces) {
   if (found) found.count += 1;
   else clients.push({ id: p.id, name: p.client, count: 1 });
 }
+
+/**
+ * Viewer artwork, resolved at build time but not attached until it is needed.
+ *
+ * These used to be <Image loading="lazy"> inside the closed dialog, on the
+ * assumption that a hidden image is not fetched. It is not true: lazy loading
+ * defers on viewport proximity, and an element in a display:none subtree has no
+ * intersection to measure, so browsers fetch it immediately. All 24 stage
+ * images and all 24 thumbnails were being pulled on every page load for a
+ * dialog most visitors never open — 72 image requests for a page that shows 24.
+ *
+ * So the URLs are computed here and parked in data attributes; the script
+ * promotes them to src/srcset the first time a slide is shown, and warms the
+ * two either side of it.
+ */
+const shots = await Promise.all(
+  pieces.map((p) =>
+    p.img
+      ? getImage({ src: p.img, widths: [600, 900, 1400], format: 'webp' })
+      : null,
+  ),
+);
+const thumbShots = await Promise.all(
+  pieces.map((p) => (p.img ? getImage({ src: p.img, widths: [120, 240], format: 'webp' }) : null)),
+);
 
 /**
  * The filter rules, written out rather than scripted. One `:checked` selector
@@ -189,23 +214,24 @@ const filterCss = clients
 
         <div class="lb__frame">
           {
-            pieces.map((p, i) => (
-              p.img && (
-                <Image
-                  src={p.img}
-                  alt={`${p.client} — ${p.caption}`}
-                  widths={[600, 900, 1400]}
-                  sizes="(min-width: 1024px) 60vw, 92vw"
-                  loading="lazy"
-                  decoding="async"
+            pieces.map((p, i) =>
+              shots[i] && p.img ? (
+                <img
                   class="lb__img"
+                  alt={`${p.client} — ${p.caption}`}
+                  width={p.img.width}
+                  height={p.img.height}
+                  sizes="(min-width: 1024px) 60vw, 92vw"
+                  decoding="async"
                   data-lb-slide={i}
+                  data-src={shots[i]!.src}
+                  data-srcset={shots[i]!.srcSet.attribute}
                   data-caption={p.caption}
                   data-client-name={p.client}
-                  hidden={i !== 0}
+                  hidden
                 />
-              )
-            ))
+              ) : null,
+            )
           }
         </div>
 
@@ -223,13 +249,13 @@ const filterCss = clients
 
       <div class="lb__strip" role="group" aria-label="Jump to a piece">
         {
-          pieces.map((p, i) => (
-            p.img && (
+          pieces.map((p, i) =>
+            thumbShots[i] ? (
               <button type="button" class="lb__thumb" data-lb-goto={i} aria-label={`${p.client}: ${p.caption}`}>
-                <Image src={p.img} alt="" widths={[120, 240]} sizes="72px" loading="lazy" decoding="async" />
+                <img alt="" decoding="async" data-src={thumbShots[i]!.src} data-srcset={thumbShots[i]!.srcSet.attribute} sizes="72px" />
               </button>
-            )
-          ))
+            ) : null,
+          )
         }
       </div>
     </dialog>
@@ -450,12 +476,21 @@ const filterCss = clients
     margin: 0;
     padding: 0;
     border: 0;
-    background: var(--color-ink);
+    /* Transparent, so the scrim is the ::backdrop and the board stays legible
+       through it — the viewer reads as a layer over the page rather than a
+       different place, which is what makes closing it feel like stepping back
+       rather than navigating. */
+    background: transparent;
     color: var(--color-paper);
     overflow: hidden;
   }
   .lb::backdrop {
-    background: rgb(23 22 15 / 0.9);
+    background: rgb(23 22 15 / 0.82);
+    /* A little blur so the artwork separates from a board that is itself busy
+       and colourful. Cheap at this radius, and it degrades to plain dimming
+       wherever it is unsupported. */
+    backdrop-filter: blur(4px) saturate(0.85);
+    -webkit-backdrop-filter: blur(4px) saturate(0.85);
   }
   .lb:not([open]) { display: none; }
 
@@ -559,8 +594,15 @@ const filterCss = clients
     place-items: center;
   }
 
+  /* Every slide sits in the one cell. The current one is opaque and centred;
+     the rest are only ever mid-transition. `hidden` still does the hiding at
+     rest, which is what keeps the other 23 images from loading. */
   .lb__img {
     grid-area: 1 / 1;
+    opacity: 0;
+    transition:
+      opacity 280ms ease,
+      transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
     max-width: 100%;
     /* Measured against the viewport, not the frame. A percentage height on a
        centred flex item does not resolve against the stage's padded box, so the
@@ -571,6 +613,10 @@ const filterCss = clients
     height: auto;
     object-fit: contain;
     box-shadow: 0 40px 90px rgb(0 0 0 / 0.5);
+  }
+  .lb__img.is-current {
+    opacity: 1;
+    transform: none;
   }
   @media (min-width: 768px) {
     .lb__img { max-height: calc(100dvh - 15.5rem); }
@@ -647,7 +693,8 @@ const filterCss = clients
 
   @media (prefers-reduced-motion: reduce) {
     .lb__btn,
-    .lb__thumb { transition: none; }
+    .lb__thumb,
+    .lb__img { transition: none; }
   }
 
   /* The tilt is a static arrangement, not motion, so it stays. What goes is the
@@ -691,7 +738,74 @@ const filterCss = clients
 
     /** The piece that opened the viewer, so focus can go back to it. */
     let opener: HTMLElement | null = null;
-    let index = 0;
+    let index = -1;
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    /** How far a slide travels as it enters or leaves. */
+    const TRAVEL = 44;
+
+    /**
+     * Attach a parked URL. Nothing in the viewer carries a src until it is
+     * wanted, because a hidden image is fetched like any other — see the note
+     * in the frontmatter.
+     */
+    const attach = (img: HTMLImageElement | null | undefined) => {
+      if (!img || img.getAttribute('src')) return;
+      const { src, srcset } = img.dataset;
+      if (srcset) img.setAttribute('srcset', srcset);
+      if (src) img.setAttribute('src', src);
+    };
+
+    /** The one being shown, plus its neighbours so a step is not a blank beat. */
+    const warm = (i: number) => {
+      const set = active();
+      const at = set.indexOf(i);
+      [i, set[(at + 1) % set.length], set[(at - 1 + set.length) % set.length]].forEach((n) => {
+        if (n !== undefined) attach(slides[n]);
+      });
+    };
+
+    /**
+     * Swap slides with a directional slide.
+     *
+     * `hidden` is display:none, which cannot transition and is also what keeps
+     * the other 23 images from ever being fetched. So the incoming slide is
+     * unhidden and placed at its start offset with transitions off, forced to
+     * lay out, and only then released — and the outgoing one is hidden again
+     * once it has finished leaving, restoring the cheap resting state.
+     */
+    const move = (from: HTMLImageElement | null, to: HTMLImageElement, dir: number) => {
+      attach(to);
+      to.hidden = false;
+
+      if (dir === 0 || reduced.matches) {
+        to.classList.add('is-current');
+        if (from && from !== to) { from.classList.remove('is-current'); from.hidden = true; }
+        return;
+      }
+
+      to.style.transition = 'none';
+      to.style.transform = `translateX(${dir * TRAVEL}px)`;
+      void to.offsetWidth; // commit the start position before animating from it
+      to.style.transition = '';
+      to.style.transform = '';
+      to.classList.add('is-current');
+
+      if (from && from !== to) {
+        from.classList.remove('is-current');
+        from.style.transform = `translateX(${-dir * TRAVEL}px)`;
+        // Re-hiding waits for the exit. A transitionend can be missed if the
+        // slide is swapped again mid-flight, so the timeout is the real
+        // guarantee and the listener only makes it prompt.
+        const settle = () => {
+          if (from.classList.contains('is-current')) return; // came back
+          from.hidden = true;
+          from.style.transform = '';
+        };
+        from.addEventListener('transitionend', settle, { once: true });
+        setTimeout(settle, 520);
+      }
+    };
 
     /** Indices the current filter leaves visible, in document order. */
     const active = () => {
@@ -702,9 +816,11 @@ const filterCss = clients
       return list.length ? list : openers.map((_, i) => i);
     };
 
-    const show = (next: number) => {
+    const show = (next: number, dir = 0) => {
+      const from = index >= 0 ? slides[index] : null;
       index = next;
-      slides.forEach((s, i) => s.toggleAttribute('hidden', i !== index));
+      move(from, slides[index], dir);
+      warm(index);
 
       const current = slides[index];
       const client = current.dataset.clientName ?? '';
@@ -730,18 +846,21 @@ const filterCss = clients
     const step = (delta: number) => {
       const set = active();
       const at = set.indexOf(index);
-      const from = at === -1 ? 0 : at;
-      show(set[(from + delta + set.length) % set.length]);
+      const at0 = at === -1 ? 0 : at;
+      show(set[(at0 + delta + set.length) % set.length], delta > 0 ? 1 : -1);
     };
 
     const open = (i: number, from: HTMLElement) => {
       opener = from;
+      // The filmstrip is only ever seen with the dialog open, so its thumbnails
+      // wait until it is.
+      thumbs.forEach((t) => attach(t.querySelector('img')));
       show(i);
       dialog.showModal();
     };
 
     openers.forEach((b, i) => b.addEventListener('click', () => open(i, b)));
-    thumbs.forEach((t, i) => t.addEventListener('click', () => show(i)));
+    thumbs.forEach((t, i) => t.addEventListener('click', () => show(i, i > index ? 1 : -1)));
 
     dialog.querySelector('[data-lb-prev]')?.addEventListener('click', () => step(-1));
     dialog.querySelector('[data-lb-next]')?.addEventListener('click', () => step(1));
