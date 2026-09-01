@@ -62,13 +62,28 @@ const BRANDFETCH =
  *
  * Parameter order follows their documented example (h, fallback, type).
  *
- * UNVERIFIED IN DEVELOPMENT. Brandfetch refuses these requests from localhost —
- * zero bytes, 27ms, while an unrelated external image on the same page loads
- * normally. Their error table calls this `hotlink_blocked`: the referer has to
- * be a host they serve logo traffic for. It cannot be confirmed until the site
- * runs on its real domain, and the client ID may need that domain registered in
- * the Brandfetch dashboard first. Every one of these currently falls back to a
- * wordmark, which is the correct failure and is what visitors see today.
+ * NOT WORKING IN PRODUCTION — the credential is rejected, not the code.
+ *
+ * Tested from https://www.ojustudio.com in a real browser. nike.com and
+ * stripe.com fail exactly like kairoscapitalng.com and geotravel.tours, and
+ * kairoscapitalng.com fails even with the fallback parameter removed, which
+ * would otherwise have rendered Brandfetch's own default logo. So it is not
+ * missing brand coverage, and — since it fails identically from localhost and
+ * from the live domain — not referer or hotlink blocking either. Something
+ * common to every request is being refused, and the only thing common to them
+ * is the `c=` value.
+ *
+ * (An earlier note here blamed `hotlink_blocked` from localhost. That was
+ * inference from circumstantial evidence and the production test disproved it.)
+ *
+ * Most likely the wrong kind of credential. Brandfetch ship two products: the
+ * Brand API, which takes a long secret key, and Logo Link, which takes a short
+ * client ID in this `c=` parameter. The value configured here is 86 characters,
+ * which is the shape of the former. Check for a Logo Link client ID at
+ * developers.brandfetch.com before looking anywhere else.
+ *
+ * Until it is resolved every one of these falls back to a wordmark, which is
+ * the correct failure and is what visitors see today.
  */
 const remoteLogo = (domain: string) =>
   `https://cdn.brandfetch.io/domain/${domain}/h/68/fallback/404/type/logo?c=${BRANDFETCH}`;

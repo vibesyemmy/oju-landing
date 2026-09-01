@@ -140,13 +140,20 @@ does not inject it into `import.meta.env` at all, so the component reads
 reach the build. The `PUBLIC_` name is still accepted as a fallback.
 Without the key, or when a logo is missing, the row shows a wordmark.
 
-**Currently unverified.** Brandfetch refuses these requests from localhost —
-zero bytes in 27ms, while an unrelated external image on the same page loads
-fine. That matches their `hotlink_blocked` error: the referer must be a host
-they serve logo traffic for. It can only be confirmed once the site is on its
-real domain, and the client ID may need that domain registered in the Brandfetch
-dashboard. Until then every remote logo falls back to a wordmark, which is the
-correct failure.
+**Not working — the credential is rejected.** Tested from the live domain in a
+real browser: `nike.com` and `stripe.com` fail exactly as the two client domains
+do, and a client domain fails even with the fallback parameter removed, where
+Brandfetch's own default logo would otherwise appear. That rules out missing
+brand coverage. Failing identically from localhost and from production rules out
+referer and hotlink blocking. What is left is the `c=` value.
+
+Most likely the wrong credential type. Brandfetch ship two products — the Brand
+API, which uses a long secret key, and Logo Link, which uses a short client ID
+in this `c=` parameter. The configured value is 86 characters, the shape of the
+former. Look for a Logo Link client ID at developers.brandfetch.com first.
+
+Until then every remote logo falls back to a wordmark, which is the correct
+failure. Adding the two logo files removes the dependency entirely.
 
 Two things to keep in mind if it does light up:
 

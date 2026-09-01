@@ -152,8 +152,11 @@ vouch for a fact nobody marked, so mark them as you go.
 - [ ] `/og.png` at 1200×630
 - [ ] Real domain in `astro.config.mjs` (`SITE`)
 - [ ] Set `CONTACT_WEBHOOK_URL` in the Vercel project
-- [x] `BRANDFETCH_CLIENT_ID` is set in Vercel. Kairos Capital and GeoTravel
-      hotlink their logos from Brandfetch until local files replace them
+- [ ] Brandfetch rejects the configured credential — every remote logo 404s,
+      including `nike.com`, so it is not brand coverage or hotlinking. The
+      value looks like a Brand API key rather than a Logo Link client ID.
+      Get a Logo Link client ID, or just add the two logo files and drop the
+      `domain` entries. See `src/assets/clients/README.md`.
 - [x] `SITE` points at `https://www.ojustudio.com`. The apex 308-redirects to
       www, so www is the canonical host.
 - [ ] Contact form endpoint
