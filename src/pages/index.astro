@@ -29,6 +29,7 @@ import ImpactCarousel from '../components/ImpactCarousel.astro';
 import WorkEvidence from '../components/WorkEvidence.astro';
 import CampaignStrip from '../components/CampaignStrip.astro';
 import ClientMarquee from '../components/ClientMarquee.astro';
+import EmberFlame from '../components/EmberFlame.astro';
 import PixelIcon, { type IconName } from '../components/PixelIcon.astro';
 import { HONEST, PROCESS, SITE } from '../data/site';
 
@@ -180,7 +181,16 @@ const ICONS: IconName[] = ['discovery', 'design', 'build', 'support'];
     </Argument>
 
     <!-- CONTACT -->
-    <section class="rule-t gutter py-16 md:py-28">
+    <section class="cta-section rule-t gutter py-16 md:py-28">
+      {/* Inside a wrapper spanning the content column, not the section: an
+          absolutely positioned child resolves right: 0 against the padding
+          box, which put the flame out in the gutter flush with the viewport
+          edge. The wrapper also owns the class, because scoped styles reach
+          this page's own elements and not a child component's. */}
+      <div class="cta-section__flame">
+        <EmberFlame cols={16} rows={20} />
+      </div>
+
       <h2 class="font-display max-w-[1000px] text-[44px] leading-[1.04] tracking-[-0.022em] md:text-[88px] md:leading-[1.02] md:tracking-[-0.028em]">
         Tell us where it is breaking.
       </h2>
@@ -251,6 +261,34 @@ const ICONS: IconName[] = ['discovery', 'design', 'build', 'support'];
     line-height: 1.1;
     letter-spacing: -0.03em;
     text-wrap: balance;
+  }
+
+  /* Burns in the empty right-hand half of the contact block, beside the
+     claim and above the row of links. Held back until there is a free right
+     half to burn in: below this the heading runs the full width. */
+  .cta-section {
+    position: relative;
+  }
+  .cta-section__flame {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .cta-section__flame {
+      /* Spans the section's padding box and inherits the section's own
+         resolved gutter, so the flame's right edge lands on the content column
+         at any width. Restating the gutter expression here would have worked
+         out to the same place on this machine and drifted by the scrollbar's
+         width on one that reserves space for it: the gutter is computed from
+         100%, which excludes the scrollbar, and the only equivalent available
+         to an absolutely positioned child is 100vw, which does not. */
+      display: flex;
+      justify-content: flex-end;
+      position: absolute;
+      inset-inline: 0;
+      padding-inline: inherit;
+      bottom: 12.5rem;
+      pointer-events: none;
+    }
   }
 
   .step__icon {
