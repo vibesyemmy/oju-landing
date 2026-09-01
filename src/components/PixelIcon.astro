@@ -2,10 +2,12 @@
 /**
  * A small animated pixel icon for the method stages.
  *
- * Nine cells at a 6px pitch: a 54px icon whose pixels are big enough to read
- * as pixels. That is the whole constraint — chunky cells and a small icon
- * leave very few of them, so the glyph has to be drawn at the size a 7-cell
- * circle allows rather than at the size a detailed one would want.
+ * Nine cells at the 9px pitch the fires use, so an icon pixel and a fire cell
+ * are the same square. That fixes the icon at 81px, and the arithmetic is the
+ * whole design: a legible glass needs a seven-cell circle plus two for the
+ * handle, so nine cells is the floor, and at a 9px pitch nine cells is 81px.
+ * Smaller means either thinner pixels or a glyph too coarse to read as a
+ * glass.
  *
  * Colours are the fireball's, imported from src/lib/fire.ts: a cool rim and a
  * hot centre, the same structure the fire itself has. The glass is blue with a
@@ -52,9 +54,9 @@ const { name, label, class: className = '' } = Astro.props;
 <script>
   import { BLUE, NAVY, ORANGE, YELLOW } from '../lib/fire';
 
-  /** Cells across, and css px per cell. 9 × 6 = a 54px icon. */
+  /** Cells across, and css px per cell. 9 × 9 = an 81px icon. */
   const GRID = 9;
-  const PIXEL = 6;
+  const PIXEL = 9;
   /** One animation frame. 8fps: deliberate, not a flicker. */
   const BEAT_MS = 125;
 
