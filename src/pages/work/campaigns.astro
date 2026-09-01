@@ -130,24 +130,26 @@ const filterCss = clients
 
         <ul class="index">
           {
-            pieces.map((p) => (
+            pieces.map((p, i) => (
               <li
                 class:list={['piece', p.feature && 'piece--feature']}
                 data-client={p.id}
                 style={`--rot:${p.rot}deg; --dy:${p.dy}px`}
               >
                 {p.img && (
-                  <Image
-                    src={p.img}
-                    alt={`${p.client} — ${p.caption}`}
-                    widths={[300, 600, 900]}
-                    sizes="(min-width: 1024px) 24vw, (min-width: 640px) 32vw, 46vw"
-                    loading="lazy"
-                    decoding="async"
-                    class="piece__img"
-                  />
+                  <button type="button" class="piece__open" data-open={i} aria-label={`View ${p.client}: ${p.caption}`}>
+                    <Image
+                      src={p.img}
+                      alt=""
+                      widths={[300, 600, 900]}
+                      sizes="(min-width: 1024px) 24vw, (min-width: 640px) 32vw, 46vw"
+                      loading="lazy"
+                      decoding="async"
+                      class="piece__img"
+                    />
+                  </button>
                 )}
-                <span class="piece__label">
+                <span class="piece__label" aria-hidden="true">
                   <b>{p.client}</b> {p.caption}
                 </span>
               </li>
@@ -156,6 +158,81 @@ const filterCss = clients
         </ul>
       </fieldset>
     </form>
+
+    {/* The viewer. A native <dialog> opened with showModal(), which brings Esc,
+        a focus trap, an inert background and a ::backdrop with it — all things
+        that are tedious and easy to get wrong by hand. */}
+    <dialog class="lb" aria-label="Campaign viewer">
+      <div class="lb__bar">
+        <p class="lb__counter font-mono">
+          <span class="lb__n" data-lb-index>1</span>
+          <span class="lb__of"> / {pieces.length}</span>
+          <span class="lb__sep" aria-hidden="true"> · </span>
+          <span data-lb-client />
+        </p>
+        <div class="lb__baractions">
+          <p class="lb__hint font-mono">Esc to close</p>
+          <button type="button" class="lb__btn" data-lb-close aria-label="Close viewer">
+            <svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+              <path d="M1 1 L14 14 M14 1 L1 14" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="lb__stage">
+        <button type="button" class="lb__btn lb__btn--nav" data-lb-prev aria-label="Previous piece">
+          <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+            <path d="M10.5 2 L4 8.5 L10.5 15" />
+          </svg>
+        </button>
+
+        <div class="lb__frame">
+          {
+            pieces.map((p, i) => (
+              p.img && (
+                <Image
+                  src={p.img}
+                  alt={`${p.client} — ${p.caption}`}
+                  widths={[600, 900, 1400]}
+                  sizes="(min-width: 1024px) 60vw, 92vw"
+                  loading="lazy"
+                  decoding="async"
+                  class="lb__img"
+                  data-lb-slide={i}
+                  data-caption={p.caption}
+                  data-client-name={p.client}
+                  hidden={i !== 0}
+                />
+              )
+            ))
+          }
+        </div>
+
+        <button type="button" class="lb__btn lb__btn--nav" data-lb-next aria-label="Next piece">
+          <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+            <path d="M6.5 2 L13 8.5 L6.5 15" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="lb__meta">
+        <p class="lb__caption" data-lb-caption />
+        <p class="lb__source font-mono" data-lb-source />
+      </div>
+
+      <div class="lb__strip" role="group" aria-label="Jump to a piece">
+        {
+          pieces.map((p, i) => (
+            p.img && (
+              <button type="button" class="lb__thumb" data-lb-goto={i} aria-label={`${p.client}: ${p.caption}`}>
+                <Image src={p.img} alt="" widths={[120, 240]} sizes="72px" loading="lazy" decoding="async" />
+              </button>
+            )
+          ))
+        }
+      </div>
+    </dialog>
 
     <section class="rule-t gutter py-14 md:py-20">
       <p class="max-w-xl text-soft">
@@ -347,6 +424,232 @@ const filterCss = clients
     .piece { margin-bottom: 3.25rem; }
   }
 
+
+  /* ── the piece as a trigger ─────────────────────────────────────── */
+  .piece__open {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+  }
+  /* The straighten already keys off :focus-within, so a keyboard user gets the
+     same lift as the mouse without another rule. */
+  .piece__open:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 6px;
+  }
+
+  /* ── the viewer ─────────────────────────────────────────────────── */
+  .lb {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    overflow: hidden;
+  }
+  .lb::backdrop {
+    background: rgb(23 22 15 / 0.9);
+  }
+  .lb:not([open]) { display: none; }
+
+  .lb__bar {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    z-index: 3;
+  }
+  @media (min-width: 768px) {
+    .lb__bar { padding: 1.5rem 2rem; }
+  }
+
+  .lb__counter {
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(242 239 233 / 0.62);
+  }
+  .lb__n { color: var(--color-paper); }
+
+  .lb__baractions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .lb__hint {
+    display: none;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(242 239 233 / 0.42);
+  }
+  @media (min-width: 768px) {
+    .lb__hint { display: block; }
+  }
+
+  .lb__btn {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgb(242 239 233 / 0.22);
+    border-radius: 50%;
+    background: none;
+    color: var(--color-paper);
+    cursor: pointer;
+    transition: border-color 200ms ease, background 200ms ease;
+  }
+  @media (min-width: 768px) {
+    .lb__btn { width: 56px; height: 56px; }
+  }
+  .lb__btn svg { width: 15px; height: 15px; }
+  .lb__btn:hover { border-color: rgb(242 239 233 / 0.55); }
+  .lb__btn:focus-visible {
+    outline: 2px solid var(--color-paper);
+    outline-offset: 3px;
+  }
+
+  .lb__stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 4.5rem 0.75rem 8.5rem;
+  }
+  @media (min-width: 768px) {
+    .lb__stage { gap: 2.75rem; padding: 6rem 2rem 9.5rem; }
+  }
+
+  /* The arrows sit outside the artwork rather than over it, so a mis-tap moves
+     the set instead of dismissing it. */
+  .lb__btn--nav { z-index: 2; }
+
+  /* On a phone two 44px arrows flanking the frame take 88px of 375, and the
+     artwork ends up width-starved with empty bands above and below it. Below
+     the breakpoint they drop out of the row and flank the caption instead, so
+     the piece gets the full width and still nobody taps an arrow by accident. */
+  @media (max-width: 767px) {
+    .lb__btn--nav {
+      position: absolute;
+      bottom: 5.5rem;
+    }
+    .lb__stage > .lb__btn--nav:first-child { left: 0.75rem; }
+    .lb__stage > .lb__btn--nav:last-child { right: 0.75rem; }
+  }
+
+  .lb__frame {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .lb__img {
+    grid-area: 1 / 1;
+    max-width: 100%;
+    /* Measured against the viewport, not the frame. A percentage height on a
+       centred flex item does not resolve against the stage's padded box, so the
+       artwork ran under the caption and off the bottom of the screen. These
+       subtract the stage's own padding: 4.5 + 8.5 here, 6 + 9.5 wide. */
+    max-height: calc(100dvh - 13rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    box-shadow: 0 40px 90px rgb(0 0 0 / 0.5);
+  }
+  @media (min-width: 768px) {
+    .lb__img { max-height: calc(100dvh - 15.5rem); }
+  }
+
+  .lb__meta {
+    position: absolute;
+    inset: auto 0 6.25rem 0;
+    text-align: center;
+    /* Clears the arrows, which sit in this band on a phone. */
+    padding: 0 4.75rem;
+    z-index: 2;
+  }
+  @media (min-width: 768px) {
+    .lb__meta { padding: 0 1.5rem; }
+  }
+  .lb__caption {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  @media (min-width: 768px) {
+    .lb__caption { font-size: 1.0625rem; }
+  }
+  .lb__source {
+    margin-top: 0.5rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(242 239 233 / 0.55);
+  }
+
+  .lb__strip {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 1.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    z-index: 3;
+  }
+  .lb__strip::-webkit-scrollbar { display: none; }
+
+  .lb__thumb {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    line-height: 0;
+    opacity: 0.4;
+    transition: opacity 200ms ease;
+  }
+  .lb__thumb img {
+    height: 40px;
+    width: auto;
+    border-radius: 2px;
+  }
+  @media (min-width: 768px) {
+    .lb__thumb img { height: 44px; }
+  }
+  .lb__thumb:hover { opacity: 0.75; }
+  .lb__thumb[aria-current='true'] {
+    opacity: 1;
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .lb__thumb:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--color-paper);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lb__btn,
+    .lb__thumb { transition: none; }
+  }
+
   /* The tilt is a static arrangement, not motion, so it stays. What goes is the
      movement between states. */
   @media (prefers-reduced-motion: reduce) {
@@ -361,3 +664,109 @@ const filterCss = clients
     }
   }
 </style>
+
+<script>
+  /**
+   * The campaign viewer.
+   *
+   * Built on a native <dialog> opened with showModal(), which supplies Esc,
+   * a focus trap, an inert background and the backdrop. What is left is the
+   * set: which piece is showing, and moving between them.
+   *
+   * Navigation follows the filter. With the roster set to one client the
+   * arrows move through that client's pieces only — stepping into hidden work
+   * would contradict what the page is showing.
+   */
+  const dialog = document.querySelector<HTMLDialogElement>('.lb');
+  const slides = [...document.querySelectorAll<HTMLImageElement>('[data-lb-slide]')];
+
+  if (dialog && slides.length) {
+    const thumbs = [...document.querySelectorAll<HTMLButtonElement>('[data-lb-goto]')];
+    const openers = [...document.querySelectorAll<HTMLButtonElement>('[data-open]')];
+    const idxEl = dialog.querySelector<HTMLElement>('[data-lb-index]');
+    const clientEl = dialog.querySelector<HTMLElement>('[data-lb-client]');
+    const captionEl = dialog.querySelector<HTMLElement>('[data-lb-caption]');
+    const sourceEl = dialog.querySelector<HTMLElement>('[data-lb-source]');
+    const ofEl = dialog.querySelector<HTMLElement>('.lb__of');
+
+    /** The piece that opened the viewer, so focus can go back to it. */
+    let opener: HTMLElement | null = null;
+    let index = 0;
+
+    /** Indices the current filter leaves visible, in document order. */
+    const active = () => {
+      const list = openers
+        .map((b, i) => ({ i, li: b.closest<HTMLElement>('.piece') }))
+        .filter(({ li }) => li && getComputedStyle(li).display !== 'none')
+        .map(({ i }) => i);
+      return list.length ? list : openers.map((_, i) => i);
+    };
+
+    const show = (next: number) => {
+      index = next;
+      slides.forEach((s, i) => s.toggleAttribute('hidden', i !== index));
+
+      const current = slides[index];
+      const client = current.dataset.clientName ?? '';
+      const caption = current.dataset.caption ?? '';
+      const set = active();
+      const place = set.indexOf(index);
+
+      if (idxEl) idxEl.textContent = String(place >= 0 ? place + 1 : 1);
+      if (ofEl) ofEl.textContent = ` / ${set.length}`;
+      if (clientEl) clientEl.textContent = client;
+      if (captionEl) captionEl.textContent = caption;
+      if (sourceEl) sourceEl.textContent = client;
+
+      thumbs.forEach((t, i) => {
+        t.setAttribute('aria-current', String(i === index));
+        // A thumb for a filtered-out piece is not a place the arrows can reach,
+        // so it should not be offered as a shortcut either.
+        t.hidden = !set.includes(i);
+      });
+      thumbs[index]?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    };
+
+    const step = (delta: number) => {
+      const set = active();
+      const at = set.indexOf(index);
+      const from = at === -1 ? 0 : at;
+      show(set[(from + delta + set.length) % set.length]);
+    };
+
+    const open = (i: number, from: HTMLElement) => {
+      opener = from;
+      show(i);
+      dialog.showModal();
+    };
+
+    openers.forEach((b, i) => b.addEventListener('click', () => open(i, b)));
+    thumbs.forEach((t, i) => t.addEventListener('click', () => show(i)));
+
+    dialog.querySelector('[data-lb-prev]')?.addEventListener('click', () => step(-1));
+    dialog.querySelector('[data-lb-next]')?.addEventListener('click', () => step(1));
+    dialog.querySelector('[data-lb-close]')?.addEventListener('click', () => dialog.close());
+
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    });
+
+    /* Clicking the ground around the artwork closes. The dialog fills the
+       viewport, so the backdrop never receives the click — the target is the
+       dialog itself, or the stage padding around the frame. */
+    dialog.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      if (t === dialog || t.classList.contains('lb__stage') || t.classList.contains('lb__frame')) {
+        dialog.close();
+      }
+    });
+
+    /* Return focus to the piece that opened it, so a keyboard user lands back
+       where they were rather than at the top of the board. */
+    dialog.addEventListener('close', () => {
+      opener?.focus();
+      opener = null;
+    });
+  }
+</script>
