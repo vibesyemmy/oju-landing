@@ -67,7 +67,10 @@ import { SITE } from '../data/site';
     /* Tall enough for the fire to have somewhere to burn. Capped against the
        viewport so the claim is never pushed below the fold on a laptop. */
     min-height: min(82vh, 46rem);
-    padding: 5rem var(--gutter) 4rem;
+    /* Uneven on purpose. The copy is centred in the content box, so its centre
+       sits at (height + top - bottom) / 2 — the heavier bottom padding is what
+       rides it 3rem above the hero's middle and leaves the fire more room. */
+    padding: 4rem var(--gutter) 9rem;
     overflow: hidden;
   }
 
@@ -79,6 +82,25 @@ import { SITE } from '../data/site';
     /* Behind the copy, in front of the paper. */
     z-index: 0;
     pointer-events: none;
+  }
+
+  /* Parallax. Three depths at three rates, all within the copy: the block
+     itself, then the small lines moving a little further again. The fire does
+     not move — it is drawn to the hero's own box and clipped by it, so any
+     drift would cut its base, which is the densest part of it. Relative motion
+     between the copy and a fixed fire is the effect either way. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__copy {
+      transform: translate3d(0, calc(var(--hero-scroll, 0) * -4.5rem), 0);
+      opacity: calc(1 - var(--hero-scroll, 0) * 0.7);
+      will-change: transform;
+    }
+    .hero__meta {
+      transform: translate3d(0, calc(var(--hero-scroll, 0) * -2.4rem), 0);
+    }
+    .hero__line {
+      transform: translate3d(0, calc(var(--hero-scroll, 0) * -1.8rem), 0);
+    }
   }
 
   .hero__copy {
@@ -409,10 +431,31 @@ import { SITE } from '../data/site';
       else if (!reduced.matches) start();
     });
 
+    /* How far the hero has travelled out of view, 0 to 1. Written as a
+       custom property and left to CSS, so the parallax is transforms the
+       compositor can do rather than layout this script drives. */
+    let ticking = false;
+    const track = () => {
+      ticking = false;
+      const r = hero.getBoundingClientRect();
+      const t = Math.min(1, Math.max(0, -r.top / (r.height || 1)));
+      hero.style.setProperty('--hero-scroll', t.toFixed(4));
+    };
+    addEventListener(
+      'scroll',
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(track);
+      },
+      { passive: true },
+    );
+
     watchPointer();
     addHearth(canvas);
     measure();
     paint();
+    track();
 
     if (reduced.matches) {
       // One still frame, rather than an empty hero.
