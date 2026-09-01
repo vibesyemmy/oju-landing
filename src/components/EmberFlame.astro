@@ -1,0 +1,144 @@
+---
+/**
+ * A small standing flame, for dropping into a panel.
+ *
+ * Same material as the hero's wildfire and the cursor's — grid, palette, noise,
+ * compression and banding all come from src/lib/fire.ts — at a size that reads
+ * as one flame rather than a front. The cell pitch is deliberately not scaled
+ * down with it: a 9px cell is what every other fire on this site is made of,
+ * and a finer grid here would read as a different substance.
+ *
+ * Shaped as a single body rather than a row of columns: each column's height
+ * falls off from the centre, so it tapers to a tip instead of ending flat, and
+ * turbulence grows with height so the tip shreds while the base holds.
+ *
+ * Capped below white, like the hero. These panels are a light fill, so a cell
+ * the colour of the panel reads as a hole punched in the flame.
+ *
+ * Decorative only — aria-hidden, and it carries no state anything depends on.
+ * Under prefers-reduced-motion it stands as a single still frame rather than
+ * disappearing, and it stops burning when scrolled out of view.
+ */
+interface Props {
+  /** Cells across and up. The canvas sizes itself from these. */
+  cols?: number;
+  rows?: number;
+  /** Extra classes, for the parent to place it. */
+  class?: string;
+}
+
+const { cols = 9, rows = 12, class: className = '' } = Astro.props;
+---
+
+<canvas
+  class:list={['ember', className]}
+  data-ember-flame
+  data-cols={cols}
+  data-rows={rows}
+  aria-hidden="true"></canvas>
+
+<style>
+  .ember {
+    display: block;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { CELL, band, compress, noise, threshold } from '../lib/fire';
+
+  /** One flame frame. ~11fps, matching every other fire here. */
+  const BEAT_MS = 92;
+  /** Heat at the base, before turbulence. Low enough that the body spans
+      orange to yellow rather than saturating into one flat band. */
+  const FUEL = 1.5;
+  /** Never white: on a light panel a paper-coloured cell reads as a hole. */
+  const CEILING = 0.93;
+
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-ember-flame]')) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) continue;
+
+    const cols = Number(canvas.dataset.cols) || 9;
+    const rows = Number(canvas.dataset.rows) || 12;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.style.width = `${cols * CELL}px`;
+    canvas.style.height = `${rows * CELL}px`;
+    canvas.width = Math.floor(cols * CELL * dpr);
+    canvas.height = Math.floor(rows * CELL * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    /** A per-flame offset into the noise field, so two on one page do not
+        burn in lockstep. */
+    const seed = Math.random() * 400;
+    const mid = (cols - 1) / 2;
+    let rise = 0;
+    let drift = 0;
+    let beat = -1;
+    let frame: number | undefined;
+
+    const paint = () => {
+      ctx.clearRect(0, 0, cols * CELL, rows * CELL);
+
+      for (let gx = 0; gx < cols; gx += 1) {
+        // Off-centre columns burn shorter, so the flame comes to a tip.
+        const off = (gx - mid) / (mid || 1);
+        const taper = 1 - off * off * 0.72;
+        const lick = noise(gx * 0.46 + seed + drift * 0.5, seed + drift * 0.22);
+        const height = rows * taper * (0.72 + 0.5 * lick);
+        if (height <= 0) continue;
+
+        for (let gy = rows - 1; gy >= 0; gy -= 1) {
+          const above = rows - gy;
+          let h = (1 - above / height) * FUEL * (1 - off * off * 0.4);
+          if (h < -0.5) continue;
+
+          const churn = Math.min(1.3, above / height + 0.45);
+          h +=
+            ((noise(gx * 0.5 + seed, (gy - rise) * 0.5 + seed) - 0.5) * 1.3 +
+              (noise(gx * 0.9 + seed + 17, (gy - rise * 1.6) * 0.9) - 0.5) * 0.6) *
+            churn;
+          if (h <= 0) continue;
+
+          const heat = Math.min(CEILING, compress(h));
+          if (heat < threshold(gx, gy) * 0.2) continue;
+
+          const { colour, alpha } = band(heat);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = colour;
+          ctx.fillRect(gx * CELL, gy * CELL, CELL - 1, CELL - 1);
+        }
+      }
+      ctx.globalAlpha = 1;
+    };
+
+    const draw = (now: number) => {
+      frame = requestAnimationFrame(draw);
+      const b = Math.floor(now / BEAT_MS);
+      if (b === beat) return;
+      beat = b;
+      rise += 0.55;
+      drift += 0.09;
+      paint();
+    };
+
+    const start = () => {
+      if (frame === undefined && !reduced.matches) frame = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame);
+      frame = undefined;
+    };
+
+    paint();
+
+    /* Nothing below the fold needs to burn. */
+    new IntersectionObserver((entries) => {
+      for (const e of entries) (e.isIntersecting ? start() : stop());
+    }).observe(canvas);
+
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+  }
+</script>

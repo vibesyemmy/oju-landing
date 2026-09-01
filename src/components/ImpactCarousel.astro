@@ -42,6 +42,8 @@ const slides = projects.map((entry) => ({
       : `${entry.data.title} · ${entry.data.client}`,
 }));
 
+import EmberFlame from './EmberFlame.astro';
+
 const rotates = slides.length > 1;
 const INTERVAL = 5000;
 ---
@@ -93,6 +95,12 @@ const INTERVAL = 5000;
       }
     </div>
 
+    {/* Wrapped rather than classed directly: scoped styles reach this
+        component's own elements, not those rendered by a child. */}
+    <div class="impact__flame">
+      <EmberFlame cols={9} rows={12} />
+    </div>
+
     {rotates && <div class="impact__progress" aria-hidden="true"><i /></div>}
   </div>
 </section>
@@ -131,6 +139,21 @@ const INTERVAL = 5000;
       top: 1.5rem;
       right: 2.25rem;
       margin-bottom: 0;
+    }
+  }
+
+  /* Burns in the empty right-hand corner, under the controls. Held back until
+     the panel is wide enough to have an empty corner at all — on a phone the
+     controls sit inline above the figure and there is none. */
+  .impact__flame {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .impact__flame {
+      display: block;
+      position: absolute;
+      right: 2.5rem;
+      bottom: 1.75rem;
     }
   }
 
@@ -204,6 +227,15 @@ const INTERVAL = 5000;
      nothing below it moves when the slide changes. */
   .impact__stage {
     display: grid;
+  }
+  /* Room reserved for the flame, so the copy wraps before it reaches the
+     corner rather than running under it. Measured rather than guessed: the
+     flame is 81px wide and sits 40px in from the panel's padding box, which
+     puts its left edge 73px inside the content column. Without this the
+     longest line collided by 26px just above the breakpoint, where the panel
+     is narrowest and the flame is already showing. */
+  @media (min-width: 768px) {
+    .impact__stage { padding-right: 6.25rem; }
   }
 
   .impact__slide {
