@@ -1,35 +1,43 @@
 ---
 /**
- * A small animated pixel icon for the method stages.
+ * The animated pixel icons for the method stages.
  *
  * Eight cells at the 9px pitch the fires use, so an icon pixel and a fire cell
  * are the same square. With the pitch fixed, cell count is the only size
- * control there is, and eight is the floor: a legible glass needs a seven-cell
- * circle and the handle needs somewhere to go. Anything smaller means either
- * thinner pixels or dropping the handle and letting a bare lens stand for
- * Discovery.
+ * control there is, and eight is the floor: a legible circle needs seven cells
+ * and the glass's handle needs somewhere to go.
  *
- * Colours are the fireball's, imported from src/lib/fire.ts: a cool rim and a
- * hot centre, the same structure the fire itself has. The glass is blue with a
- * navy handle, and what the scan turns up runs orange to yellow.
+ * That square is the whole brief for the drawings. Nothing with fine detail
+ * survives at this size, so each stage is a silhouette that reads at a glance
+ * and animates by having cells appear rather than by moving anything — cells
+ * only exist on the grid, so nothing can travel between them.
  *
- * The rim is drawn with the midpoint circle algorithm rather than by
- * thresholding a distance field. The latter is the obvious way to do it and it
- * looks wrong: at a ten-cell diameter it leaves the outline lumpy and doubled
- * in places, because rounding a smooth function is not the same problem as
- * drawing a circle. Midpoint gives the canonical pixel circle, symmetric in
- * all eight octants.
+ *   discovery — a glass, with a line scanning down it and a cell that catches
+ *   design    — a board filling in, one cell placed at a time
+ *   build     — blocks stacking on a ground line, bottom up
+ *   support   — a flame that keeps burning
  *
- * Discovery: a glass with a line scanning down through it, and a cell that
- * catches when the scan passes over it — looking, then finding. The scan runs
- * at 8fps, slow enough to read as deliberate rather than as a flicker.
+ * Colours are the fireball's, imported from src/lib/fire.ts so there is one
+ * source for them: blue and navy for the object, orange and yellow for what
+ * the stage is doing to it. In each icon the newest cell is the hottest, which
+ * is what carries the eye to the thing that just changed.
  *
- * Under prefers-reduced-motion it draws one still frame with the scan parked
- * and nothing found. It stops when scrolled out of view.
+ * The glass's rim uses the midpoint circle algorithm rather than a thresholded
+ * distance field. The latter is the obvious way and it looks wrong: at this
+ * diameter it leaves the outline lumpy and doubled, because rounding a smooth
+ * function is not the same problem as drawing a circle.
+ *
+ * The flame is hand-plotted instead. Generating shapes keeps circles and lines
+ * honest, but a flame has no formula worth the trouble at eight cells, and
+ * three drawn frames flicker better than noise does at this scale.
+ *
+ * Under prefers-reduced-motion each draws one still frame of its finished
+ * state, not an empty board or a bare rim. They stop when scrolled out of view.
  */
+export type IconName = 'discovery' | 'design' | 'build' | 'support';
+
 interface Props {
-  /** Which glyph to draw. Only 'discovery' is drawn so far. */
-  name: 'discovery';
+  name: IconName;
   /** Accessible name, or omit to leave it decorative. */
   label?: string;
   class?: string;
@@ -61,11 +69,194 @@ const { name, label, class: className = '' } = Astro.props;
   const BEAT_MS = 125;
 
   type Cell = [number, number, string];
+  /** A glyph is its cells at a given beat, and how long before it repeats. */
+  type Glyph = { cells: (beat: number) => Cell[]; cycle: number };
+
+  const CHARS: Record<string, string> = { B: BLUE, N: NAVY, O: ORANGE, Y: YELLOW };
+
+  /** Rows of characters to cells, so a hand-drawn glyph reads as itself here. */
+  const art = (rows: string[]): Cell[] => {
+    const out: Cell[] = [];
+    rows.forEach((row, y) => {
+      [...row].forEach((ch, x) => {
+        if (CHARS[ch]) out.push([x, y, CHARS[ch]]);
+      });
+    });
+    return out;
+  };
+
+  /* ── discovery ───────────────────────────────────────────────────── */
+  const discovery = (): Glyph => {
+    const CX = 3;
+    const CY = 3;
+    const R = 3;
+
+    const rim = new Set<string>();
+    let x = R;
+    let y = 0;
+    let err = 0;
+    while (x >= y) {
+      for (const [dx, dy] of [
+        [x, y], [y, x], [-y, x], [-x, y],
+        [-x, -y], [-y, -x], [y, -x], [x, -y],
+      ]) {
+        rim.add(`${CX + dx},${CY + dy}`);
+      }
+      y += 1;
+      if (err <= 0) err += 2 * y + 1;
+      else { x -= 1; err -= 2 * x + 1; }
+    }
+
+    const ring: Cell[] = [];
+    const lens: [number, number][] = [];
+    for (let cx = 0; cx < GRID; cx += 1) {
+      for (let cy = 0; cy < GRID; cy += 1) {
+        if (rim.has(`${cx},${cy}`)) ring.push([cx, cy, BLUE]);
+        else if (Math.hypot(cx - CX, cy - CY) < R - 0.5) lens.push([cx, cy]);
+      }
+    }
+
+    /* Handle: down the diagonal from the rim to the corner, starting clear of
+       it. The handle is painted after the ring, so an overlapping first cell
+       silently ate the rim's corner and left a bite out of the circle. */
+    const handle: Cell[] = [];
+    for (let t = CX + R; t < GRID; t += 1) handle.push([t, t, NAVY]);
+
+    /** What the scan turns up: below and right of centre, so the sweep has
+        somewhere to travel before it gets there. */
+    const find: [number, number] = [CX + 1, CY + 2];
+    const top = CY - R;
+    const span = 2 * R;
+    // Sweep plus a short rest. A long rest leaves the icon a bare outline for
+    // most of its cycle.
+    const cycle = span + 5;
+
+    return {
+      cycle,
+      cells: (beat) => {
+        const phase = beat % cycle;
+        const row = top + Math.min(phase, span);
+        const sweeping = phase <= span;
+        const out: Cell[] = [];
+
+        if (sweeping) {
+          for (const [lx, ly] of lens) if (ly === row) out.push([lx, ly, ORANGE]);
+        }
+        // Stays lit once passed, and through the rest, so the glass is never
+        // just an empty outline.
+        if (!sweeping || row >= find[1]) out.push([find[0], find[1], YELLOW]);
+        return [...out, ...ring, ...handle];
+      },
+    };
+  };
+
+  /* ── design ──────────────────────────────────────────────────────── */
+  const design = (): Glyph => {
+    const frame: Cell[] = [];
+    for (let x = 1; x <= 6; x += 1) frame.push([x, 1, BLUE], [x, 6, BLUE]);
+    for (let y = 2; y <= 5; y += 1) frame.push([1, y, BLUE], [6, y, BLUE]);
+
+    const slots: [number, number][] = [];
+    for (let y = 2; y <= 5; y += 1) {
+      for (let x = 2; x <= 5; x += 1) slots.push([x, y]);
+    }
+
+    const cycle = slots.length + 6;
+    return {
+      cycle,
+      cells: (beat) => {
+        const phase = beat % cycle;
+        const placed = Math.min(phase, slots.length);
+        const out: Cell[] = [];
+        for (let i = 0; i < placed; i += 1) {
+          const [x, y] = slots[i];
+          // The one just placed is hot; everything before it has cooled.
+          const hot = i === placed - 1 && phase <= slots.length;
+          out.push([x, y, hot ? YELLOW : ORANGE]);
+        }
+        return [...out, ...frame];
+      },
+    };
+  };
+
+  /* ── build ───────────────────────────────────────────────────────── */
+  const build = (): Glyph => {
+    const ground: Cell[] = [];
+    for (let x = 0; x < GRID; x += 1) ground.push([x, 7, NAVY]);
+
+    // Uneven, so it reads as something being built rather than as a chart.
+    const heights = [2, 4, 3, 5, 2, 4];
+    const order: [number, number][] = [];
+    heights.forEach((h, i) => {
+      for (let k = 0; k < h; k += 1) order.push([i + 1, 6 - k]);
+    });
+
+    const cycle = order.length + 6;
+    return {
+      cycle,
+      cells: (beat) => {
+        const phase = beat % cycle;
+        const laid = Math.min(phase, order.length);
+        const out: Cell[] = [];
+        for (let i = 0; i < laid; i += 1) {
+          const [x, y] = order[i];
+          const hot = i === laid - 1 && phase <= order.length;
+          out.push([x, y, hot ? YELLOW : BLUE]);
+        }
+        return [...out, ...ground];
+      },
+    };
+  };
+
+  /* ── support ─────────────────────────────────────────────────────── */
+  const support = (): Glyph => {
+    const frames = [
+      art([
+        '........',
+        '...Y....',
+        '..OYO...',
+        '..OYO...',
+        '.BOYOB..',
+        '.BOOOB..',
+        '..BBB...',
+        '........',
+      ]),
+      art([
+        '........',
+        '..Y.....',
+        '..YO....',
+        '.OOYO...',
+        '.BOYOB..',
+        '.BOOOB..',
+        '..BBB...',
+        '........',
+      ]),
+      art([
+        '........',
+        '....Y...',
+        '...OY...',
+        '..OYOO..',
+        '.BOYOB..',
+        '.BOOOB..',
+        '..BBB...',
+        '........',
+      ]),
+    ];
+    // Two beats a frame: at one, the flicker is too quick to read as a flame.
+    return {
+      cycle: frames.length * 2,
+      cells: (beat) => frames[Math.floor(beat / 2) % frames.length],
+    };
+  };
+
+  const GLYPHS: Record<string, () => Glyph> = { discovery, design, build, support };
 
   for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-picon]')) {
     const ctx = canvas.getContext('2d', { alpha: true });
-    if (!ctx) continue;
+    const make = GLYPHS[canvas.dataset.picon ?? ''];
+    if (!ctx || !make) continue;
 
+    const glyph = make();
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -76,83 +267,9 @@ const { name, label, class: className = '' } = Astro.props;
     canvas.height = Math.floor(size * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    /* ── the glass ───────────────────────────────────────────────────
-       A ring from a radius and a handle from a line, so the circle is round
-       at any size and the two always meet. */
-    // Integer centre and radius: the midpoint algorithm wants both, and an
-    // off-grid centre is what makes a small pixel circle look lopsided.
-    const CX = 3;
-    const CY = 3;
-    const R = 3;
-
-    const rim = new Set<string>();
-    {
-      let x = R;
-      let y = 0;
-      let err = 0;
-      while (x >= y) {
-        for (const [dx, dy] of [
-          [x, y], [y, x], [-y, x], [-x, y],
-          [-x, -y], [-y, -x], [y, -x], [x, -y],
-        ]) {
-          rim.add(`${CX + dx},${CY + dy}`);
-        }
-        y += 1;
-        if (err <= 0) err += 2 * y + 1;
-        else { x -= 1; err -= 2 * x + 1; }
-      }
-    }
-
-    const ring: Cell[] = [];
-    const lens: [number, number][] = [];
-    for (let x = 0; x < GRID; x += 1) {
-      for (let y = 0; y < GRID; y += 1) {
-        if (rim.has(`${x},${y}`)) ring.push([x, y, BLUE]);
-        else if (Math.hypot(x - CX, y - CY) < R - 0.5) lens.push([x, y]);
-      }
-    }
-    /* Handle: straight down the diagonal from the rim to the corner. It starts
-       clear of the rim rather than on it — the handle is painted after the
-       ring, so an overlapping first cell silently ate the rim's bottom-right
-       corner and left the circle with a bite out of it. Diagonally adjacent is
-       enough to read as joined. */
-    const handle: Cell[] = [];
-    for (let t = CX + R; t < GRID; t += 1) handle.push([t, t, NAVY]);
-
-    /** The cell the scan turns up. Below and right of centre, so the scan has
-        somewhere to travel before it gets there. */
-    const find: [number, number] = [Math.round(CX) + 1, Math.round(CY) + 2];
-
-    const top = Math.ceil(CY - R);
-    const span = Math.round(2 * R);
-    /** Sweep, then a short rest before starting over. A long rest leaves the
-        icon sitting as a bare outline for most of its cycle. */
-    const CYCLE = span + 5;
-
     const paint = (beat: number) => {
       ctx.clearRect(0, 0, size, size);
-
-      // The scan line's row, sweeping the lens top to bottom then resting.
-      const phase = beat % CYCLE;
-      const row = top + Math.min(phase, span);
-      const sweeping = phase <= span;
-      const found = !sweeping || row >= find[1];
-
-      for (const [x, y] of lens) {
-        if (sweeping && y === row) {
-          ctx.fillStyle = ORANGE;
-          ctx.fillRect(x * PIXEL, y * PIXEL, PIXEL - 1, PIXEL - 1);
-        }
-      }
-
-      // What the scan turned up stays lit once passed, and rests lit between
-      // sweeps — the icon is never a bare outline for long.
-      if (found) {
-        ctx.fillStyle = YELLOW;
-        ctx.fillRect(find[0] * PIXEL, find[1] * PIXEL, PIXEL - 1, PIXEL - 1);
-      }
-
-      for (const [x, y, colour] of [...ring, ...handle]) {
+      for (const [x, y, colour] of glyph.cells(beat)) {
         ctx.fillStyle = colour;
         ctx.fillRect(x * PIXEL, y * PIXEL, PIXEL - 1, PIXEL - 1);
       }
@@ -178,8 +295,8 @@ const { name, label, class: className = '' } = Astro.props;
       frame = undefined;
     };
 
-    // A still frame first, so the icon is drawn whether or not it animates.
-    paint(reduced.matches ? CYCLE - 1 : 0);
+    // The finished state when still, rather than an empty board or a bare rim.
+    paint(reduced.matches ? glyph.cycle - 1 : 0);
 
     new IntersectionObserver((entries) => {
       for (const e of entries) (e.isIntersecting ? start() : stop());
