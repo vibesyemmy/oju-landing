@@ -86,12 +86,69 @@ import { SITE } from '../data/site';
     max-width: 46rem;
   }
 
+  /* The claim takes heat from the fire under it: ink at the top, scorching
+     toward the last line. The gradient is painted through the glyphs rather
+     than behind them, so it is the letters that heat up, not a block.
+
+     The hot end stops at #c4470f. Against this paper that is 4.3:1, and the
+     ember above it 7.2:1 — both clear the 3:1 that large text needs, which is
+     what caps how hot the type is allowed to get. Anything brighter is put in
+     the halo instead, where it sits on the paper beside the glyphs and cannot
+     take the text's contrast down with it. */
   .hero__claim {
     margin: 0;
     font-size: clamp(2.75rem, 8.4vw, 6.5rem);
     line-height: 0.94;
     letter-spacing: -0.035em;
     text-wrap: balance;
+    background-image: linear-gradient(
+      to bottom,
+      var(--color-ink) 38%,
+      #8f2f0a 76%,
+      #c4470f 96%
+    );
+    /* Taller than the text, so shifting it moves the heat line through the
+       glyphs instead of recolouring them in place. */
+    background-size: 100% 190%;
+    background-position: 0% 0%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__claim {
+      /* Two clocks that do not divide evenly, so the heat never settles into
+         a loop you can count. The slow one is the fire breathing up and down
+         the letters; the fast one is the flicker of the halo. */
+      animation:
+        claim-heat 5.3s ease-in-out infinite alternate,
+        claim-flicker 2.9s ease-in-out infinite;
+    }
+  }
+
+  @keyframes claim-heat {
+    from { background-position: 0% 0%; }
+    to { background-position: 0% 38%; }
+  }
+
+  /* The halo is outside the glyphs, on the paper, so it can be as hot as it
+     likes without touching legibility. */
+  @keyframes claim-flicker {
+    0%, 100% { filter: drop-shadow(0 0.06em 0.16em rgb(224 99 26 / 0.16)); }
+    38% { filter: drop-shadow(0 0.09em 0.26em rgb(255 138 30 / 0.34)); }
+    64% { filter: drop-shadow(0 0.07em 0.2em rgb(224 99 26 / 0.22)); }
+  }
+
+  /* background-clip: text needs a real colour to fall back to when the user's
+     own colours are forced, or the headline disappears. */
+  @media (forced-colors: active) {
+    .hero__claim {
+      background-image: none;
+      color: CanvasText;
+      forced-color-adjust: none;
+    }
   }
 
   .hero__meta {
