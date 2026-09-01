@@ -366,39 +366,38 @@ const filterCss = clients
       0 34px 70px rgb(23 22 15 / 0.16);
   }
 
-  /* Sits under the piece rather than over it: these are adverts, and a caption
-     laid across one covers the work it is describing. */
+  /* On the piece rather than under it, matching the work gallery. These are
+     adverts, so the band does cover the strip where many of them carry a logo,
+     a URL and social icons — the cost of the two galleries reading as one
+     system. It fades out by a third of the way up so it weights the bottom edge
+     instead of masking the picture.
+
+     Scrim weighted for the lightest pieces in the set, not the average: the
+     GTBank phone and the Country Homes board are near-white at the bottom, and
+     contrast over an image is not something any check in the pipeline can
+     measure. */
   .piece__label {
     position: absolute;
-    inset: auto auto -1.75rem 0;
-    width: 100%;
-    font-size: 0.6875rem;
+    inset: auto 0 0 0;
+    padding: 2.25rem 0.7rem 0.6rem;
+    font-size: 0.625rem;
     line-height: 1.35;
-    color: var(--color-faint);
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity 240ms ease, transform 240ms ease;
+    color: rgb(242 239 233 / 0.82);
+    background: linear-gradient(
+      to top,
+      rgb(19 18 12 / 0.9) 0%,
+      rgb(19 18 12 / 0.72) 34%,
+      rgb(19 18 12 / 0) 100%
+    );
+    border-radius: 0 0 2px 2px;
     pointer-events: none;
   }
   .piece__label b {
-    color: var(--color-ink);
+    display: block;
+    color: var(--color-paper);
     font-weight: 600;
-    margin-right: 0.35em;
+    margin-bottom: 0.15em;
   }
-
-  .piece:hover .piece__label,
-  .piece:focus-within .piece__label {
-    opacity: 1;
-    transform: none;
-  }
-
-  /* Touch has no hover, so the caption would never appear. It is shown there,
-     and the piece is given the room it needs underneath. */
-  @media (hover: none) {
-    .piece__label { opacity: 1; transform: none; }
-    .piece { margin-bottom: 3.25rem; }
-  }
-
 
   /* ── the piece as a trigger ─────────────────────────────────────── */
   .piece__open {
@@ -481,8 +480,7 @@ const filterCss = clients
      movement between states. */
   @media (prefers-reduced-motion: reduce) {
     .piece,
-    .piece__img,
-    .piece__label {
+    .piece__img {
       transition: none;
     }
     .piece:hover,
