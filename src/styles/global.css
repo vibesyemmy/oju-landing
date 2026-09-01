@@ -247,6 +247,9 @@
   .narrative img { width: 100%; height: auto; }
 
   .narrative figure { margin-top: 2rem; }
+  /* Inside a two-up grid the figures sit side by side and the vertical rhythm
+     comes from the grid's own gap, not the standalone figure spacing. */
+  .narrative .grid-2 figure { margin-top: 0; }
   .narrative figcaption {
     margin-top: 0.75rem;
     font-family: var(--font-mono);
