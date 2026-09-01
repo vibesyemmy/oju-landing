@@ -1,0 +1,171 @@
+---
+/**
+ * A trail of dithered blocks behind the pointer.
+ *
+ * Ordered dithering rather than a blur or a fade: each cell is either drawn or
+ * not, decided by a 4×4 Bayer threshold, which is what gives the texture its
+ * hard-edged, printed look instead of a soft smear. A trail that faded smoothly
+ * would just be a glow.
+ *
+ * Cells snap to a fixed grid in CSS pixels, so the blocks stay the same size
+ * whatever the display density and the pattern reads as pixels rather than as
+ * artefacts.
+ *
+ * It sits behind the page. Sections, tiles and images occlude it, so it shows
+ * through the paper between them and reads as texture in the margins rather
+ * than as something drawn over the work. That also settles what would otherwise
+ * be a clash with the work gallery's own cursor: the trail is simply behind the
+ * tiles there.
+ *
+ * Off entirely under prefers-reduced-motion and on touch — there is no pointer
+ * to trail.
+ *
+ * The loop runs only while there is something to draw. An idle canvas
+ * repainting sixty times a second costs a frame budget on every page for
+ * nothing.
+ */
+---
+
+<canvas class="dither" data-dither aria-hidden="true"></canvas>
+
+<style>
+  .dither {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* Behind the page. The paper ground moved from body to html so this can
+       paint above it: a background on body would have covered the canvas
+       outright at a negative index. */
+    z-index: -1;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dither { display: none; }
+  }
+  @media (hover: none) {
+    .dither { display: none; }
+  }
+</style>
+
+<script>
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-dither]');
+
+  if (canvas && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+
+    /** Block size in CSS pixels. Large enough to read as a pixel, not as noise. */
+    const CELL = 9;
+    /** How many pointer samples the tail remembers. */
+    const TAIL = 16;
+    /** Cells reachable from a sample, in cells. */
+    const REACH = 3;
+
+    /* The classic 4×4 ordered-dither threshold map, normalised. A cell is drawn
+       when its intensity clears the threshold at its own grid position, so
+       neighbouring cells switch on at different intensities and the fade
+       becomes a pattern rather than a gradient. */
+    const BAYER = [
+      [0, 8, 2, 10],
+      [12, 4, 14, 6],
+      [3, 11, 1, 9],
+      [15, 7, 13, 5],
+    ].map((row) => row.map((v) => (v + 0.5) / 16));
+
+    let dpr = 1;
+    let points: { x: number; y: number; born: number }[] = [];
+    let frame: number | undefined;
+    let ink = '#17160f';
+    let accent = '#a53d00';
+
+    const readTokens = () => {
+      const cs = getComputedStyle(document.documentElement);
+      ink = cs.getPropertyValue('--color-ink').trim() || ink;
+      accent = cs.getPropertyValue('--color-accent').trim() || accent;
+    };
+
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+      ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const draw = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+      const now = performance.now();
+      // Anything older than the tail's life is gone.
+      points = points.filter((p) => now - p.born < 620);
+
+      for (const p of points) {
+        const age = (now - p.born) / 620;
+        // Fades out, and shrinks its reach as it goes, so the tail tapers.
+        const strength = (1 - age) ** 1.6;
+        const reach = Math.max(1, Math.round(REACH * (1 - age * 0.55)));
+
+        const cx = Math.floor(p.x / CELL);
+        const cy = Math.floor(p.y / CELL);
+
+        for (let gx = cx - reach; gx <= cx + reach; gx += 1) {
+          for (let gy = cy - reach; gy <= cy + reach; gy += 1) {
+            const dx = gx - cx;
+            const dy = gy - cy;
+            const dist = Math.sqrt(dx * dx + dy * dy) / (reach + 0.6);
+            if (dist > 1) continue;
+
+            const intensity = strength * (1 - dist) ** 1.4;
+            // The threshold, not a comparison against alpha: this is what makes
+            // it dither instead of dissolve.
+            const threshold = BAYER[((gy % 4) + 4) % 4][((gx % 4) + 4) % 4];
+            if (intensity <= threshold) continue;
+
+            // A minority of cells take the accent, so the trail carries the
+            // site's colour without becoming an orange smear.
+            ctx.fillStyle = (gx * 31 + gy * 17) % 9 === 0 ? accent : ink;
+            ctx.globalAlpha = Math.min(0.5, 0.16 + intensity * 0.42);
+            ctx.fillRect(gx * CELL, gy * CELL, CELL - 1, CELL - 1);
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      if (points.length) frame = requestAnimationFrame(draw);
+      else frame = undefined;
+    };
+
+    const start = () => {
+      if (frame === undefined) frame = requestAnimationFrame(draw);
+    };
+
+    document.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+
+      const last = points[points.length - 1];
+      // Sampling by distance rather than by event keeps the tail even: a slow
+      // drag would otherwise pile every sample into one spot.
+      if (last && Math.hypot(e.clientX - last.x, e.clientY - last.y) < CELL * 0.9) return;
+
+      points.push({ x: e.clientX, y: e.clientY, born: performance.now() });
+      if (points.length > TAIL) points.shift();
+      start();
+    });
+
+    /* Nothing to trail toward once the pointer has gone, and a tab away should
+       not leave the last frame painted on the page. */
+    document.addEventListener('pointerleave', () => { points = []; });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { points = []; ctx?.clearRect(0, 0, innerWidth, innerHeight); }
+    });
+
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 120);
+    });
+
+    readTokens();
+    resize();
+  }
+</script>

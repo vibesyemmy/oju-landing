@@ -95,8 +95,15 @@
     }
   }
 
-  body {
+  /* The paper ground sits on html, not body, so a fixed canvas at a negative
+     z-index can paint above it — a background on body would cover anything
+     behind body outright. */
+  html {
     background: var(--color-paper);
+  }
+
+  body {
+    background: transparent;
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
