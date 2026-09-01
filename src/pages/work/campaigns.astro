@@ -33,9 +33,35 @@ const files = import.meta.glob<{ default: ImageMetadata }>(
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+/**
+ * The tilt of each piece on the board, derived from its filename.
+ *
+ * Seeded rather than random on purpose: a random angle is re-rolled on every
+ * render, so the whole wall would reshuffle between builds and between a page
+ * and its own reload. From the filename it is stable forever, and a piece keeps
+ * its angle when the set around it is filtered.
+ */
+const hash = (str: string) => {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+};
+/** Spread over a range, to 2dp, avoiding a dead-centre 0 that reads as unset. */
+const spread = (str: string, range: number) =>
+  Number((((hash(str) % 2000) / 1000 - 1) * range).toFixed(2));
+
 const pieces = CAMPAIGNS.map((c) => {
   const hit = Object.keys(files).find((k) => k.endsWith(`/${c.image}`));
-  return { ...c, id: slug(c.client), img: hit ? files[hit].default : undefined };
+  return {
+    ...c,
+    id: slug(c.client),
+    img: hit ? files[hit].default : undefined,
+    rot: spread(c.image, 4.2),
+    dy: spread(`${c.image}y`, 14),
+  };
 });
 
 /** Roster in first-appearance order, which is already most-recognised first. */
@@ -105,13 +131,17 @@ const filterCss = clients
         <ul class="index">
           {
             pieces.map((p) => (
-              <li class:list={['piece', p.feature && 'piece--feature']} data-client={p.id}>
+              <li
+                class:list={['piece', p.feature && 'piece--feature']}
+                data-client={p.id}
+                style={`--rot:${p.rot}deg; --dy:${p.dy}px`}
+              >
                 {p.img && (
                   <Image
                     src={p.img}
                     alt={`${p.client} — ${p.caption}`}
                     widths={[300, 600, 900]}
-                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 32vw, 45vw"
+                    sizes="(min-width: 1024px) 24vw, (min-width: 640px) 32vw, 46vw"
                     loading="lazy"
                     decoding="async"
                     class="piece__img"
@@ -212,89 +242,122 @@ const filterCss = clients
     opacity: 0.75;
   }
 
-  /* ── the index ──────────────────────────────────────────────────── */
+  /* ── the board ──────────────────────────────────────────────────
+     Columns rather than a grid. A grid of equal cells has to letterbox or crop
+     to fill them; on a board the pieces keep their own size and the varying
+     heights are the point — that is what stops it reading as a contact sheet.
+
+     Transforms do not affect layout, so the tilt and the overlap are purely
+     visual. The columns underneath stay orderly, which is what lets the filter
+     hide a piece and have the rest simply close up rather than leave a hole in
+     a collage. */
   .index {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    grid-auto-rows: 140px;
-    /* Feature tiles leave holes as the grid reflows and as filters change what
-       is present; dense backfills them with whatever comes next. */
-    grid-auto-flow: dense;
-    gap: 0.75rem;
+    columns: 2;
+    column-gap: 1.25rem;
     list-style: none;
-    padding: 0 0 3.5rem;
+    padding: 0 0 4rem;
     margin: 0;
   }
-  @media (min-width: 768px) {
-    .index {
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      grid-auto-rows: 180px;
-      gap: 1rem;
-    }
+  @media (min-width: 640px) {
+    .index { columns: 3; column-gap: 1.75rem; }
+  }
+  @media (min-width: 1024px) {
+    .index { columns: 4; column-gap: 2.25rem; }
   }
 
   .piece {
     position: relative;
-    display: grid;
-    place-items: center;
-    overflow: hidden;
+    /* Without this a piece can be split down a column boundary. */
+    break-inside: avoid;
+    margin-bottom: 2.25rem;
+    transform: rotate(var(--rot, 0deg)) translateY(var(--dy, 0px));
+    transition: transform 380ms cubic-bezier(0.2, 0.7, 0.3, 1);
   }
+  @media (min-width: 640px) {
+    .piece { margin-bottom: 3rem; }
+  }
+
+  /* The pieces that carry a campaign sit a little larger, so the board has a
+     couple of anchors rather than 24 items of equal weight. */
   .piece--feature {
-    grid-column: span 2;
-    grid-row: span 2;
+    --lift: 1.06;
   }
 
-  /* Contained, not cropped. These are adverts: a cell that crops fills the grid
-     neatly and cuts every headline in half, which is the one thing the work
-     cannot survive. */
   .piece__img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
+    display: block;
+    width: 100%;
     height: auto;
-    object-fit: contain;
-    border: 1px solid var(--color-rule);
-    border-radius: 3px;
-    transition:
-      transform 400ms cubic-bezier(0.2, 0.7, 0.3, 1),
-      opacity 250ms ease;
+    border: 1px solid rgb(23 22 15 / 0.1);
+    border-radius: 2px;
+    background: var(--color-fill);
+    /* Two shadows: a tight one for the paper's own edge, a wide soft one for
+       the distance it sits off the board. */
+    box-shadow:
+      0 2px 6px rgb(23 22 15 / 0.07),
+      0 14px 34px rgb(23 22 15 / 0.06);
+    transition: box-shadow 380ms ease, border-color 380ms ease;
   }
 
-  /* Captions would be 24 blocks of grey text fighting 24 images, so they wait
-     for intent. Alt text carries the same words for anyone not hovering. */
+  /* Hover straightens the piece and lifts it clear of its neighbours. The
+     straightening is what makes the board feel like paper rather than a set of
+     rotated boxes — the tilt has to be undone, not merely scaled. */
+  .piece:hover,
+  .piece:focus-within {
+    transform: rotate(0deg) scale(var(--lift, 1.045));
+    z-index: 20;
+  }
+  .piece:hover .piece__img,
+  .piece:focus-within .piece__img {
+    border-color: rgb(23 22 15 / 0.18);
+    box-shadow:
+      0 8px 18px rgb(23 22 15 / 0.1),
+      0 34px 70px rgb(23 22 15 / 0.16);
+  }
+
+  /* Sits under the piece rather than over it: these are adverts, and a caption
+     laid across one covers the work it is describing. */
   .piece__label {
     position: absolute;
-    inset: auto 0 0 0;
-    padding: 0.5rem 0.55rem 0.45rem;
+    inset: auto auto -1.75rem 0;
+    width: 100%;
     font-size: 0.6875rem;
     line-height: 1.35;
-    color: var(--color-bg, #f2efe9);
-    background: linear-gradient(to top, rgb(0 0 0 / 0.82), rgb(0 0 0 / 0));
+    color: var(--color-faint);
     opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 220ms ease, transform 220ms ease;
+    transform: translateY(-4px);
+    transition: opacity 240ms ease, transform 240ms ease;
     pointer-events: none;
   }
-  .piece__label b { display: block; font-weight: 600; }
+  .piece__label b {
+    color: var(--color-ink);
+    font-weight: 600;
+    margin-right: 0.35em;
+  }
 
-  .piece:hover .piece__img { transform: scale(1.03); }
   .piece:hover .piece__label,
   .piece:focus-within .piece__label {
     opacity: 1;
     transform: none;
   }
 
-  /* Touch has no hover, so the label would never appear. Show it there. */
+  /* Touch has no hover, so the caption would never appear. It is shown there,
+     and the piece is given the room it needs underneath. */
   @media (hover: none) {
     .piece__label { opacity: 1; transform: none; }
+    .piece { margin-bottom: 3.25rem; }
   }
 
+  /* The tilt is a static arrangement, not motion, so it stays. What goes is the
+     movement between states. */
   @media (prefers-reduced-motion: reduce) {
+    .piece,
     .piece__img,
-    .piece__label,
-    .piece:hover .piece__img {
+    .piece__label {
       transition: none;
-      transform: none;
+    }
+    .piece:hover,
+    .piece:focus-within {
+      transform: rotate(var(--rot, 0deg)) translateY(var(--dy, 0px));
     }
   }
 </style>
