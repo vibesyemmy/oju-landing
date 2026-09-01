@@ -58,6 +58,20 @@ superseded mark as the current one, so every candidate needs looking at.
 | `kfc.png` | Extracted from the portfolio PDF | — |
 | `union-bank.png` | File:Union Bank of Nigeria Logo.png | CC BY 4.0 |
 | `gangan.png` | opeyemi.app brand board, keyed to transparency | own work |
+| `sabi.svg` | opeyemi.app `/logos/` — vector, as served | own work |
+| `lingawa.svg` | opeyemi.app `/logos/` — vector, as served | own work |
+| `hydrogen.svg` | Hydrogen-booking repo, `public/HydrogenLogo.svg` | own work |
+
+The opeyemi.app landing page serves its client row as individual logo files
+rather than compositing them into a screenshot, so those are a straight
+download — no keying, no tracing. `scripts/fetch-portfolio-logos.mjs` covers it.
+
+**Do not strip a Figma export's `fill="white"` rect on sight.** Figma writes the
+clipPath's own rect that way, inside `<defs>`. Removing it empties the clip path
+and the whole mark disappears while still reporting as a loaded image with a
+real bounding box — it renders nothing. Check whether the rect sits inside
+`<clipPath>` before touching it. A true background plate sits in the body,
+before the paths.
 
 **Rejected: Union Bank.** The Commons file is correct — leaping horse,
 `unionbank` wordmark — but it is a solid blue tile with no transparency. Among
@@ -67,6 +81,9 @@ horizontal transparent variant turns up.
 **Not on Commons:** VFD Microfinance Bank, Consolidated Hallmark Insurance,
 Kairos Capital. Too small to have articles. These need the client's own asset,
 or the original project files.
+
+**Still wordmarks:** Consolidated Hallmark Insurance, NEPAL Oil & Gas, Country
+Homes, Butchers & Bakers. No domain either, so Brandfetch cannot reach them.
 
 ## Lifting a logo off a brand board
 
