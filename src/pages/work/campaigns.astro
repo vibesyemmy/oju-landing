@@ -1,14 +1,24 @@
 ---
 /**
- * The advertising gallery.
+ * The advertising index.
  *
- * Nothing here has a brief behind it — these are finished pieces from campaigns,
- * and there is no honest way to write a problem-and-outcome story for a
- * Valentine's post. So they are shown as work rather than dressed as case
- * studies: grouped by client, image first, captions doing only the labelling.
+ * This was twelve stacked sections, one per client, each a heading over a grid.
+ * The repetition was structural rather than cosmetic: twelve identical blocks
+ * read as an archive however they are styled, and they gave a one-off
+ * restaurant ad exactly the same billing as a GTBank campaign.
  *
- * Ordered so the most recognisable names land first. A visitor who scrolls two
- * screens should already have met GTBank, MTN and Sterling.
+ * So the sections are gone. One grid holds every piece, and the client roster is
+ * promoted into the headline as the filter. That removes the repetition at its
+ * source and puts the actual selling point where it can be read in one glance —
+ * GTBank, MTN, Sterling, KFC in a line beats twelve headings you scroll past.
+ *
+ * Filtering is CSS only. A radio per client sits before the grid, and generated
+ * `:checked ~` rules hide the pieces that do not match. No JavaScript, so it
+ * works on first paint and cannot break; the radios keep it keyboard-operable
+ * and announce as a group.
+ *
+ * Nothing here has a brief behind it, so there is no honest problem-and-outcome
+ * story to write for a Valentine's post. The work is the argument.
  */
 import Base from '../../layouts/Base.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
@@ -21,68 +31,101 @@ const files = import.meta.glob<{ default: ImageMetadata }>(
   { eager: true },
 );
 
-/** Group into client sections, preserving the order the data declares. */
-const groups: { client: string; pieces: { caption: string; img?: ImageMetadata }[] }[] = [];
-for (const piece of CAMPAIGNS) {
-  const hit = Object.keys(files).find((k) => k.endsWith(`/${piece.image}`));
-  const img = hit ? files[hit].default : undefined;
-  const last = groups.at(-1);
-  if (last?.client === piece.client) last.pieces.push({ caption: piece.caption, img });
-  else groups.push({ client: piece.client, pieces: [{ caption: piece.caption, img }] });
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const pieces = CAMPAIGNS.map((c) => {
+  const hit = Object.keys(files).find((k) => k.endsWith(`/${c.image}`));
+  return { ...c, id: slug(c.client), img: hit ? files[hit].default : undefined };
+});
+
+/** Roster in first-appearance order, which is already most-recognised first. */
+const clients: { id: string; name: string; count: number }[] = [];
+for (const p of pieces) {
+  const found = clients.find((c) => c.id === p.id);
+  if (found) found.count += 1;
+  else clients.push({ id: p.id, name: p.client, count: 1 });
 }
 
-const count = CAMPAIGNS.length;
-const clients = groups.length;
+/**
+ * The filter rules, written out rather than scripted. One `:checked` selector
+ * per client hides everything else, and a second lights its own label. Emitted
+ * as a plain <style> so the generated selectors survive — Astro's scoping
+ * rewrites authored CSS only.
+ */
+const filterCss = clients
+  .map(
+    ({ id }) => `
+#f-${id}:checked ~ .index .piece:not([data-client='${id}']) { display: none; }
+#f-${id}:checked ~ .roster label[for='f-${id}'] { color: var(--color-ink); }
+#f-${id}:focus-visible ~ .roster label[for='f-${id}'] { outline: 2px solid var(--color-accent); outline-offset: 3px; }`,
+  )
+  .join('\n');
 ---
 
 <Base
   title="Campaigns"
-  description={`Print, social and digital advertising from Ojú — ${count} pieces across ${clients} brands.`}
+  description={`Print, social and digital advertising from Ojú — ${pieces.length} pieces across ${clients.length} brands.`}
 >
   <SiteHeader current="/work" />
   <main id="main">
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
+    <section class="border-t border-rule px-6 pt-12 pb-8 md:px-20 md:pt-16 md:pb-10">
       <p class="label mb-4">
         <a href="/work" class="backlink">Work</a> <span aria-hidden="true">/</span> Campaigns
       </p>
-      <h1 class="font-display max-w-4xl text-[44px] leading-tight tracking-tight md:text-[78px]">
+      <h1 class="font-display max-w-4xl text-[40px] leading-[1.05] tracking-tight md:text-[68px]">
         Print, social<br />and digital ads
       </h1>
-      <p class="mt-7 max-w-xl text-lg text-soft md:mt-9">
-        Campaign work for banks, telcos and restaurant brands. {count} pieces
-        across {clients} names — the craft side of the studio, shown without
-        commentary.
+      <p class="mt-6 max-w-lg text-soft">
+        {pieces.length} pieces across {clients.length} names, for banks, telcos and
+        restaurant brands. The craft side of the studio, shown without commentary.
       </p>
     </section>
 
-    {
-      groups.map((group) => (
-        <section class="border-t border-rule px-6 py-10 md:px-20 md:py-14">
-          <h2 class="font-display mb-7 text-[26px] leading-tight tracking-tight md:mb-9 md:text-[34px]">
-            {group.client}
-          </h2>
+    <form class="filter px-6 md:px-20">
+      <fieldset>
+        <legend class="sr-only">Filter campaigns by client</legend>
 
-          <ul class="gallery">
-            {group.pieces.map((piece) => (
-              <li class="piece">
-                {piece.img && (
+        <input class="sr-only" type="radio" name="client" id="f-all" checked />
+        {clients.map((c) => <input class="sr-only" type="radio" name="client" id={`f-${c.id}`} />)}
+
+        {/* The roster is the headline. Set at display size, muted until chosen. */}
+        <div class="roster font-display">
+          <label for="f-all">All</label>{' '}{
+            /* The space between labels is load-bearing: it is the only line-break
+               opportunity between them, and without it the roster runs off the
+               page as one 2,488px line instead of wrapping. */
+            clients.map((c) => (
+              <>
+                <label for={`f-${c.id}`}>{c.name}<sup class="roster__n">{c.count}</sup></label>{' '}
+              </>
+            ))
+          }
+        </div>
+
+        <ul class="index">
+          {
+            pieces.map((p) => (
+              <li class:list={['piece', p.feature && 'piece--feature']} data-client={p.id}>
+                {p.img && (
                   <Image
-                    src={piece.img}
-                    alt={`${group.client} — ${piece.caption}`}
-                    widths={[400, 800, 1200]}
-                    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                    src={p.img}
+                    alt={`${p.client} — ${p.caption}`}
+                    widths={[300, 600, 900]}
+                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 32vw, 45vw"
                     loading="lazy"
                     decoding="async"
                     class="piece__img"
                   />
                 )}
-                <p class="piece__caption">{piece.caption}</p>
+                <span class="piece__label">
+                  <b>{p.client}</b> {p.caption}
+                </span>
               </li>
-            ))}
-          </ul>
-        </section>
-      ))
-    }
+            ))
+          }
+        </ul>
+      </fieldset>
+    </form>
 
     <section class="border-t border-rule px-6 py-14 md:px-20 md:py-20">
       <p class="max-w-xl text-soft">
@@ -94,6 +137,8 @@ const clients = groups.length;
   <SiteFooter />
 </Base>
 
+<style is:global set:html={filterCss}></style>
+
 <style>
   .backlink,
   .inline-link {
@@ -103,42 +148,153 @@ const clients = groups.length;
     transition: border-color 200ms ease;
   }
   .backlink:hover,
-  .inline-link:hover {
-    border-color: currentColor;
+  .inline-link:hover { border-color: currentColor; }
+
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+
+  /* Visually hidden but still focusable — display:none would take the radios
+     out of the tab order and lose keyboard filtering entirely. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 
-  /* Columns rather than a grid: these pieces are square, portrait and one very
-     tall illustrated strip, and a row-based grid would either crop them or
-     leave a band of dead space beside every short one. */
-  .gallery {
-    columns: 1;
-    column-gap: 1.25rem;
+  /* ── the roster, doubling as the filter ─────────────────────────── */
+  .roster {
+    font-size: clamp(1.25rem, 3.2vw, 2.125rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: var(--color-rule);
+    padding: 1.5rem 0 2.5rem;
+    text-wrap: balance;
   }
-  @media (min-width: 640px) {
-    .gallery { columns: 2; }
+  @media (min-width: 768px) {
+    .roster { padding: 2rem 0 3.5rem; }
   }
-  @media (min-width: 1024px) {
-    .gallery { columns: 3; column-gap: 1.75rem; }
+
+  .roster label {
+    color: var(--color-faint);
+    cursor: pointer;
+    transition: color 180ms ease;
+    /* The comma belongs to the name before it. As a separate element it could
+       wrap to the start of a line, which is where the stray leading commas
+       came from. */
+    white-space: nowrap;
+  }
+  .roster label:not(:last-child)::after {
+    content: ',';
+    color: var(--color-rule);
+    margin-right: 0.3em;
+  }
+  .roster label:hover { color: var(--color-ink); }
+
+  /* "All" is the state on load, so it starts lit. A later :checked rule for a
+     client overrides this by source order. */
+  #f-all:checked ~ .roster label[for='f-all'] { color: var(--color-ink); }
+  #f-all:focus-visible ~ .roster label[for='f-all'] {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .roster__n {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.34em;
+    vertical-align: super;
+    letter-spacing: 0;
+    margin-left: 0.15em;
+    opacity: 0.75;
+  }
+
+  /* ── the index ──────────────────────────────────────────────────── */
+  .index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-auto-rows: 140px;
+    /* Feature tiles leave holes as the grid reflows and as filters change what
+       is present; dense backfills them with whatever comes next. */
+    grid-auto-flow: dense;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0 0 3.5rem;
+    margin: 0;
+  }
+  @media (min-width: 768px) {
+    .index {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-auto-rows: 180px;
+      gap: 1rem;
+    }
   }
 
   .piece {
-    /* Without this a card can be split across a column boundary. */
-    break-inside: avoid;
-    margin-bottom: 1.75rem;
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .piece--feature {
+    grid-column: span 2;
+    grid-row: span 2;
   }
 
+  /* Contained, not cropped. These are adverts: a cell that crops fills the grid
+     neatly and cuts every headline in half, which is the one thing the work
+     cannot survive. */
   .piece__img {
-    display: block;
-    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
     height: auto;
-    border-radius: 4px;
+    object-fit: contain;
     border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    transition:
+      transform 400ms cubic-bezier(0.2, 0.7, 0.3, 1),
+      opacity 250ms ease;
   }
 
-  .piece__caption {
-    margin-top: 0.625rem;
-    font-size: 0.8125rem;
-    line-height: 1.45;
-    color: var(--color-faint);
+  /* Captions would be 24 blocks of grey text fighting 24 images, so they wait
+     for intent. Alt text carries the same words for anyone not hovering. */
+  .piece__label {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 0.5rem 0.55rem 0.45rem;
+    font-size: 0.6875rem;
+    line-height: 1.35;
+    color: var(--color-bg, #f2efe9);
+    background: linear-gradient(to top, rgb(0 0 0 / 0.82), rgb(0 0 0 / 0));
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 220ms ease, transform 220ms ease;
+    pointer-events: none;
+  }
+  .piece__label b { display: block; font-weight: 600; }
+
+  .piece:hover .piece__img { transform: scale(1.03); }
+  .piece:hover .piece__label,
+  .piece:focus-within .piece__label {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Touch has no hover, so the label would never appear. Show it there. */
+  @media (hover: none) {
+    .piece__label { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .piece__img,
+    .piece__label,
+    .piece:hover .piece__img {
+      transition: none;
+      transform: none;
+    }
   }
 </style>

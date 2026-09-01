@@ -214,21 +214,27 @@ export interface CampaignPiece {
   client: string;
   /** Alt text, and the caption on hover. Describe the piece, not the file. */
   caption: string;
+  /**
+   * Spans 2x2 in the index grid. A handful of these is what stops a dense grid
+   * of equal cells reading as a contact sheet — without them the page is
+   * uniform again, just at a smaller size.
+   */
+  feature?: true;
 }
 
 export const CAMPAIGNS: readonly CampaignPiece[] = [
-  { image: 'gtbank-737-mobile.webp', client: 'GTBank', caption: '*737 mobile banking launch' },
+  { image: 'gtbank-737-mobile.webp', client: 'GTBank', caption: '*737 mobile banking launch', feature: true },
   { image: 'gtbank-737-valentine.webp', client: 'GTBank', caption: '*737 Valentine’s campaign' },
   { image: 'gtbank-737-family.webp', client: 'GTBank', caption: '*737, “Its Banking; Only Easier”' },
-  { image: 'mtn-traveling-abroad.webp', client: 'MTN', caption: 'Roaming, “Traveling abroad or staying home?”' },
+  { image: 'mtn-traveling-abroad.webp', client: 'MTN', caption: 'Roaming, “Traveling abroad or staying home?”', feature: true },
   { image: 'sterling-multiverse-passion.webp', client: 'Sterling Bank', caption: 'Multiverse of Opportunities, “Passion meets opportunities”' },
-  { image: 'sterling-multiverse-portrait.webp', client: 'Sterling Bank', caption: 'Multiverse of Opportunities, portrait treatment' },
+  { image: 'sterling-multiverse-portrait.webp', client: 'Sterling Bank', caption: 'Multiverse of Opportunities, portrait treatment', feature: true },
   { image: 'sterling-multiverse-magic.webp', client: 'Sterling Bank', caption: 'Multiverse of Opportunities, “Unleash the magic in you”' },
   { image: 'sterling-teambonding.webp', client: 'Sterling Bank', caption: '#TeamBonding, “Engage, Bond, Connect”' },
-  { image: 'sterling-trade-toons.webp', client: 'Sterling Bank', caption: 'Trade Toons, an illustrated service series' },
+  { image: 'sterling-trade-toons.webp', client: 'Sterling Bank', caption: 'Trade Toons, an illustrated service series', feature: true },
   { image: 'sterling-mechanic-series.webp', client: 'Sterling Bank', caption: 'Spare parts campaign, “T for Tenks”' },
   { image: 'kfc-doublicious.webp', client: 'KFC', caption: 'Doublicious launch' },
-  { image: 'eat-drink-ribs.webp', client: 'Eat Drink Festival', caption: '“Crack your ribs”' },
+  { image: 'eat-drink-ribs.webp', client: 'Eat Drink Festival', caption: '“Crack your ribs”', feature: true },
   { image: 'eat-drink-sweet-tooth.webp', client: 'Eat Drink Festival', caption: '“Sweet Tooth”' },
   { image: 'eat-drink-appetite.webp', client: 'Eat Drink Festival', caption: '“Indulge your appetite”' },
   { image: 'vfd-avoid-contact.webp', client: 'VFD Microfinance Bank', caption: 'Contactless payments, “Avoid contact with cash”' },
