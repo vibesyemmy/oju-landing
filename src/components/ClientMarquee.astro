@@ -129,10 +129,34 @@ const DURATION = Math.max(40, clients.length * 4);
 
   .marquee {
     overflow: hidden;
+
     /* Fades both ends so logos arrive and leave rather than being chopped at
-       the viewport edge. */
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+       the edge — and the fade lands on the content edge, not the viewport, so
+       the row starts and stops where every other section does. At percentages
+       of the viewport it faded hundreds of pixels out in the margin on a wide
+       screen, which made the logos the one thing ignoring the page's column.
+
+       The track still runs the full width underneath; only its visibility is
+       clipped, so the loop stays seamless.
+
+       The band is capped so it stays a fade rather than a long ghosting across
+       a 640px margin, and it shrinks on a phone where the whole gutter is 24px
+       and a fixed band would eat the first logo. */
+    --fade: min(5rem, var(--gutter));
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent calc(var(--gutter) - var(--fade)),
+      #000 var(--gutter),
+      #000 calc(100% - var(--gutter)),
+      transparent calc(100% - var(--gutter) + var(--fade))
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent calc(var(--gutter) - var(--fade)),
+      #000 var(--gutter),
+      #000 calc(100% - var(--gutter)),
+      transparent calc(100% - var(--gutter) + var(--fade))
+    );
   }
 
   .marquee__inner {
