@@ -1,0 +1,405 @@
+---
+/**
+ * A pixel fire carried on the pointer.
+ *
+ * One canvas, one heat field, one flame. The head and the tail used to be two
+ * canvases at opposite ends of the stack, which is why they read as separate
+ * things travelling together rather than as one fire. Now everything is heat
+ * splatted into a single grid, banded into colour, and dithered in one pass —
+ * so the tail is not a trail behind the flame, it is the cooler part of it.
+ *
+ * That means the fire is over the page rather than behind it, which is the
+ * price of the head always being visible. The coolest cells are drawn at
+ * reduced alpha so the tail does not sit on top of text as a solid block.
+ *
+ * ── physics ──────────────────────────────────────────────────────────
+ * The core is a spring-damper chasing the pointer, so it lags, overshoots
+ * slightly and settles — a mass being dragged, not a value being lerped. Speed
+ * is then the input everything else reads:
+ *
+ *   · the core stretches along its direction of travel and squeezes across it,
+ *     so a fast flame is a streak and a resting one is a ball;
+ *   · embers are shed at a rate that climbs with speed, inheriting a share of
+ *     the core's velocity, so the faster the pointer the longer the tail;
+ *   · every ember is then on its own: buoyancy up, drag against its velocity,
+ *     heat falling with age. Nothing follows the cursor — they are simply lit
+ *     things that were thrown.
+ *
+ * At rest the emitter keeps burning, so the fire never goes out. Fuel is at the
+ * pointer; the flame above it is whatever has not cooled yet.
+ *
+ * ── how it is drawn ──────────────────────────────────────────────────
+ * Heat from the core and every ember accumulates into one grid of 9px cells.
+ * A single noise field then modulates the whole grid, which is what makes the
+ * head and the tail one substance rather than two. Cells are banded into the
+ * palette by heat and the coolest edge is dissolved by an ordered dither, so
+ * the fire ends in loose cells instead of an outline.
+ *
+ * The noise is sampled from a fixed seed and translated upward, so the pattern
+ * rises through the flame rather than boiling in place, and it steps at about
+ * 11fps while the physics runs every frame: stepped texture over smooth motion
+ * is what reads as pixel art.
+ *
+ * Off entirely under prefers-reduced-motion and on touch — there is no pointer
+ * to carry it.
+ */
+---
+
+<canvas class="fire" data-fire aria-hidden="true"></canvas>
+
+<style>
+  .fire {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* Over the page: the fire is standing in for the pointer, so it cannot be
+       occluded by whatever the pointer happens to be above. */
+    z-index: 60;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fire { display: none; }
+  }
+  @media (hover: none) {
+    .fire { display: none; }
+  }
+</style>
+
+<script>
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-fire]');
+
+  if (canvas && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+
+    /** Cell pitch in CSS pixels: an 8px block in a 9px cell. */
+    const CELL = 9;
+    /** One texture frame. ~11fps: stepped enough to read as drawn. */
+    const FLAME_MS = 92;
+
+    /* Spring-damper on the core. Steady-state lag under a moving pointer is
+       v·DAMP/STIFF, so the ratio is the whole tuning: this keeps the head
+       within ~40px of the cursor at a hard flick while staying underdamped
+       (ζ≈0.45), which is what gives it the whip on a direction change. */
+    const STIFF = 900;
+    const DAMP = 27;
+
+    /** Embers: upward acceleration, drag, and how much of the core's velocity
+        they are born with. */
+    const BUOYANCY = 150;
+    const DRAG = 4.6;
+    const INHERIT = 0.26;
+    const SPREAD = 40;
+    const MAX_EMBERS = 200;
+
+    const WHITE = '#fffbe8';
+    const YELLOW = '#ffe500';
+    const ORANGE = '#ff8a1e';
+    const RED = '#ff2f14';
+    const BLUE = '#3757e8';
+    const NAVY = '#151c6b';
+
+    /* The classic 4×4 ordered-dither threshold map, normalised. A cell is drawn
+       when its heat clears the threshold at its own grid position, so
+       neighbouring cells switch on at different heats and the edge becomes a
+       pattern rather than a gradient. */
+    const BAYER = [
+      [0, 8, 2, 10],
+      [12, 4, 14, 6],
+      [3, 11, 1, 9],
+      [15, 7, 13, 5],
+    ].map((row) => row.map((v) => (v + 0.5) / 16));
+
+    const hash = (x: number, y: number) => {
+      const h = Math.imul(x * 374761393 + y * 668265263, 1274126177);
+      return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
+    };
+
+    /** Value noise: hashed lattice, smoothstep between. Smooth enough that
+        translating it reads as flow rather than as a jump. */
+    const noise = (x: number, y: number) => {
+      const xi = Math.floor(x);
+      const yi = Math.floor(y);
+      const xf = x - xi;
+      const yf = y - yi;
+      const u = xf * xf * (3 - 2 * xf);
+      const v = yf * yf * (3 - 2 * yf);
+      const a = hash(xi, yi);
+      const b = hash(xi + 1, yi);
+      const top = a + (b - a) * u;
+      const c = hash(xi, yi + 1);
+      const d = hash(xi + 1, yi + 1);
+      const bottom = c + (d - c) * u;
+      return top + (bottom - top) * v;
+    };
+
+    type Ember = { x: number; y: number; vx: number; vy: number; age: number; life: number };
+
+    let dpr = 1;
+    let cols = 0;
+    let rows = 0;
+    /** Heat per cell for this frame, and the cells that carry any. */
+    let heat = new Float32Array(0);
+    let touched: number[] = [];
+
+    /** The core: where the fire is, and how fast it is going. */
+    let cx = -999;
+    let cy = -999;
+    let cvx = 0;
+    let cvy = 0;
+    let tx = -999;
+    let ty = -999;
+    /** Where the core was last frame, so embers can be laid along the path. */
+    let px = -999;
+    let py = -999;
+    let seen = false;
+
+    const embers: Ember[] = [];
+    /** Carried between frames so emission is a rate, not a per-frame count. */
+    let debt = 0;
+    let beat = -1;
+    let rise = 0;
+
+    let frame: number | undefined;
+    let last = 0;
+    /** Pixel region painted last frame, so a frame clears what it drew. */
+    let box: [number, number, number, number] | null = null;
+
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+      ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = Math.ceil(innerWidth / CELL) + 2;
+      rows = Math.ceil(innerHeight / CELL) + 2;
+      heat = new Float32Array(cols * rows);
+      touched = [];
+      box = null;
+    };
+
+    /** Add heat to one cell, remembering it so the grid can be cleared cheaply. */
+    const add = (gx: number, gy: number, v: number) => {
+      if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) return;
+      const i = gy * cols + gx;
+      if (heat[i] === 0) touched.push(i);
+      heat[i] += v;
+    };
+
+    /**
+     * The core, splatted as an ellipse aligned to its own travel.
+     *
+     * Stretched along the direction of motion and squeezed across it, so speed
+     * turns the ball into a streak. At rest the ellipse is round and leans
+     * upward instead, because heat rises.
+     */
+    const splatCore = () => {
+      const speed = Math.hypot(cvx, cvy);
+      const stretch = 1 + Math.min(1.7, speed / 620);
+      const squeeze = 1 + Math.min(0.5, speed / 1900);
+      const ux = speed > 1 ? cvx / speed : 0;
+      const uy = speed > 1 ? cvy / speed : -1;
+      const radius = 3.5;
+      const span = Math.ceil(radius * stretch) + 1;
+
+      const bx = Math.round(cx / CELL);
+      const by = Math.round(cy / CELL);
+
+      for (let gx = -span; gx <= span; gx += 1) {
+        for (let gy = -span; gy <= span; gy += 1) {
+          // Into the frame of travel: along the direction of motion, and across
+          // it. Only the trailing half stretches, so the leading edge stays
+          // tight and the flame streams out behind.
+          const along = gx * ux + gy * uy;
+          const across = -gx * uy + gy * ux;
+          const a = along < 0 ? along / stretch : along;
+          const r = Math.hypot(a, across * squeeze);
+          if (r > radius) continue;
+          add(bx + gx, by + gy, (1 - r / radius) ** 1.5 * 1.25);
+        }
+      }
+    };
+
+    /** An ember's heat, falling off from its own centre and with its age. */
+    const splatEmber = (e: Ember) => {
+      const t = e.age / e.life;
+      const strength = (1 - t) ** 1.4;
+      const radius = 0.75 + (1 - t) * 0.95;
+      const bx = Math.round(e.x / CELL);
+      const by = Math.round(e.y / CELL);
+      const span = Math.ceil(radius);
+
+      for (let gx = -span; gx <= span; gx += 1) {
+        for (let gy = -span; gy <= span; gy += 1) {
+          const r = Math.hypot(gx, gy);
+          if (r > radius) continue;
+          add(bx + gx, by + gy, (1 - r / radius) * strength * 0.62);
+        }
+      }
+    };
+
+    const step = (dt: number) => {
+      px = cx;
+      py = cy;
+
+      // Core: a mass on a spring, so it lags and overshoots rather than
+      // arriving exactly where the pointer is.
+      const ax = (tx - cx) * STIFF - cvx * DAMP;
+      const ay = (ty - cy) * STIFF - cvy * DAMP;
+      cvx += ax * dt;
+      cvy += ay * dt;
+      cx += cvx * dt;
+      cy += cvy * dt;
+
+      const speed = Math.hypot(cvx, cvy);
+
+      // Embers: buoyancy, drag, age. Nothing here follows the pointer.
+      const decay = Math.exp(-DRAG * dt);
+      for (let i = embers.length - 1; i >= 0; i -= 1) {
+        const e = embers[i];
+        e.vy -= BUOYANCY * dt;
+        e.vx *= decay;
+        e.vy *= decay;
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        e.age += dt;
+        if (e.age >= e.life) embers.splice(i, 1);
+      }
+
+      // Shed faster when travelling faster: that is what lengthens the tail.
+      debt += (26 + Math.min(190, speed * 0.3)) * dt;
+      while (debt >= 1 && embers.length < MAX_EMBERS) {
+        debt -= 1;
+        // Placed along the path actually covered since the last frame, not
+        // along one frame's worth of velocity: a fast sweep otherwise lays the
+        // tail down as detached beads instead of one body.
+        const back = Math.random();
+        embers.push({
+          x: px + (cx - px) * back,
+          y: py + (cy - py) * back,
+          vx: cvx * INHERIT + (Math.random() - 0.5) * SPREAD,
+          vy: cvy * INHERIT + (Math.random() - 0.5) * SPREAD,
+          age: 0,
+          life: 0.2 + Math.random() * 0.2,
+        });
+      }
+      if (debt > 4) debt = 4;
+    };
+
+    const paint = () => {
+      if (!ctx) return;
+      if (box) ctx.clearRect(box[0], box[1], box[2], box[3]);
+
+      let x0 = Infinity;
+      let y0 = Infinity;
+      let x1 = -Infinity;
+      let y1 = -Infinity;
+
+      for (const i of touched) {
+        const gx = i % cols;
+        const gy = (i / cols) | 0;
+
+        // One noise field over the whole fire — head and tail alike. Sampled at
+        // a point that rises with the beat, so the pattern climbs through the
+        // flame instead of reshuffling in place.
+        const n =
+          (noise(gx * 0.42, gy * 0.42 - rise) - 0.5) * 0.62 +
+          (noise(gx * 0.9 + 40, gy * 0.9 - rise * 1.7) - 0.5) * 0.26;
+        const h = heat[i] + n * Math.min(1, heat[i] * 2.4);
+
+        const threshold = BAYER[gy % 4][gx % 4];
+        if (h < threshold * 0.2) continue;
+
+        let colour: string;
+        let alpha = 1;
+        if (h > 0.95) colour = WHITE;
+        else if (h > 0.68) colour = YELLOW;
+        else if (h > 0.46) colour = ORANGE;
+        else if (h > 0.3) colour = RED;
+        else if (h > 0.16) { colour = BLUE; alpha = 0.9; }
+        else { colour = NAVY; alpha = 0.62; }
+
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = colour;
+        ctx.fillRect(gx * CELL, gy * CELL, CELL - 1, CELL - 1);
+
+        if (gx < x0) x0 = gx;
+        if (gx > x1) x1 = gx;
+        if (gy < y0) y0 = gy;
+        if (gy > y1) y1 = gy;
+      }
+      ctx.globalAlpha = 1;
+
+      box = x1 < 0 || x1 === -Infinity
+        ? null
+        : [x0 * CELL - 2, y0 * CELL - 2, (x1 - x0 + 2) * CELL + 4, (y1 - y0 + 2) * CELL + 4];
+    };
+
+    const draw = (now: number) => {
+      frame = requestAnimationFrame(draw);
+      // Clamped, so a tab returning from the background does not integrate one
+      // enormous step and fling the fire off screen.
+      const dt = Math.min(0.05, (now - last) / 1000 || 0);
+      last = now;
+      if (!seen) return;
+
+      step(dt);
+
+      // Texture steps on its own clock; physics does not.
+      const b = Math.floor(now / FLAME_MS);
+      if (b !== beat) {
+        beat = b;
+        rise += 0.5;
+      }
+
+      for (const i of touched) heat[i] = 0;
+      touched.length = 0;
+      splatCore();
+      for (const e of embers) splatEmber(e);
+      paint();
+    };
+
+    const start = () => {
+      if (frame === undefined) {
+        last = performance.now();
+        frame = requestAnimationFrame(draw);
+      }
+    };
+
+    const stop = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame);
+      frame = undefined;
+    };
+
+    document.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      tx = e.clientX;
+      ty = e.clientY;
+      if (!seen) {
+        // Light where the pointer already is, rather than flying in from the
+        // corner on the first move.
+        seen = true;
+        cx = tx;
+        cy = ty;
+        px = tx;
+        py = ty;
+      }
+    });
+
+    /* A hidden tab gets nothing. The browser throttles rAF there anyway, but
+       stopping outright also means no half-drawn frame waiting on return. */
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else start();
+    });
+
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 120);
+    });
+
+    resize();
+    start();
+  }
+</script>

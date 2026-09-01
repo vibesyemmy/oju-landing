@@ -21,7 +21,7 @@ import '../styles/fonts.css';
 import '../styles/global.css';
 
 import { SITE } from '../data/site';
-import DitherTrail from '../components/DitherTrail.astro';
+import PixelFire from '../components/PixelFire.astro';
 
 interface Props {
   title?: string;
@@ -64,6 +64,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       Skip to content
     </a>
     <slot />
-    <DitherTrail />
+    <PixelFire />
   </body>
 </html>
