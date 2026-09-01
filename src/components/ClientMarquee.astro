@@ -136,7 +136,11 @@ const DURATION = Math.max(40, clients.length * 4);
     height: 28px;
     width: auto;
     filter: grayscale(1) contrast(0.85);
-    opacity: 0.55;
+    /* Weighted to match the wordmarks beside them. At 0.55 the logos read
+       noticeably lighter than the text, which made the row look like two
+       different treatments rather than one. Closing the gap from the logo side
+       keeps the wordmarks at full contrast, since those are real text. */
+    opacity: 0.7;
     transition: filter 260ms ease, opacity 260ms ease;
   }
   @media (min-width: 768px) {
@@ -152,7 +156,7 @@ const DURATION = Math.max(40, clients.length * 4);
      these keep full opacity and get the site's corner radius to read as a
      deliberate tile rather than a clipped screenshot. */
   .client__logo--tile {
-    opacity: 0.75;
+    opacity: 0.85;
     border-radius: 4px;
   }
   .client:hover .client__logo--tile { opacity: 1; }

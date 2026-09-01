@@ -83,3 +83,24 @@ inflate it.
 Not everything on a board is a logo. Lingawa's "new brand" file is phone
 screenshots on pink, and Gangan's main logo file is a wall of applications.
 Look before cropping.
+
+## Why not Brandfetch (or a logo CDN generally)
+
+Considered and rejected in favour of self-hosting.
+
+Their Logo API would fill every gap here for free, and would keep a mark current
+if a client rebrands — a real advantage, since a stale logo on a client wall is
+worse than no logo. But their usage guidelines require **hotlinking**:
+programmatic access is explicitly not permitted, caching needs a sales
+conversation, and there is a dedicated `automated_traffic` error for requests
+that do not come from an `<img>` tag in a live page.
+
+That would put a third-party origin on the homepage's critical path, take those
+images out of Astro's pipeline, send viewer IPs to a third party, and leave the
+client wall dependent on somebody else's uptime, pricing and terms. Everything
+else on this site is self-hosted, and the client wall is not the place to break
+that.
+
+So logos arrive one file at a time, from the clients or from the original
+project files. The row is built for exactly that: a client with no logo renders
+as a wordmark, and nothing looks unfinished while the collection fills up.
