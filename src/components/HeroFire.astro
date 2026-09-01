@@ -212,7 +212,11 @@ import { SITE } from '../data/site';
            wanders sideways — so tongues rise and fall along the width instead
            of the whole front pulsing at once. */
         const lick = noise(gx * 0.085 + drift * 0.3, drift * 0.11);
-        const height = (0.32 + 0.72 * lick) * rows;
+        /* Squared, so the distribution leans low: most columns burn near the
+           floor and only a few spike. A straight lick puts the body of the
+           fire halfway up the hero, level with the headline; this keeps the
+           mass down and still throws the occasional tongue up into it. */
+        const height = (0.16 + 0.62 * lick * lick) * rows;
         /* Fuel varies along the front too. Without this every column's base
            lands in the same band and the bottom of the hero is a flat slab of
            one colour rather than a fire. */
