@@ -1,0 +1,195 @@
+---
+/**
+ * Large type heats up under the pointer.
+ *
+ * The fire already burns behind the words. This makes the words themselves
+ * take heat where the cursor is over them — a warm bloom scrubbed across the
+ * glyphs — so the fire reads as something the cursor is carrying rather than a
+ * layer that happens to be underneath.
+ *
+ * The bloom is painted through the letterforms with background-clip, not behind
+ * them, so it is the strokes that glow and not a patch of the page.
+ *
+ * ── why only large text ──────────────────────────────────────────────
+ * The hot end of the bloom is #d4550f, which is 3.6:1 on this paper, and the
+ * ember behind it #8f2f0a at 7.2:1. Those clear the 3:1 that WCAG asks of large
+ * text but not the 4.5:1 it asks of body copy, so the effect is gated on
+ * measured font size at 24px — which is the same line WCAG draws, and happens
+ * to be the line between the display face and everything else here.
+ *
+ * Size is measured rather than assumed because `.font-display` is set anywhere
+ * from 24px to 104px on this site, and a class name is not a promise about
+ * size.
+ *
+ * Elements are also skipped unless their own colour is dark. A pale heading on
+ * a dark panel would need the opposite treatment entirely, and guessing at one
+ * is worse than leaving it alone.
+ *
+ * ── cost ─────────────────────────────────────────────────────────────
+ * Only the element under the pointer carries the gradient, and only while the
+ * pointer is on it. A viewport-fixed bloom on every heading at once would be
+ * the same effect and would repaint all of them on every move.
+ *
+ * Off under prefers-reduced-motion and on touch — there is no hover to answer.
+ */
+---
+
+<style is:global>
+  /* A real property, so the bloom can grow instead of appearing at full size.
+     background-image cannot be transitioned; a registered length can. */
+  @property --heat-r {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  .is-hot {
+    /* Painted through the glyphs. The bloom is the first layer and the
+       element's own colour is the second, so everything outside the bloom
+       stays exactly the colour it was. */
+    background-image:
+      radial-gradient(
+        circle var(--heat-r) at var(--mx) var(--my),
+        #d4550f 0%,
+        #8f2f0a 46%,
+        transparent 100%
+      ),
+      linear-gradient(var(--heat-base), var(--heat-base));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: --heat-r 240ms ease-out;
+  }
+
+  /* The hero claim already carries its own scorch and its own animation, so it
+     takes the bloom as an extra layer over that rather than a replacement. Its
+     radius is live at all times — at 0px the gradient is invisible — which is
+     what keeps one set of keyframes valid in both states. */
+  .hero__claim {
+    transition: --heat-r 240ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-hot,
+    .hero__claim { transition: none; }
+  }
+
+  /* background-clip: text needs a real colour to fall back to when a user
+     forces their own, or heated text disappears while it is hovered. */
+  @media (forced-colors: active) {
+    .is-hot {
+      background-image: none;
+      color: CanvasText;
+      forced-color-adjust: none;
+    }
+  }
+</style>
+
+<script>
+  /** WCAG's large-text threshold, and the size at which the palette's hot end
+      is allowed to touch type at all. */
+  const LARGE = 24;
+  /** How far the bloom reaches, in px. */
+  const REACH = 170;
+
+  if (matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    /** Relative luminance, for deciding whether text is dark enough to heat. */
+    const luminance = (colour: string) => {
+      const m = colour.match(/[\d.]+/g);
+      if (!m || m.length < 3) return 1;
+      const [r, g, b] = m.slice(0, 3).map((v) => {
+        const c = Number(v) / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+
+    const heatable = (el: Element | null): HTMLElement | null => {
+      let node = el as HTMLElement | null;
+      while (node && node !== document.body) {
+        if (node.dataset.heat === 'off') return null;
+        const cs = getComputedStyle(node);
+        /* Inline elements hand off to whatever block contains them. A heading
+           with a <span> in it would otherwise heat only the span, and since
+           the bloom is positioned in the element's own box, its edge would cut
+           off hard at the span's boundary partway through the line. */
+        if (cs.display === 'inline') {
+          node = node.parentElement;
+          continue;
+        }
+        // Only elements that actually carry text, at display size, in a dark
+        // enough colour that the bloom is a heating rather than a wash.
+        if (
+          parseFloat(cs.fontSize) >= LARGE &&
+          node.textContent?.trim() &&
+          (node.classList.contains('hero__claim') || luminance(cs.color) < 0.12)
+        ) {
+          return node;
+        }
+        node = node.parentElement;
+      }
+      return null;
+    };
+
+    let hot: HTMLElement | null = null;
+    let pending: PointerEvent | null = null;
+    let frame = 0;
+
+    const clear = () => {
+      if (!hot) return;
+      hot.style.setProperty('--heat-r', '0px');
+      const leaving = hot;
+      // Let the bloom shrink before the clip comes off, or it snaps back to
+      // flat colour mid-transition. The hero claim keeps its clip either way.
+      if (!leaving.classList.contains('hero__claim')) {
+        setTimeout(() => {
+          if (leaving !== hot) leaving.classList.remove('is-hot');
+        }, 260);
+      }
+      hot = null;
+    };
+
+    const apply = () => {
+      frame = 0;
+      const e = pending;
+      if (!e) return;
+
+      const target = heatable(document.elementFromPoint(e.clientX, e.clientY));
+      if (target !== hot) {
+        clear();
+        if (target) {
+          hot = target;
+          if (!target.classList.contains('hero__claim')) {
+            target.style.setProperty('--heat-base', getComputedStyle(target).color);
+            target.classList.add('is-hot');
+          }
+          // Next frame, so the radius transitions from 0 rather than starting
+          // at full reach the moment the class lands.
+          requestAnimationFrame(() => {
+            if (hot === target) target.style.setProperty('--heat-r', `${REACH}px`);
+          });
+        }
+      }
+
+      if (hot) {
+        const b = hot.getBoundingClientRect();
+        hot.style.setProperty('--mx', `${e.clientX - b.left}px`);
+        hot.style.setProperty('--my', `${e.clientY - b.top}px`);
+      }
+    };
+
+    document.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      pending = e;
+      // One hit test and one write per frame, however many events arrive.
+      if (!frame) frame = requestAnimationFrame(apply);
+    });
+
+    document.addEventListener('pointerleave', clear);
+    /* A scroll moves the type under a stationary pointer, so what is hot has
+       to be re-tested even though nothing moved. */
+    document.addEventListener('scroll', () => {
+      if (pending && !frame) frame = requestAnimationFrame(apply);
+    }, { passive: true });
+  }
+</script>

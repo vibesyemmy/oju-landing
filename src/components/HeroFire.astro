@@ -107,16 +107,28 @@ import { SITE } from '../data/site';
     line-height: 0.94;
     letter-spacing: -0.035em;
     text-wrap: balance;
-    background-image: linear-gradient(
-      to bottom,
-      var(--color-ink) 38%,
-      #8f2f0a 76%,
-      #c4470f 96%
-    );
-    /* Taller than the text, so shifting it moves the heat line through the
-       glyphs instead of recolouring them in place. */
-    background-size: 100% 190%;
-    background-position: 0% 0%;
+    /* Two layers: the pointer's bloom over the standing scorch. The bloom's
+       radius is live even when nothing is hovering — at 0px the gradient is
+       invisible — which is what lets one set of keyframes stay valid whether
+       the claim is being hovered or not. */
+    background-image:
+      radial-gradient(
+        circle var(--heat-r) at var(--mx, -999px) var(--my, -999px),
+        #d4550f 0%,
+        #8f2f0a 48%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        var(--color-ink) 38%,
+        #8f2f0a 76%,
+        #c4470f 96%
+      );
+    /* The scorch is taller than the text, so shifting it moves the heat line
+       through the glyphs instead of recolouring them in place. The bloom is
+       positioned inside its own gradient and must not be shifted with it. */
+    background-size: auto, 100% 190%;
+    background-position: 0 0, 0% var(--fill-y);
     background-repeat: no-repeat;
     -webkit-background-clip: text;
     background-clip: text;
@@ -134,9 +146,19 @@ import { SITE } from '../data/site';
     }
   }
 
+  /* Registered so it can be animated at all: an unregistered custom property
+     has no type and jumps between keyframes instead of interpolating. */
+  @property --fill-y {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
+  }
+
+  /* The scorch layer's own offset, rather than background-position wholesale —
+     that would drag the pointer's bloom along with it. */
   @keyframes claim-heat {
-    from { background-position: 0% 0%; }
-    to { background-position: 0% 38%; }
+    from { --fill-y: 0%; }
+    to { --fill-y: 38%; }
   }
 
   /* The halo is outside the glyphs, on the paper, so it can be as hot as it
