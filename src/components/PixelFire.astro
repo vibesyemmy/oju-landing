@@ -8,9 +8,14 @@
  * splatted into a single grid, banded into colour, and dithered in one pass —
  * so the tail is not a trail behind the flame, it is the cooler part of it.
  *
- * That means the fire is over the page rather than behind it, which is the
- * price of the head always being visible. The coolest cells are drawn at
- * reduced alpha so the tail does not sit on top of text as a solid block.
+ * It burns under the page. The paper ground sits on html rather than body
+ * precisely so a fixed canvas at a negative index can paint above it, which
+ * is what lets the fire show through everything that does not paint its own
+ * background — most of this site. Words, images and cards are in front of it.
+ *
+ * The cost is that the head is occluded like everything else: over a photo or
+ * a card the fire disappears, and only the system cursor is left. That is the
+ * trade for it never sitting on top of text.
  *
  * ── physics ──────────────────────────────────────────────────────────
  * The core is a spring-damper chasing the pointer, so it lags, overshoots
@@ -57,9 +62,9 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    /* Over the page: the fire is standing in for the pointer, so it cannot be
-       occluded by whatever the pointer happens to be above. */
-    z-index: 60;
+    /* Under the page. Negative, so it paints above the html background and
+       below every element in body — glyphs included. */
+    z-index: -1;
     pointer-events: none;
   }
 
