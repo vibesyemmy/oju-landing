@@ -42,10 +42,43 @@ export const CAPABILITIES = [
   },
 ] as const;
 
+/**
+ * Footer navigation. Every item carries an href — these rendered as plain
+ * <span> before, which looks exactly like navigation and does nothing, so a
+ * visitor who aimed at "Services" got no feedback at all.
+ *
+ * The service entries deep-link into the matching section of /services rather
+ * than inventing pages that do not exist.
+ */
 export const FOOTER_COLUMNS = [
-  { title: 'Studio', items: ['Work', 'Services', 'Contact'] },
-  { title: 'Design', items: ['UI/UX', 'Brand & identity', 'Motion', 'Design systems'] },
-  { title: 'Build', items: ['Web applications', 'Mobile apps', 'APIs', 'Infrastructure'] },
+  {
+    title: 'Studio',
+    items: [
+      { label: 'Work', href: '/work' },
+      { label: 'Campaigns', href: '/work/campaigns' },
+      { label: 'About', href: '/studio' },
+      { label: 'Services', href: '/services' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+  {
+    title: 'Design',
+    items: [
+      { label: 'UI/UX', href: '/services#design' },
+      { label: 'Brand & identity', href: '/services#design' },
+      { label: 'Motion', href: '/services#design' },
+      { label: 'Design systems', href: '/services#design' },
+    ],
+  },
+  {
+    title: 'Build',
+    items: [
+      { label: 'Web applications', href: '/services#engineering' },
+      { label: 'Mobile apps', href: '/services#engineering' },
+      { label: 'APIs', href: '/services#engineering' },
+      { label: 'Infrastructure', href: '/services#engineering' },
+    ],
+  },
 ] as const;
 
 export interface Client {
