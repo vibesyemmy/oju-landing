@@ -1,0 +1,154 @@
+---
+/**
+ * The second tier on /work: brand and interface projects that have a brief but
+ * not a case study.
+ *
+ * These deliberately have no detail pages. There is a paragraph behind each,
+ * and a page built on a paragraph reads thinner than a good card does — it also
+ * teaches a visitor that clicking through is not worth it, which then costs the
+ * five case studies that do reward it.
+ *
+ * So the card is the whole thing, and it is sized to look finished rather than
+ * truncated.
+ */
+import { Image } from 'astro:assets';
+import { SELECTED_WORK } from '../data/site';
+
+const files = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/work-selected/*.{webp,png,jpg,jpeg}',
+  { eager: true },
+);
+
+const projects = SELECTED_WORK.map((p) => {
+  const hit = Object.keys(files).find((k) => k.endsWith(`/${p.image}`));
+  return { ...p, img: hit ? files[hit].default : undefined };
+});
+---
+
+<section class="border-t border-rule px-6 py-14 md:px-20 md:py-22" aria-labelledby="more-work">
+  <div class="mb-10 md:mb-14 md:flex md:items-end md:justify-between md:gap-10">
+    <div class="max-w-2xl">
+      <p class="label mb-4">Also from the studio</p>
+      <h2 id="more-work" class="font-display text-[32px] leading-tight tracking-tight md:text-[48px]">
+        Brand and interface work
+      </h2>
+    </div>
+    <p class="mt-5 max-w-md text-soft md:mt-0">
+      Identities, campaigns and product interfaces. Shorter engagements than the
+      case studies above, and shown as they were delivered.
+    </p>
+  </div>
+
+  <ul class="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+    {
+      projects.map((p) => (
+        <li class="project">
+          {p.img && (
+            <div class="project__frame">
+              <Image
+                src={p.img}
+                alt={`${p.name} — ${p.services.join(', ').toLowerCase()}`}
+                widths={[400, 800]}
+                sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 90vw"
+                loading="lazy"
+                decoding="async"
+                class="project__img"
+              />
+            </div>
+          )}
+
+          <h3 class="font-display mt-5 text-[22px] leading-tight tracking-tight">{p.name}</h3>
+
+          <ul class="project__services">
+            {p.services.map((s) => (
+              <li>{s}</li>
+            ))}
+          </ul>
+
+          <p class="mt-3 text-soft">{p.line}</p>
+
+          {p.prototype && (
+            <a
+              class="project__link"
+              href={p.prototype}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View the prototype
+              <span aria-hidden="true">↗</span>
+            </a>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  /* A fixed frame so a row of cards lines up whether the artwork inside is a
+     flat-lay, a browser mockup or a stack of banners. object-fit would crop
+     type out of the ad work, so these are contained on the page ground
+     instead. */
+  .project__frame {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    border-radius: 6px;
+    background: var(--color-raised, #f6f4ef);
+    padding: 0.75rem;
+  }
+
+  .project__img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: transform 400ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .project:hover .project__img {
+    transform: scale(1.02);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project__img,
+    .project:hover .project__img {
+      transition: none;
+      transform: none;
+    }
+  }
+
+  .project__services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 0.5rem;
+    margin-top: 0.625rem;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+  .project__services li + li::before {
+    content: '·';
+    margin-right: 0.5rem;
+    color: var(--color-rule);
+  }
+
+  .project__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.875rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+    padding-bottom: 2px;
+    transition: border-color 200ms ease;
+  }
+  .project__link:hover {
+    border-color: var(--color-ink);
+  }
+</style>

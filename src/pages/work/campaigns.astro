@@ -1,0 +1,144 @@
+---
+/**
+ * The advertising gallery.
+ *
+ * Nothing here has a brief behind it — these are finished pieces from campaigns,
+ * and there is no honest way to write a problem-and-outcome story for a
+ * Valentine's post. So they are shown as work rather than dressed as case
+ * studies: grouped by client, image first, captions doing only the labelling.
+ *
+ * Ordered so the most recognisable names land first. A visitor who scrolls two
+ * screens should already have met GTBank, MTN and Sterling.
+ */
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import { Image } from 'astro:assets';
+import { CAMPAIGNS } from '../../data/site';
+
+const files = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/campaigns/*.{webp,png,jpg,jpeg}',
+  { eager: true },
+);
+
+/** Group into client sections, preserving the order the data declares. */
+const groups: { client: string; pieces: { caption: string; img?: ImageMetadata }[] }[] = [];
+for (const piece of CAMPAIGNS) {
+  const hit = Object.keys(files).find((k) => k.endsWith(`/${piece.image}`));
+  const img = hit ? files[hit].default : undefined;
+  const last = groups.at(-1);
+  if (last?.client === piece.client) last.pieces.push({ caption: piece.caption, img });
+  else groups.push({ client: piece.client, pieces: [{ caption: piece.caption, img }] });
+}
+
+const count = CAMPAIGNS.length;
+const clients = groups.length;
+---
+
+<Base
+  title="Campaigns"
+  description={`Print, social and digital advertising from Ojú — ${count} pieces across ${clients} brands.`}
+>
+  <SiteHeader current="/work" />
+  <main id="main">
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
+      <p class="label mb-4">
+        <a href="/work" class="backlink">Work</a> <span aria-hidden="true">/</span> Campaigns
+      </p>
+      <h1 class="font-display max-w-4xl text-[44px] leading-tight tracking-tight md:text-[78px]">
+        Print, social<br />and digital ads
+      </h1>
+      <p class="mt-7 max-w-xl text-lg text-soft md:mt-9">
+        Campaign work for banks, telcos and restaurant brands. {count} pieces
+        across {clients} names — the craft side of the studio, shown without
+        commentary.
+      </p>
+    </section>
+
+    {
+      groups.map((group) => (
+        <section class="border-t border-rule px-6 py-10 md:px-20 md:py-14">
+          <h2 class="font-display mb-7 text-[26px] leading-tight tracking-tight md:mb-9 md:text-[34px]">
+            {group.client}
+          </h2>
+
+          <ul class="gallery">
+            {group.pieces.map((piece) => (
+              <li class="piece">
+                {piece.img && (
+                  <Image
+                    src={piece.img}
+                    alt={`${group.client} — ${piece.caption}`}
+                    widths={[400, 800, 1200]}
+                    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                    loading="lazy"
+                    decoding="async"
+                    class="piece__img"
+                  />
+                )}
+                <p class="piece__caption">{piece.caption}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-20">
+      <p class="max-w-xl text-soft">
+        The projects with a story behind them are on
+        <a href="/work" class="inline-link">the work page</a>.
+      </p>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .backlink,
+  .inline-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+    transition: border-color 200ms ease;
+  }
+  .backlink:hover,
+  .inline-link:hover {
+    border-color: currentColor;
+  }
+
+  /* Columns rather than a grid: these pieces are square, portrait and one very
+     tall illustrated strip, and a row-based grid would either crop them or
+     leave a band of dead space beside every short one. */
+  .gallery {
+    columns: 1;
+    column-gap: 1.25rem;
+  }
+  @media (min-width: 640px) {
+    .gallery { columns: 2; }
+  }
+  @media (min-width: 1024px) {
+    .gallery { columns: 3; column-gap: 1.75rem; }
+  }
+
+  .piece {
+    /* Without this a card can be split across a column boundary. */
+    break-inside: avoid;
+    margin-bottom: 1.75rem;
+  }
+
+  .piece__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid var(--color-rule);
+  }
+
+  .piece__caption {
+    margin-top: 0.625rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--color-faint);
+  }
+</style>

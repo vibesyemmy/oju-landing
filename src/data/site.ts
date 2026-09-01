@@ -105,6 +105,119 @@ export const CLIENTS: readonly Client[] = [
   { name: 'Butchers & Bakers' },
 ];
 
+/* ── /work, second tier ────────────────────────────────────────
+   Brand and interface projects that have a brief but not a case
+   study. They render as cards on /work below the case studies,
+   with no detail pages of their own: there is a paragraph of
+   substance behind each, and a page built on that would read
+   thinner than the card does. */
+export interface SelectedProject {
+  name: string;
+  /** Filename in src/assets/work-selected. */
+  image: string;
+  services: string[];
+  line: string;
+  /**
+   * These are Figma prototypes, not shipped sites — the portfolio calls them
+   * "link to project", but every one resolves to figma.com/proto. Labelled as
+   * prototypes on the card, because "view the site" would be a false promise.
+   * Omitted where the link is dead.
+   */
+  prototype?: string;
+}
+
+export const SELECTED_WORK: readonly SelectedProject[] = [
+  {
+    name: 'Harcourt Hotels & Resorts',
+    image: 'harcourt.webp',
+    services: ['Brand identity', 'Web design', 'Advertising'],
+    line: 'Positioning a hotel group as a luxury brand, and building the online presence to carry it.',
+  },
+  {
+    name: 'Insidify',
+    image: 'insidify.webp',
+    services: ['Logo', 'Brand identity', 'Marketing design'],
+    line: 'A careers and technology platform that needed an identity people remember, and a way to explain what it actually does.',
+  },
+  {
+    name: 'GeoTravel',
+    image: 'geotravel.webp',
+    services: ['UI design', 'Web'],
+    line: 'Flights, hotels, holidays and airport transfers folded into one booking flow.',
+    prototype: 'https://www.figma.com/proto/fFJ4N6W268k6nrH0avqd8E/Hotel-Booking-NEW?node-id=1%3A3',
+  },
+  {
+    name: 'Kairos Capital',
+    image: 'kairos-capital.webp',
+    services: ['UI design', 'Web'],
+    line: 'A financial advisory firm, structured around what they actually offer rather than how they describe themselves.',
+    prototype: 'https://www.figma.com/proto/8IfDvAzuZw2YNIHIVJPRAw/Kairos-Capital?node-id=7%3A8',
+  },
+  {
+    name: 'NEPAL Oil & Gas',
+    image: 'nepal-oil-gas.webp',
+    services: ['UI design', 'Web'],
+    line: 'A corporate site carrying a great deal of business detail without burying any of it.',
+  },
+  {
+    name: 'FundPatients',
+    image: 'fundpatients.webp',
+    services: ['Logo', 'Digital advertising'],
+    line: 'Logo, brand tokens and advert elements for a healthcare start-up, built to launch with.',
+  },
+  {
+    name: 'Belvia',
+    image: 'belvia.webp',
+    services: ['Logo', 'Brand identity'],
+    line: 'A kids’ fashion label that had to read as fun and hip without talking down to teenagers.',
+  },
+  {
+    name: 'Country Homes',
+    image: 'country-homes.webp',
+    services: ['Logo', 'Brand identity'],
+    line: 'An identity for a property company that states the business proposition rather than decorating it.',
+  },
+];
+
+/* ── /work/campaigns ───────────────────────────────────────────
+   Print, social and digital advertising. No briefs behind these,
+   so they are shown as a gallery rather than dressed up as case
+   studies: the work is the argument. Grouped by client. */
+export interface CampaignPiece {
+  /** Filename in src/assets/campaigns. */
+  image: string;
+  client: string;
+  /** Alt text, and the caption on hover. Describe the piece, not the file. */
+  caption: string;
+}
+
+export const CAMPAIGNS: readonly CampaignPiece[] = [
+  { image: 'gtbank-737-mobile.webp', client: 'GTBank', caption: '*737 mobile banking launch' },
+  { image: 'gtbank-737-valentine.webp', client: 'GTBank', caption: '*737 Valentine’s campaign' },
+  { image: 'gtbank-737-family.webp', client: 'GTBank', caption: '*737, “Its Banking; Only Easier”' },
+  { image: 'mtn-traveling-abroad.webp', client: 'MTN', caption: 'Roaming, “Traveling abroad or staying home?”' },
+  { image: 'sterling-multiverse-passion.webp', client: 'Sterling Bank', caption: 'Multiverse of Opportunities, “Passion meets opportunities”' },
+  { image: 'sterling-multiverse-portrait.webp', client: 'Sterling Bank', caption: 'Multiverse of Opportunities, portrait treatment' },
+  { image: 'sterling-multiverse-magic.webp', client: 'Sterling Bank', caption: 'Multiverse of Opportunities, “Unleash the magic in you”' },
+  { image: 'sterling-teambonding.webp', client: 'Sterling Bank', caption: '#TeamBonding, “Engage, Bond, Connect”' },
+  { image: 'sterling-trade-toons.webp', client: 'Sterling Bank', caption: 'Trade Toons, an illustrated service series' },
+  { image: 'sterling-mechanic-series.webp', client: 'Sterling Bank', caption: 'Spare parts campaign, “T for Tenks”' },
+  { image: 'kfc-doublicious.webp', client: 'KFC', caption: 'Doublicious launch' },
+  { image: 'eat-drink-ribs.webp', client: 'Eat Drink Festival', caption: '“Crack your ribs”' },
+  { image: 'eat-drink-sweet-tooth.webp', client: 'Eat Drink Festival', caption: '“Sweet Tooth”' },
+  { image: 'eat-drink-appetite.webp', client: 'Eat Drink Festival', caption: '“Indulge your appetite”' },
+  { image: 'vfd-avoid-contact.webp', client: 'VFD Microfinance Bank', caption: 'Contactless payments, “Avoid contact with cash”' },
+  { image: 'vfd-quick-cash.webp', client: 'VFD Microfinance Bank', caption: 'Loans, “Need quick cash?”' },
+  { image: 'kairos-ramadan.webp', client: 'Kairos Capital', caption: 'Ramadan Kareem' },
+  { image: 'kairos-womens-day.webp', client: 'Kairos Capital', caption: 'International Women’s Day' },
+  { image: 'geotravel-dubai.webp', client: 'GeoTravel', caption: 'Dubai flash sale' },
+  { image: 'geotravel-easter.webp', client: 'GeoTravel', caption: 'Easter Fiesta, seven destinations' },
+  { image: 'country-homes-pride.webp', client: 'Country Homes', caption: 'Brand advertising' },
+  { image: 'insidify-childs-play.webp', client: 'Insidify', caption: '“Getting a job, easy like child’s play”' },
+  { image: 'butchers-bakers-heaven.webp', client: 'Butchers & Bakers', caption: '“A slice of heaven”' },
+  { image: 'harcourt-app.webp', client: 'Harcourt Hotels & Resorts', caption: 'App launch' },
+];
+
 /* ── /services ─────────────────────────────────────────────────
    The three capability columns from the homepage, expanded. Same
    order, same numbering — a visitor arriving from the homepage

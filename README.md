@@ -156,6 +156,31 @@ vouch for a fact nobody marked, so mark them as you go.
       not resolve
 - [ ] Contact form endpoint
 
+## Where the portfolio PDF landed
+
+`scripts/extract-portfolio-media.mjs` cuts artwork out of the portfolio deck.
+It renders pages and segments them rather than running `pdfimages`, because on
+the advert pages each piece is a photograph with the headline set as vector type
+over it — extracting embedded images returns the photo with the words missing,
+which is the half that carries the work.
+
+The material split three ways:
+
+- **Case studies** (`src/content/work`) — unchanged. Five projects with a
+  problem, an approach and an outcome.
+- **Brand and interface work** (`SELECTED_WORK`) — eight projects that have a
+  brief but not a case study, shown as cards on `/work`. Deliberately no detail
+  pages: there is a paragraph behind each, and a page built on a paragraph reads
+  thinner than a good card, which then teaches visitors that clicking through is
+  not worth it.
+- **Campaigns** (`CAMPAIGNS`, `/work/campaigns`) — 24 advertising pieces across
+  12 brands, as a gallery. No briefs exist for these, so they are shown as work
+  rather than dressed as case studies.
+
+The three "link to project" URLs in the deck are **Figma prototypes**, not
+shipped sites, and are labelled as prototypes for that reason. NEPAL Oil & Gas's
+link 404s and is omitted.
+
 ## Known gaps
 
 - With one project, "Next project" on a case study links to itself. Correct with 2+.
