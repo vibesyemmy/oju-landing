@@ -79,7 +79,7 @@ const DURATION = Math.max(40, clients.length * 4);
 
 {
   clients.length > 0 && (
-    <section class="clients" aria-labelledby="clients-heading">
+    <section class="clients rule-t" aria-labelledby="clients-heading">
       <h2 class="label clients__head" id="clients-heading">Trusted by</h2>
 
       <div class="marquee" style={`--marquee-duration:${DURATION}s`}>
@@ -113,7 +113,6 @@ const DURATION = Math.max(40, clients.length * 4);
 
 <style>
   .clients {
-    border-top: 1px solid var(--color-rule);
     padding: 1.75rem 0 2rem;
   }
   @media (min-width: 768px) {
@@ -142,21 +141,8 @@ const DURATION = Math.max(40, clients.length * 4);
        The band is capped so it stays a fade rather than a long ghosting across
        a 640px margin, and it shrinks on a phone where the whole gutter is 24px
        and a fixed band would eat the first logo. */
-    --fade: min(5rem, var(--gutter));
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent calc(var(--gutter) - var(--fade)),
-      #000 var(--gutter),
-      #000 calc(100% - var(--gutter)),
-      transparent calc(100% - var(--gutter) + var(--fade))
-    );
-    mask-image: linear-gradient(
-      to right,
-      transparent calc(var(--gutter) - var(--fade)),
-      #000 var(--gutter),
-      #000 calc(100% - var(--gutter)),
-      transparent calc(100% - var(--gutter) + var(--fade))
-    );
+    -webkit-mask-image: var(--edge-fade);
+    mask-image: var(--edge-fade);
   }
 
   .marquee__inner {

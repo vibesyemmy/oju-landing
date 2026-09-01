@@ -57,6 +57,24 @@
      rather than the viewport. */
   :root {
     --gutter: max(1.5rem, (100% - var(--content-max)) / 2);
+
+    /* How far a full-bleed element takes to resolve at the content edge.
+       Capped, or on a 2560px screen it would smear across a 640px margin
+       instead of reading as a fade; and it collapses to the gutter on a phone,
+       where a fixed band would eat the first thing in the row. */
+    --fade: min(5rem, var(--gutter));
+
+    /* Opaque across the content column, fading out into both margins. Applied
+       as a mask, so it works on a scrolling row and on a hairline alike.
+       Percentages resolve against the element it lands on — this belongs on
+       full-width elements only. */
+    --edge-fade: linear-gradient(
+      to right,
+      transparent calc(var(--gutter) - var(--fade)),
+      #000 var(--gutter),
+      #000 calc(100% - var(--gutter)),
+      transparent calc(100% - var(--gutter) + var(--fade))
+    );
   }
   @media (min-width: 768px) {
     :root {
@@ -102,6 +120,27 @@
      viewport, the things the editorial look is built on. */
   .gutter {
     padding-inline: var(--gutter);
+  }
+
+  /* A section divider that stops where the content does. Drawn as a masked
+     pseudo-element rather than a border, because a border cannot fade — and it
+     survives a section that sets its own background, which a background-image
+     rule would not.
+
+     Full-width sections only. On an element already inside the gutter its 100%
+     is the content width, and the mask would erase most of the rule. */
+  .rule-t {
+    position: relative;
+  }
+  .rule-t::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: var(--color-rule);
+    -webkit-mask-image: var(--edge-fade);
+    mask-image: var(--edge-fade);
+    pointer-events: none;
   }
 
   /* The small mono label used throughout the design. */

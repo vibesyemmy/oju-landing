@@ -23,7 +23,7 @@ const headingId = id ? `${id}-heading` : undefined;
 ---
 
 <section
-  class:list={['argument', tone === 'fill' && 'argument--fill']}
+  class:list={['argument', 'rule-t', tone === 'fill' && 'argument--fill']}
   aria-labelledby={headingId}
   id={id}
 >
@@ -40,9 +40,7 @@ const headingId = id ? `${id}-heading` : undefined;
 </section>
 
 <style>
-  .argument {
-    border-top: 1px solid var(--color-rule);
-  }
+
   .argument--fill {
     background: var(--color-fill);
   }

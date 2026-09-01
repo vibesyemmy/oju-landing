@@ -47,7 +47,7 @@ const COLUMNS: Tile[][] = Array.from({ length: COLUMN_COUNT }, (_, c) =>
 const count = String(projects.length).padStart(2, '0');
 ---
 
-<section class="workwall">
+<section class="workwall rule-t">
   <div class="workwall__head">
     <h2 class="label">Selected work <span class="text-ink">· {count}</span></h2>
     <a href="/work" class="workwall__all font-mono">
@@ -87,7 +87,6 @@ const count = String(projects.length).padStart(2, '0');
 
 <style>
   .workwall {
-    border-top: 1px solid var(--color-rule);
     padding-top: clamp(2rem, 4vw, 3.5rem);
     padding-bottom: clamp(3rem, 6vw, 5.5rem);
   }
