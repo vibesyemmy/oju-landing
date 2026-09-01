@@ -1,30 +1,32 @@
 ---
 /**
- * Homepage teaser for /work/campaigns.
+ * Homepage teaser for /work/campaigns — a coverflow.
  *
- * Without this the gallery had exactly one inbound link, at the foot of /work —
- * two clicks deep, below five case studies. That is a poor place for the most
- * visually striking material the studio has.
+ * The pieces sit on a 3D rack: the centred one square to the viewer, the rest
+ * turned away and receding, and the rack advances on its own.
  *
- * The pieces carry the same angles they have on the board, from the same seed,
- * so the teaser looks like the place it leads to rather than a second
- * treatment of the same artwork.
+ * It replaces the scroll-scrubbed deal-and-drift, and with it the paper tilt
+ * the board uses. The two metaphors do not mix — a card cannot be both a print
+ * lying on a wall and a sleeve standing in a rack — so the strip trades that
+ * coherence for the motion. The board keeps the tilt.
  *
- * Two scroll-driven motions, on different elements so their transforms cannot
- * collide: the cards deal in as the section arrives, and the items drift
- * sideways at slightly different rates for the rest of the time it is on
- * screen. Both are scrubbed by scroll rather than autoplayed — the client row
- * directly above moves on its own, and two self-moving strips fight each other.
+ * The client row directly above also moves on its own. They are deliberately
+ * unalike: that one slides laterally and never stops, this one turns in place
+ * and holds each piece for a beat.
  *
- * The whole frame is one link, as a stretched pseudo-element on the real anchor
- * rather than a wrapper: wrapping the section would fold the heading and every
- * caption into that link's name.
+ * WCAG 2.2.2 wants a way to stop anything that moves by itself for more than
+ * five seconds, so the pause control is a requirement rather than a nicety. It
+ * sits above the frame's link overlay so it can actually be clicked, and it
+ * also stops on hover, on focus and when the tab is hidden.
+ *
+ * The whole frame is still one link, as a stretched pseudo-element on the real
+ * anchor — wrapping the section would fold the heading and every caption into
+ * that link's name.
  */
 import { Image } from 'astro:assets';
 import { CAMPAIGNS } from '../data/site';
-import { tilt } from '../lib/tilt';
 
-/** Chosen for recognition and for variety of shape along the strip. */
+/** Chosen for recognition and for variety of shape along the rack. */
 const FEATURED = [
   'sterling-multiverse-portrait.webp',
   'gtbank-737-mobile.webp',
@@ -44,13 +46,19 @@ const files = import.meta.glob<{ default: ImageMetadata }>(
 const pieces = FEATURED.map((name) => {
   const meta = CAMPAIGNS.find((c) => c.image === name);
   const hit = Object.keys(files).find((k) => k.endsWith(`/${name}`));
-  return { ...meta, ...tilt(name), img: hit ? files[hit].default : undefined };
+  return { ...meta, img: hit ? files[hit].default : undefined };
 }).filter((p) => p.img);
 
 const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
+const INTERVAL = 3600;
 ---
 
-<section class="frame rule-t py-14 md:py-22" aria-labelledby="campaigns-heading">
+<section
+  class="frame rule-t py-14 md:py-22"
+  aria-labelledby="campaigns-heading"
+  data-flow
+  style={`--flow-interval:${INTERVAL}ms`}
+>
   <div class="gutter">
     <div class="md:flex md:items-end md:justify-between md:gap-10">
       <div class="max-w-xl">
@@ -66,17 +74,23 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
           pieces across {brands} names.
         </p>
       </div>
-      <a href="/work/campaigns/" class="strip-cta">
-        See the gallery <span aria-hidden="true">&rarr;</span>
-      </a>
+
+      <div class="frame__actions">
+        <button type="button" class="flow__pause" data-flow-toggle aria-label="Pause">
+          <span class="flow__icon" aria-hidden="true"></span>
+        </button>
+        <a href="/work/campaigns/" class="strip-cta">
+          See the gallery <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
     </div>
   </div>
 
-  <ul class="strip">
-    {
-      pieces.map((p, i) => (
-        <li class="strip__item" style={`--i:${i}`}>
-          <div class="strip__card" style={`--rot:${p.rot}deg`}>
+  <div class="flow">
+    <ul class="flow__track">
+      {
+        pieces.map((p, i) => (
+          <li class="flow__item" data-flow-item={i}>
             <Image
               src={p.img!}
               alt=""
@@ -84,13 +98,13 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
               sizes="260px"
               loading="lazy"
               decoding="async"
-              class="strip__img"
+              class="flow__img"
             />
-          </div>
-        </li>
-      ))
-    }
-  </ul>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </section>
 
 <style>
@@ -101,20 +115,26 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
     .frame { cursor: pointer; }
   }
 
-  .strip-cta {
-    display: inline-flex;
+  .frame__actions {
+    display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-top: 1.75rem;
     flex: none;
+  }
+  @media (min-width: 768px) {
+    .frame__actions { margin-top: 0; }
+  }
+
+  .strip-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--color-ink);
     text-decoration: none;
     border-bottom: 1px solid var(--color-rule);
     padding-bottom: 3px;
     transition: border-color 200ms ease;
-  }
-  @media (min-width: 768px) {
-    .strip-cta { margin-top: 0; }
   }
 
   /* The whole frame is the target, as a stretched pseudo-element: one link,
@@ -125,8 +145,7 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
     inset: 0;
     z-index: 1;
   }
-  /* Touch has no hover, and an overlay laid across a scrolling strip swallows
-     the swipe. There the strip scrolls and the visible link is the way through. */
+  /* Touch has no hover, and an overlay across the rack swallows a swipe on it. */
   @media (hover: none) {
     .strip-cta::after { display: none; }
   }
@@ -136,106 +155,214 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
     border-color: var(--color-ink);
   }
 
-  .strip {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    margin-top: 2.5rem;
-    padding: 0 var(--gutter);
-    list-style: none;
-    overflow-x: auto;
-    scroll-padding-inline-start: var(--gutter);
-    scrollbar-width: none;
-  }
-  .strip::-webkit-scrollbar { display: none; }
-  @media (min-width: 768px) {
-    .strip { gap: 1.75rem; margin-top: 3.5rem; }
-  }
-
-  /* With a pointer the frame is a link, so the strip does not need to scroll —
-     and `clip` matters for more than that: `auto` makes this a scroll
-     container, and a view() timeline resolves against the nearest one, so the
-     cards inside would have been measured against the strip rather than the
-     page and never moved at all. `clip` does not create one. */
-  @media (hover: hover) {
-    .strip { overflow-x: clip; }
-  }
-
-  .strip__item {
+  /* Above the overlay, or the link would swallow it. */
+  .flow__pause {
+    position: relative;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
     flex: none;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-faint);
+    cursor: pointer;
+  }
+  .flow__pause:hover { color: var(--color-ink); }
+  .flow__pause:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
-  /* The angle it has on the board, from the same seed. */
-  .strip__card {
-    transform: rotate(var(--rot, 0deg));
+  /* Two bars for pause; the paused state swaps to a single triangle. */
+  .flow__icon {
+    width: 9px;
+    height: 11px;
+    border-left: 2.5px solid currentColor;
+    border-right: 2.5px solid currentColor;
+  }
+  .frame.is-paused .flow__icon {
+    width: 0;
+    height: 0;
+    border-left: 9px solid currentColor;
+    border-right: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
   }
 
-  .strip__img {
+  /* ── the rack ───────────────────────────────────────────────────── */
+  .flow {
+    position: relative;
+    margin-top: 2.5rem;
+    height: 300px;
+    /* The depth of the room. Shallower than the classic cover flow, because a
+       hard vanishing point reads as a widget; this should read as a rack of
+       printed pieces seen slightly from the side. */
+    perspective: 1500px;
+    perspective-origin: 50% 50%;
+    overflow: hidden;
+  }
+  @media (min-width: 768px) {
+    .flow { height: 380px; margin-top: 3.5rem; }
+  }
+
+  .flow__track {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transform-style: preserve-3d;
+  }
+
+  .flow__item {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* JS owns the transform: the angle and depth of a piece depend on its
+       distance from the centre, which is a running value rather than a
+       stylesheet one. */
+    transform: translate(-50%, -50%);
+    transition:
+      transform 760ms cubic-bezier(0.22, 0.72, 0.24, 1),
+      opacity 760ms ease;
+    will-change: transform;
+  }
+
+  .flow__img {
     display: block;
-    height: 200px;
+    height: 220px;
     width: auto;
     border: 1px solid rgb(23 22 15 / 0.1);
     border-radius: 3px;
     box-shadow:
-      0 2px 6px rgb(23 22 15 / 0.07),
-      0 14px 34px rgb(23 22 15 / 0.06);
-    transition: box-shadow 350ms ease;
+      0 2px 8px rgb(23 22 15 / 0.08),
+      0 22px 48px rgb(23 22 15 / 0.14);
   }
   @media (min-width: 768px) {
-    .strip__img { height: 260px; }
+    .flow__img { height: 300px; }
   }
 
-  /* One hover state for the whole frame, because the whole frame is one link. */
-  .frame:hover .strip__img {
-    box-shadow:
-      0 6px 14px rgb(23 22 15 / 0.09),
-      0 26px 56px rgb(23 22 15 / 0.12);
-  }
-
-  /* ── the two motions ──────────────────────────────────────────────
-     Deal lands on the card (transform), drift on the item (translate), so
-     neither overwrites the other's property. */
-  @keyframes strip-deal {
-    from {
-      opacity: 0;
-      transform: translate(-38px, 14px) rotate(0deg) scale(0.94);
-    }
-    to {
-      opacity: 1;
-      transform: translate(0, 0) rotate(var(--rot, 0deg)) scale(1);
-    }
-  }
-
-  @keyframes strip-drift {
-    from { translate: calc(26px + var(--i) * 3px) 0; }
-    to   { translate: calc(-26px - var(--i) * 3px) 0; }
-  }
-
-  @supports (animation-timeline: view()) {
-    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-      .strip__card {
-        animation: strip-deal linear both;
-        animation-timeline: view();
-        /* Dealt out well before the section settles, so it reads as arrival
-           rather than something still happening while you read.
-
-           Staggered by shifting each card's range, not by animation-delay: a
-           delay is measured in time, and a scrubbed animation has no clock for
-           it to run against, so it is ignored outright. The first attempt used
-           one and every card dealt in unison. */
-        animation-range-start: entry calc(6% + var(--i) * 3%);
-        animation-range-end: cover calc(26% + var(--i) * 3%);
-      }
-
-      .strip__item {
-        animation: strip-drift linear both;
-        animation-timeline: view();
-        animation-range: cover;
-      }
-    }
-  }
-
+  /* No motion at all where it is not wanted: the rack lays out once, flat and
+     evenly spaced, and never advances. */
   @media (prefers-reduced-motion: reduce) {
-    .strip__img { transition: none; }
+    .flow__item { transition: none; }
   }
 </style>
+
+<script>
+  /**
+   * The coverflow.
+   *
+   * Each piece's angle, depth and scale come from its distance to the centre,
+   * so the layout is one function of one number. The offset wraps at the
+   * halfway point, which is what lets the rack turn forever in one direction
+   * without a seam or a duplicated set.
+   */
+  const root = document.querySelector<HTMLElement>('[data-flow]');
+  const items = [...document.querySelectorAll<HTMLElement>('[data-flow-item]')];
+
+  if (root && items.length) {
+    const toggle = root.querySelector<HTMLButtonElement>('[data-flow-toggle]');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const interval =
+      parseInt(getComputedStyle(root).getPropertyValue('--flow-interval')) || 3600;
+    const n = items.length;
+
+    let active = 0;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    /** Stopped by the button — sticky, unlike hover. */
+    let stopped = reduced.matches;
+
+    const narrow = () => window.innerWidth < 768;
+
+    const layout = () => {
+      /* Pieces vary in width — portrait posters beside square social crops —
+         so a fixed spread leaves uneven gaps. Set wide enough that the widest
+         neighbour still clears the centred piece. */
+      const spread = narrow() ? 112 : 174;
+      const depth = narrow() ? 150 : 210;
+
+      items.forEach((el, i) => {
+        // Shortest way round, so the rack never unwinds the long way.
+        let off = i - active;
+        if (off > n / 2) off -= n;
+        if (off < -n / 2) off += n;
+
+        const dist = Math.abs(off);
+        const turn = Math.max(-52, Math.min(52, -off * 40));
+        const scale = Math.max(0.62, 1 - dist * 0.13);
+
+        el.style.transform = [
+          'translate(-50%, -50%)',
+          `translateX(${off * spread}px)`,
+          `translateZ(${-dist * depth}px)`,
+          `rotateY(${turn}deg)`,
+          `scale(${scale})`,
+        ].join(' ');
+        // Beyond the third neighbour a piece is a smudge; fading it out keeps
+        // the edges of the rack clean without hiding anything a viewer wanted.
+        el.style.opacity = String(dist > 3 ? 0 : Math.max(0, 1 - dist * 0.22));
+        el.style.zIndex = String(100 - Math.round(dist * 10));
+      });
+    };
+
+    const stop = () => {
+      clearInterval(timer);
+      timer = undefined;
+    };
+
+    const run = () => {
+      if (stopped || document.hidden) return;
+      stop();
+      timer = setInterval(() => {
+        active = (active + 1) % n;
+        layout();
+      }, interval);
+    };
+
+    /** Hover and focus hold it without changing what the button says. */
+    const hold = () => stop();
+    const release = () => {
+      if (!stopped) run();
+    };
+
+    toggle?.addEventListener('click', (e) => {
+      // The frame is a link; this button is not a way through it.
+      e.preventDefault();
+      e.stopPropagation();
+      stopped = !stopped;
+      root.classList.toggle('is-paused', stopped);
+      toggle.setAttribute('aria-label', stopped ? 'Play' : 'Pause');
+      if (stopped) stop();
+      else run();
+    });
+
+    root.addEventListener('pointerenter', hold);
+    root.addEventListener('pointerleave', release);
+    root.addEventListener('focusin', hold);
+    root.addEventListener('focusout', (e) => {
+      if (!root.contains(e.relatedTarget as Node)) release();
+    });
+
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : release()));
+
+    // The spread and depth are viewport-dependent, so a resize re-lays it out.
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(layout, 120);
+    });
+
+    layout();
+
+    if (stopped) {
+      root.classList.add('is-paused');
+      toggle?.setAttribute('aria-label', 'Play');
+    } else {
+      run();
+    }
+  }
+</script>
