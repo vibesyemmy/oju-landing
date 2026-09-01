@@ -6,16 +6,23 @@
  * two clicks deep, below five case studies. That is a poor place for the most
  * visually striking material the studio has.
  *
- * A filmstrip rather than a grid: these pieces are square, portrait and one
- * wide banner, and any fixed cell either crops a headline in half or leaves
- * every short piece letterboxed. Matching on height instead lets each keep its
- * real proportions, and the ragged right edge is what tells you it continues.
+ * The pieces carry the same angles they have on the board, from the same seed,
+ * so the teaser looks like the place it leads to rather than a second
+ * treatment of the same artwork.
  *
- * Deliberately not a marquee. The client row above already scrolls on its own,
- * and two auto-moving strips on one page fight each other.
+ * Two scroll-driven motions, on different elements so their transforms cannot
+ * collide: the cards deal in as the section arrives, and the items drift
+ * sideways at slightly different rates for the rest of the time it is on
+ * screen. Both are scrubbed by scroll rather than autoplayed — the client row
+ * directly above moves on its own, and two self-moving strips fight each other.
+ *
+ * The whole frame is one link, as a stretched pseudo-element on the real anchor
+ * rather than a wrapper: wrapping the section would fold the heading and every
+ * caption into that link's name.
  */
 import { Image } from 'astro:assets';
 import { CAMPAIGNS } from '../data/site';
+import { tilt } from '../lib/tilt';
 
 /** Chosen for recognition and for variety of shape along the strip. */
 const FEATURED = [
@@ -37,13 +44,13 @@ const files = import.meta.glob<{ default: ImageMetadata }>(
 const pieces = FEATURED.map((name) => {
   const meta = CAMPAIGNS.find((c) => c.image === name);
   const hit = Object.keys(files).find((k) => k.endsWith(`/${name}`));
-  return { ...meta, img: hit ? files[hit].default : undefined };
+  return { ...meta, ...tilt(name), img: hit ? files[hit].default : undefined };
 }).filter((p) => p.img);
 
 const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
 ---
 
-<section class="rule-t py-14 md:py-22" aria-labelledby="campaigns-heading">
+<section class="frame rule-t py-14 md:py-22" aria-labelledby="campaigns-heading">
   <div class="gutter">
     <div class="md:flex md:items-end md:justify-between md:gap-10">
       <div class="max-w-xl">
@@ -67,9 +74,9 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
 
   <ul class="strip">
     {
-      pieces.map((p) => (
-        <li class="strip__item">
-          <a href="/work/campaigns/" tabindex="-1" aria-hidden="true">
+      pieces.map((p, i) => (
+        <li class="strip__item" style={`--i:${i}`}>
+          <div class="strip__card" style={`--rot:${p.rot}deg`}>
             <Image
               src={p.img!}
               alt=""
@@ -79,7 +86,7 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
               decoding="async"
               class="strip__img"
             />
-          </a>
+          </div>
         </li>
       ))
     }
@@ -87,6 +94,13 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
 </section>
 
 <style>
+  .frame {
+    position: relative;
+  }
+  @media (hover: hover) {
+    .frame { cursor: pointer; }
+  }
+
   .strip-cta {
     display: inline-flex;
     align-items: center;
@@ -99,66 +113,129 @@ const brands = [...new Set(CAMPAIGNS.map((c) => c.client))].length;
     padding-bottom: 3px;
     transition: border-color 200ms ease;
   }
-  .strip-cta:hover,
-  .strip-cta:focus-visible {
-    border-color: var(--color-ink);
-  }
   @media (min-width: 768px) {
     .strip-cta { margin-top: 0; }
   }
 
-  /* One row, matched on height. Scrolls rather than wrapping: a strip that
-     wraps stops reading as a strip. */
+  /* The whole frame is the target, as a stretched pseudo-element: one link,
+     with the name the anchor already has. */
+  .strip-cta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  /* Touch has no hover, and an overlay laid across a scrolling strip swallows
+     the swipe. There the strip scrolls and the visible link is the way through. */
+  @media (hover: none) {
+    .strip-cta::after { display: none; }
+  }
+
+  .frame:hover .strip-cta,
+  .strip-cta:focus-visible {
+    border-color: var(--color-ink);
+  }
+
   .strip {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem;
     margin-top: 2.5rem;
     padding: 0 var(--gutter);
     list-style: none;
     overflow-x: auto;
-    scroll-snap-type: x proximity;
-    /* Snap points align to the scrollport edge, which sits inside the padding —
-       without this the first item snaps flush to the viewport and swallows the
-       gutter the heading is aligned to. */
     scroll-padding-inline-start: var(--gutter);
-    /* The images carry the page's own edges; no scrollbar furniture. */
     scrollbar-width: none;
   }
   .strip::-webkit-scrollbar { display: none; }
   @media (min-width: 768px) {
-    .strip {
-      gap: 1.25rem;
-      padding: 0 var(--gutter);
-      scroll-padding-inline-start: var(--gutter);
-      margin-top: 3.5rem;
-    }
+    .strip { gap: 1.75rem; margin-top: 3.5rem; }
+  }
+
+  /* With a pointer the frame is a link, so the strip does not need to scroll —
+     and `clip` matters for more than that: `auto` makes this a scroll
+     container, and a view() timeline resolves against the nearest one, so the
+     cards inside would have been measured against the strip rather than the
+     page and never moved at all. `clip` does not create one. */
+  @media (hover: hover) {
+    .strip { overflow-x: clip; }
   }
 
   .strip__item {
     flex: none;
-    scroll-snap-align: start;
+  }
+
+  /* The angle it has on the board, from the same seed. */
+  .strip__card {
+    transform: rotate(var(--rot, 0deg));
   }
 
   .strip__img {
     display: block;
     height: 200px;
     width: auto;
-    border: 1px solid var(--color-rule);
-    border-radius: 4px;
-    transition: transform 350ms cubic-bezier(0.2, 0.7, 0.3, 1);
+    border: 1px solid rgb(23 22 15 / 0.1);
+    border-radius: 3px;
+    box-shadow:
+      0 2px 6px rgb(23 22 15 / 0.07),
+      0 14px 34px rgb(23 22 15 / 0.06);
+    transition: box-shadow 350ms ease;
   }
   @media (min-width: 768px) {
     .strip__img { height: 260px; }
   }
-  .strip__item:hover .strip__img {
-    transform: translateY(-4px);
+
+  /* One hover state for the whole frame, because the whole frame is one link. */
+  .frame:hover .strip__img {
+    box-shadow:
+      0 6px 14px rgb(23 22 15 / 0.09),
+      0 26px 56px rgb(23 22 15 / 0.12);
   }
-  @media (prefers-reduced-motion: reduce) {
-    .strip__img,
-    .strip__item:hover .strip__img {
-      transition: none;
-      transform: none;
+
+  /* ── the two motions ──────────────────────────────────────────────
+     Deal lands on the card (transform), drift on the item (translate), so
+     neither overwrites the other's property. */
+  @keyframes strip-deal {
+    from {
+      opacity: 0;
+      transform: translate(-38px, 14px) rotate(0deg) scale(0.94);
     }
+    to {
+      opacity: 1;
+      transform: translate(0, 0) rotate(var(--rot, 0deg)) scale(1);
+    }
+  }
+
+  @keyframes strip-drift {
+    from { translate: calc(26px + var(--i) * 3px) 0; }
+    to   { translate: calc(-26px - var(--i) * 3px) 0; }
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      .strip__card {
+        animation: strip-deal linear both;
+        animation-timeline: view();
+        /* Dealt out well before the section settles, so it reads as arrival
+           rather than something still happening while you read.
+
+           Staggered by shifting each card's range, not by animation-delay: a
+           delay is measured in time, and a scrubbed animation has no clock for
+           it to run against, so it is ignored outright. The first attempt used
+           one and every card dealt in unison. */
+        animation-range-start: entry calc(6% + var(--i) * 3%);
+        animation-range-end: cover calc(26% + var(--i) * 3%);
+      }
+
+      .strip__item {
+        animation: strip-drift linear both;
+        animation-timeline: view();
+        animation-range: cover;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .strip__img { transition: none; }
   }
 </style>

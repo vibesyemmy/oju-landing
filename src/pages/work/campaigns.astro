@@ -25,6 +25,7 @@ import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import { Image, getImage } from 'astro:assets';
 import { CAMPAIGNS } from '../../data/site';
+import { tilt } from '../../lib/tilt';
 
 const files = import.meta.glob<{ default: ImageMetadata }>(
   '../../assets/campaigns/*.{webp,png,jpg,jpeg}',
@@ -33,34 +34,13 @@ const files = import.meta.glob<{ default: ImageMetadata }>(
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-/**
- * The tilt of each piece on the board, derived from its filename.
- *
- * Seeded rather than random on purpose: a random angle is re-rolled on every
- * render, so the whole wall would reshuffle between builds and between a page
- * and its own reload. From the filename it is stable forever, and a piece keeps
- * its angle when the set around it is filtered.
- */
-const hash = (str: string) => {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i += 1) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-};
-/** Spread over a range, to 2dp, avoiding a dead-centre 0 that reads as unset. */
-const spread = (str: string, range: number) =>
-  Number((((hash(str) % 2000) / 1000 - 1) * range).toFixed(2));
-
 const pieces = CAMPAIGNS.map((c) => {
   const hit = Object.keys(files).find((k) => k.endsWith(`/${c.image}`));
   return {
     ...c,
     id: slug(c.client),
     img: hit ? files[hit].default : undefined,
-    rot: spread(c.image, 4.2),
-    dy: spread(`${c.image}y`, 14),
+    ...tilt(c.image),
   };
 });
 
