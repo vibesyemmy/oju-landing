@@ -16,12 +16,16 @@
  *
  * WCAG 2.2.2 wants a way to stop anything that moves by itself for more than
  * five seconds, so the pause control is a requirement rather than a nicety. It
- * sits above the frame's link overlay so it can actually be clicked, and it
  * also stops on hover, on focus and when the tab is hidden.
  *
- * The whole frame is still one link, as a stretched pseudo-element on the real
- * anchor — wrapping the section would fold the heading and every caption into
- * that link's name.
+ * Two things lead to the gallery: the rack and the button under the heading.
+ * Not the whole section — a sheet stretched over everything makes the heading
+ * and the lede look clickable when they are not, and it had to be switched off
+ * on touch because an invisible layer over the rack swallows a swipe.
+ *
+ * The rack's anchor is hidden from assistive tech and out of the tab order: it
+ * wraps only decorative images and goes where the visible button already goes,
+ * so announcing it twice would be noise.
  */
 import { Image } from 'astro:assets';
 import { CAMPAIGNS } from '../data/site';
@@ -86,7 +90,7 @@ const INTERVAL = 3600;
     </div>
   </div>
 
-  <div class="flow">
+  <a class="flow" href="/work/campaigns/" aria-hidden="true" tabindex="-1">
     <ul class="flow__track">
       {
         pieces.map((p, i) => (
@@ -104,15 +108,12 @@ const INTERVAL = 3600;
         ))
       }
     </ul>
-  </div>
+  </a>
 </section>
 
 <style>
   .frame {
     position: relative;
-  }
-  @media (hover: hover) {
-    .frame { cursor: pointer; }
   }
 
   .frame__actions {
@@ -137,28 +138,15 @@ const INTERVAL = 3600;
     transition: border-color 200ms ease;
   }
 
-  /* The whole frame is the target, as a stretched pseudo-element: one link,
-     with the name the anchor already has. */
-  .strip-cta::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-  }
-  /* Touch has no hover, and an overlay across the rack swallows a swipe on it. */
-  @media (hover: none) {
-    .strip-cta::after { display: none; }
-  }
-
-  .frame:hover .strip-cta,
+  /* Hovering the rack lights the button, so it reads as the same destination
+     rather than two unrelated targets. */
+  .frame:has(.flow:hover) .strip-cta,
+  .strip-cta:hover,
   .strip-cta:focus-visible {
     border-color: var(--color-ink);
   }
 
-  /* Above the overlay, or the link would swallow it. */
   .flow__pause {
-    position: relative;
-    z-index: 2;
     width: 44px;
     height: 44px;
     flex: none;
@@ -194,7 +182,9 @@ const INTERVAL = 3600;
 
   /* ── the rack ───────────────────────────────────────────────────── */
   .flow {
+    display: block;
     position: relative;
+    cursor: pointer;
     margin-top: 2.5rem;
     height: 300px;
     /* The depth of the room. Shallower than the classic cover flow, because a
@@ -240,15 +230,24 @@ const INTERVAL = 3600;
     box-shadow:
       0 2px 8px rgb(23 22 15 / 0.08),
       0 22px 48px rgb(23 22 15 / 0.14);
+    transition: box-shadow 350ms ease;
   }
   @media (min-width: 768px) {
     .flow__img { height: 300px; }
   }
 
+  /* The whole rack lifts together, because the whole rack is one target. */
+  .flow:hover .flow__img {
+    box-shadow:
+      0 6px 14px rgb(23 22 15 / 0.1),
+      0 30px 62px rgb(23 22 15 / 0.18);
+  }
+
   /* No motion at all where it is not wanted: the rack lays out once, flat and
      evenly spaced, and never advances. */
   @media (prefers-reduced-motion: reduce) {
-    .flow__item { transition: none; }
+    .flow__item,
+    .flow__img { transition: none; }
   }
 </style>
 
