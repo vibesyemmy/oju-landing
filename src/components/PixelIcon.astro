@@ -2,11 +2,14 @@
 /**
  * A small animated pixel icon for the method stages.
  *
- * Drawn on the same square-cell principle as the fires, but at a 4px pitch
- * rather than the 9px the fire uses. That is deliberate: 9px cells are what
- * fire is made of on this site, and at icon size a 9px cell gives about six
- * cells across, which is not enough to draw anything legible. An icon is a
- * glyph rather than a substance, so it gets its own pitch and its own count.
+ * Nine cells at a 6px pitch: a 54px icon whose pixels are big enough to read
+ * as pixels. That is the whole constraint — chunky cells and a small icon
+ * leave very few of them, so the glyph has to be drawn at the size a 7-cell
+ * circle allows rather than at the size a detailed one would want.
+ *
+ * Colours are the fireball's, imported from src/lib/fire.ts: a cool rim and a
+ * hot centre, the same structure the fire itself has. The glass is blue with a
+ * navy handle, and what the scan turns up runs orange to yellow.
  *
  * The rim is drawn with the midpoint circle algorithm rather than by
  * thresholding a distance field. The latter is the obvious way to do it and it
@@ -14,9 +17,6 @@
  * in places, because rounding a smooth function is not the same problem as
  * drawing a circle. Midpoint gives the canonical pixel circle, symmetric in
  * all eight octants.
- *
- * Colour is read from the page's own tokens, so an icon cannot drift from the
- * ink and accent around it.
  *
  * Discovery: a glass with a line scanning down through it, and a cell that
  * catches when the scan passes over it — looking, then finding. The scan runs
@@ -50,12 +50,11 @@ const { name, label, class: className = '' } = Astro.props;
 </style>
 
 <script>
-  /** Cells across, and css px per cell. 16 × 4 = a 64px icon.
-      The count matters more than the pitch: at 12 cells the lens was seven
-      across and a circle that coarse reads as a rounded square. Sixteen buys
-      a lens of ten, which is round enough to be a glass. */
-  const GRID = 16;
-  const PIXEL = 4;
+  import { BLUE, NAVY, ORANGE, YELLOW } from '../lib/fire';
+
+  /** Cells across, and css px per cell. 9 × 6 = a 54px icon. */
+  const GRID = 9;
+  const PIXEL = 6;
   /** One animation frame. 8fps: deliberate, not a flicker. */
   const BEAT_MS = 125;
 
@@ -66,10 +65,6 @@ const { name, label, class: className = '' } = Astro.props;
     if (!ctx) continue;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    const cs = getComputedStyle(document.documentElement);
-    const ink = cs.getPropertyValue('--color-ink').trim() || '#17160f';
-    const accent = cs.getPropertyValue('--color-accent').trim() || '#a53d00';
-    const faint = cs.getPropertyValue('--color-faint').trim() || '#5d594f';
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const size = GRID * PIXEL;
@@ -84,9 +79,9 @@ const { name, label, class: className = '' } = Astro.props;
        at any size and the two always meet. */
     // Integer centre and radius: the midpoint algorithm wants both, and an
     // off-grid centre is what makes a small pixel circle look lopsided.
-    const CX = 6;
-    const CY = 6;
-    const R = 5;
+    const CX = 3;
+    const CY = 3;
+    const R = 3;
 
     const rim = new Set<string>();
     {
@@ -110,21 +105,17 @@ const { name, label, class: className = '' } = Astro.props;
     const lens: [number, number][] = [];
     for (let x = 0; x < GRID; x += 1) {
       for (let y = 0; y < GRID; y += 1) {
-        if (rim.has(`${x},${y}`)) ring.push([x, y, ink]);
+        if (rim.has(`${x},${y}`)) ring.push([x, y, BLUE]);
         else if (Math.hypot(x - CX, y - CY) < R - 0.5) lens.push([x, y]);
       }
     }
-    // Handle: down the diagonal from the rim toward the corner, two cells
-    // wide so it does not read as a dotted line at this pitch.
+    /* Handle: straight down the diagonal from the rim to the corner. It starts
+       clear of the rim rather than on it — the handle is painted after the
+       ring, so an overlapping first cell silently ate the rim's bottom-right
+       corner and left the circle with a bite out of it. Diagonally adjacent is
+       enough to read as joined. */
     const handle: Cell[] = [];
-    for (let t = 0; t <= 5; t += 1) {
-      const x = Math.round(CX + (R + 0.2 + t * 0.8) * 0.707);
-      const y = Math.round(CY + (R + 0.2 + t * 0.8) * 0.707);
-      if (x < GRID && y < GRID) {
-        handle.push([x, y, ink]);
-        if (x + 1 < GRID) handle.push([x + 1, y, ink]);
-      }
-    }
+    for (let t = CX + R; t < GRID; t += 1) handle.push([t, t, NAVY]);
 
     /** The cell the scan turns up. Below and right of centre, so the scan has
         somewhere to travel before it gets there. */
@@ -147,7 +138,7 @@ const { name, label, class: className = '' } = Astro.props;
 
       for (const [x, y] of lens) {
         if (sweeping && y === row) {
-          ctx.fillStyle = faint;
+          ctx.fillStyle = ORANGE;
           ctx.fillRect(x * PIXEL, y * PIXEL, PIXEL - 1, PIXEL - 1);
         }
       }
@@ -155,7 +146,7 @@ const { name, label, class: className = '' } = Astro.props;
       // What the scan turned up stays lit once passed, and rests lit between
       // sweeps — the icon is never a bare outline for long.
       if (found) {
-        ctx.fillStyle = accent;
+        ctx.fillStyle = YELLOW;
         ctx.fillRect(find[0] * PIXEL, find[1] * PIXEL, PIXEL - 1, PIXEL - 1);
       }
 
