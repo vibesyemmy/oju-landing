@@ -5,8 +5,10 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import vercel from '@astrojs/vercel';
 
-// TODO: swap for the real domain once it is registered.
-const SITE = 'https://oju.studio';
+// www, not the apex: ojustudio.com 308-redirects to www.ojustudio.com in
+// production, so canonical tags and sitemap entries pointing at the apex would
+// name a URL that never serves a page directly.
+const SITE = 'https://www.ojustudio.com';
 
 export default defineConfig({
   site: SITE,

@@ -129,7 +129,7 @@ true. Add one whenever you invent something.
 
 Nothing is invented any more — the case studies are real and the team section
 is hidden rather than fictional. What remains is three known-outstanding items,
-all of which the report lists: the `oju.studio` domain and email are not
+all of which the report lists: the `ojustudio.com` email is not
 registered, there is no `/og.png` so links unfurl bare, and the client strip has
 no names in it.
 
@@ -143,17 +143,19 @@ vouch for a fact nobody marked, so mark them as you go.
       them the most dangerous placeholder here: every other one is a visible
       `[BRACKET]`, this one is not. Set `TEAM = []` to hide the section instead.
 - [ ] Replace the hero wall imagery in `src/assets/wall/` — currently placeholders
-- [ ] Register `oju.studio` — the contact email is displayed everywhere and
-      does not resolve, and the contact form's fallback is "email us directly"
+- [ ] Add MX records for `ojustudio.com`. The domain resolves and serves the
+      site, but publishes no MX, so `hello@ojustudio.com` bounces — and that
+      address is the fallback shown whenever the contact form fails.
 - [ ] Work through `npm run placeholders` until it reports none — they are real facts still owed, not styling
 - [ ] Real project data in `src/content/work/` (delete `project-one.mdx`)
 - [ ] `CLIENTS` in `src/data/site.ts` — empty array currently hides the strip
 - [ ] `/og.png` at 1200×630
 - [ ] Real domain in `astro.config.mjs` (`SITE`)
 - [ ] Set `CONTACT_WEBHOOK_URL` in the Vercel project
-- [ ] Point `SITE` in `astro.config.mjs` at the real domain — canonical tags
-      and every sitemap entry currently claim `https://oju.studio`, which does
-      not resolve
+- [ ] Set `PUBLIC_BRANDFETCH_CLIENT_ID` in Vercel, or add the last two logos as
+      files — Kairos Capital and GeoTravel render as wordmarks without either
+- [x] `SITE` points at `https://www.ojustudio.com`. The apex 308-redirects to
+      www, so www is the canonical host.
 - [ ] Contact form endpoint
 
 ## Where the portfolio PDF landed

@@ -21,7 +21,7 @@ const post = async (fields, { json = true, env = {} } = {}) => {
   else delete process.env.CONTACT_WEBHOOK_URL;
   try {
     return await POST({
-      request: new Request('https://oju.studio/api/contact', {
+      request: new Request('https://www.ojustudio.com/api/contact', {
         method: 'POST',
         body,
         headers: json ? { accept: 'application/json' } : {},

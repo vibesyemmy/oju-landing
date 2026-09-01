@@ -96,7 +96,7 @@ export const POST: APIRoute = async ({ request }) => {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        source: 'oju.studio/contact',
+        source: 'ojustudio.com/contact',
         receivedAt: new Date().toISOString(),
         name,
         email,

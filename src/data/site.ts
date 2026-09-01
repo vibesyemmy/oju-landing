@@ -4,8 +4,10 @@ export const SITE = {
   city: 'Lagos',
   country: 'Nigeria',
   timezone: 'Africa/Lagos',
-  // TODO: real address once the domain is registered.
-  email: 'hello@oju.studio',
+  // TODO: ojustudio.com publishes no MX records, so this address does not
+  // receive mail yet. It is shown as the fallback whenever the contact form
+  // fails, which makes it the second broken path rather than the safety net.
+  email: 'hello@ojustudio.com',
   description:
     'Ojú is a design, product and engineering studio in Lagos. Interfaces, brand systems, ' +
     'and the software underneath, drawn and shipped by one team.',
