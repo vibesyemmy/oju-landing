@@ -84,23 +84,39 @@ Not everything on a board is a logo. Lingawa's "new brand" file is phone
 screenshots on pink, and Gangan's main logo file is a wall of applications.
 Look before cropping.
 
-## Why not Brandfetch (or a logo CDN generally)
+## Brandfetch, as a gap-filler only
 
-Considered and rejected in favour of self-hosting.
+Self-hosted logos always win. Brandfetch fills gaps for clients that have a
+`domain` and no local file, and only when `PUBLIC_BRANDFETCH_CLIENT_ID` is set.
+Without the key, or when a logo is missing, the row shows a wordmark.
 
-Their Logo API would fill every gap here for free, and would keep a mark current
-if a client rebrands — a real advantage, since a stale logo on a client wall is
-worse than no logo. But their usage guidelines require **hotlinking**:
+**Currently unverified.** Brandfetch refuses these requests from localhost —
+zero bytes in 27ms, while an unrelated external image on the same page loads
+fine. That matches their `hotlink_blocked` error: the referer must be a host
+they serve logo traffic for. It can only be confirmed once the site is on its
+real domain, and the client ID may need that domain registered in the Brandfetch
+dashboard. Until then every remote logo falls back to a wordmark, which is the
+correct failure.
+
+Two things to keep in mind if it does light up:
+
+- `fallback/404` is mandatory. The default fallback for an icon is *Brandfetch's
+  own logo*, so an unrecognised domain would silently put their mark in the
+  client wall as though it were a client.
+- Only add a `domain` you can evidence. A wrong guess that happens to belong to
+  a real company shows a stranger's logo, which is worse than a wordmark.
+
+### The tradeoff this accepts
+
+Their Logo API fills gaps for free and keeps a mark current if a client
+rebrands — a real advantage, since a stale logo is worse than no logo. But their
+usage guidelines require **hotlinking**:
 programmatic access is explicitly not permitted, caching needs a sales
 conversation, and there is a dedicated `automated_traffic` error for requests
 that do not come from an `<img>` tag in a live page.
 
-That would put a third-party origin on the homepage's critical path, take those
-images out of Astro's pipeline, send viewer IPs to a third party, and leave the
-client wall dependent on somebody else's uptime, pricing and terms. Everything
-else on this site is self-hosted, and the client wall is not the place to break
-that.
-
-So logos arrive one file at a time, from the clients or from the original
-project files. The row is built for exactly that: a client with no logo renders
-as a wordmark, and nothing looks unfinished while the collection fills up.
+So these images sit on the homepage's critical path from a third-party origin,
+outside Astro's pipeline, and send viewer IPs to Brandfetch. That is the cost of
+filling the gaps this way. Self-hosted files remain preferable wherever they can
+be obtained — replacing a remote logo is just adding the file and dropping the
+`domain`.

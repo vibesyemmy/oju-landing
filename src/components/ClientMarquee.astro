@@ -31,7 +31,40 @@ const resolve = (logo?: string) => {
   return hit ? files[hit].default : undefined;
 };
 
-const clients = CLIENTS.map((c) => ({ ...c, img: resolve(c.logo) }));
+/**
+ * Brandfetch's client ID is not a secret — their terms require it embedded in a
+ * live page's img src, so PUBLIC_ is correct and required. Absent, every remote
+ * logo simply falls back to its wordmark.
+ */
+const BRANDFETCH = import.meta.env.PUBLIC_BRANDFETCH_CLIENT_ID;
+
+/**
+ * `type/logo` is the horizontal lockup, which is what a single row wants.
+ *
+ * `fallback/404` is not optional: the default fallback for an icon is
+ * *Brandfetch's own logo*, so an unrecognised domain would quietly put their
+ * mark in the client wall as though it were a client. A 404 lets the img fail,
+ * and the failure swaps in the wordmark.
+ *
+ * Parameter order follows their documented example (h, fallback, type).
+ *
+ * UNVERIFIED IN DEVELOPMENT. Brandfetch refuses these requests from localhost —
+ * zero bytes, 27ms, while an unrelated external image on the same page loads
+ * normally. Their error table calls this `hotlink_blocked`: the referer has to
+ * be a host they serve logo traffic for. It cannot be confirmed until the site
+ * runs on its real domain, and the client ID may need that domain registered in
+ * the Brandfetch dashboard first. Every one of these currently falls back to a
+ * wordmark, which is the correct failure and is what visitors see today.
+ */
+const remoteLogo = (domain: string) =>
+  `https://cdn.brandfetch.io/domain/${domain}/h/68/fallback/404/type/logo?c=${BRANDFETCH}`;
+
+const clients = CLIENTS.map((c) => ({
+  ...c,
+  img: resolve(c.logo),
+  // Self-hosted always wins; remote only fills gaps.
+  remote: !c.logo && c.domain && BRANDFETCH ? remoteLogo(c.domain) : undefined,
+}));
 
 /** Slow enough to read, and scaled to the list so adding clients does not speed it up. */
 const DURATION = Math.max(40, clients.length * 4);
@@ -47,7 +80,7 @@ const DURATION = Math.max(40, clients.length * 4);
           {[0, 1].map((copy) => (
             <ul class="marquee__track" aria-hidden={copy === 1 ? 'true' : undefined}>
               {clients.map((c) => (
-                <li class="client">
+                <li class="client" data-remote={c.remote ? '' : undefined}>
                   {c.img ? (
                     <Image
                       src={c.img}
@@ -58,6 +91,23 @@ const DURATION = Math.max(40, clients.length * 4);
                       decoding="async"
                       class:list={['client__logo', c.tile && 'client__logo--tile']}
                     />
+                  ) : c.remote ? (
+                    <>
+                      {/* Inline onerror rather than a listener: the image can
+                          fail before any script runs, and a missing logo must
+                          never leave a gap in the row. */}
+                      <img
+                        src={c.remote}
+                        alt={c.name}
+                        height="34"
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        class="client__logo"
+                        onerror="this.closest('.client').classList.add('is-missing')"
+                      />
+                      <span class="client__name font-display">{c.name}</span>
+                    </>
                   ) : (
                     <span class="client__name font-display">{c.name}</span>
                   )}
@@ -175,6 +225,12 @@ const DURATION = Math.max(40, clients.length * 4);
     .client__name { font-size: 1.375rem; }
   }
   .client:hover .client__name { color: var(--color-ink); }
+
+  /* A remote logo hides its wordmark until the image fails, at which point the
+     wordmark takes over and the image is removed from the row entirely. */
+  .client[data-remote] .client__name { display: none; }
+  .client[data-remote].is-missing .client__logo { display: none; }
+  .client[data-remote].is-missing .client__name { display: block; }
 
   @media (prefers-reduced-motion: reduce) {
     .marquee {

@@ -62,6 +62,16 @@ export interface Client {
    * blocks, so they keep their weight instead.
    */
   tile?: boolean;
+  /**
+   * Domain for the Brandfetch Logo API, used only when no self-hosted `logo`
+   * exists. Their terms require hotlinking, so these load from their CDN at
+   * runtime rather than through Astro's pipeline.
+   *
+   * Only add a domain you can actually evidence. A wrong guess that happens to
+   * belong to a real company puts a stranger's logo in the client wall, which
+   * is far worse than a wordmark.
+   */
+  domain?: string;
 }
 
 /**
@@ -78,17 +88,17 @@ export const CLIENTS: readonly Client[] = [
   { name: 'Union Bank', logo: 'union-bank.png', tile: true },
   { name: 'Sterling Bank', logo: 'sterling-bank.png' },
   { name: 'KFC', logo: 'kfc.png' },
-  { name: 'Sabi' },
-  { name: 'HydrogenPay' },
-  { name: 'VFD Microfinance Bank' },
+  { name: 'Sabi', domain: 'sabi.am' },
+  { name: 'HydrogenPay', domain: 'hydrogenpay.com' },
+  { name: 'VFD Microfinance Bank', domain: 'vfdbank.com' },
   { name: 'Consolidated Hallmark Insurance' },
-  { name: 'Kairos Capital' },
-  { name: 'Lingawa' },
+  { name: 'Kairos Capital', domain: 'kairoscapitalng.com' },
+  { name: 'Lingawa', domain: 'lingawa.com' },
   { name: 'Gangan', logo: 'gangan.png' },
-  { name: 'Harcourt Hotels & Resorts' },
-  { name: 'GeoTravel' },
+  { name: 'Harcourt Hotels & Resorts', domain: 'harcourt.com' },
+  { name: 'GeoTravel', domain: 'geotravel.tours' },
   { name: 'NEPAL Oil & Gas' },
-  { name: 'Insidify' },
+  { name: 'Insidify', domain: 'insidify.com' },
   { name: 'Country Homes' },
   { name: 'Butchers & Bakers' },
 ];
