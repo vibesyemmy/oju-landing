@@ -1,0 +1,197 @@
+---
+/**
+ * A small animated pixel icon for the method stages.
+ *
+ * Drawn on the same square-cell principle as the fires, but at a 4px pitch
+ * rather than the 9px the fire uses. That is deliberate: 9px cells are what
+ * fire is made of on this site, and at icon size a 9px cell gives about six
+ * cells across, which is not enough to draw anything legible. An icon is a
+ * glyph rather than a substance, so it gets its own pitch and its own count.
+ *
+ * The rim is drawn with the midpoint circle algorithm rather than by
+ * thresholding a distance field. The latter is the obvious way to do it and it
+ * looks wrong: at a ten-cell diameter it leaves the outline lumpy and doubled
+ * in places, because rounding a smooth function is not the same problem as
+ * drawing a circle. Midpoint gives the canonical pixel circle, symmetric in
+ * all eight octants.
+ *
+ * Colour is read from the page's own tokens, so an icon cannot drift from the
+ * ink and accent around it.
+ *
+ * Discovery: a glass with a line scanning down through it, and a cell that
+ * catches when the scan passes over it — looking, then finding. The scan runs
+ * at 8fps, slow enough to read as deliberate rather than as a flicker.
+ *
+ * Under prefers-reduced-motion it draws one still frame with the scan parked
+ * and nothing found. It stops when scrolled out of view.
+ */
+interface Props {
+  /** Which glyph to draw. Only 'discovery' is drawn so far. */
+  name: 'discovery';
+  /** Accessible name, or omit to leave it decorative. */
+  label?: string;
+  class?: string;
+}
+
+const { name, label, class: className = '' } = Astro.props;
+---
+
+<canvas
+  class:list={['picon', className]}
+  data-picon={name}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}></canvas>
+
+<style>
+  .picon {
+    display: block;
+  }
+</style>
+
+<script>
+  /** Cells across, and css px per cell. 16 × 4 = a 64px icon.
+      The count matters more than the pitch: at 12 cells the lens was seven
+      across and a circle that coarse reads as a rounded square. Sixteen buys
+      a lens of ten, which is round enough to be a glass. */
+  const GRID = 16;
+  const PIXEL = 4;
+  /** One animation frame. 8fps: deliberate, not a flicker. */
+  const BEAT_MS = 125;
+
+  type Cell = [number, number, string];
+
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-picon]')) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) continue;
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const cs = getComputedStyle(document.documentElement);
+    const ink = cs.getPropertyValue('--color-ink').trim() || '#17160f';
+    const accent = cs.getPropertyValue('--color-accent').trim() || '#a53d00';
+    const faint = cs.getPropertyValue('--color-faint').trim() || '#5d594f';
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const size = GRID * PIXEL;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    canvas.width = Math.floor(size * dpr);
+    canvas.height = Math.floor(size * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    /* ── the glass ───────────────────────────────────────────────────
+       A ring from a radius and a handle from a line, so the circle is round
+       at any size and the two always meet. */
+    // Integer centre and radius: the midpoint algorithm wants both, and an
+    // off-grid centre is what makes a small pixel circle look lopsided.
+    const CX = 6;
+    const CY = 6;
+    const R = 5;
+
+    const rim = new Set<string>();
+    {
+      let x = R;
+      let y = 0;
+      let err = 0;
+      while (x >= y) {
+        for (const [dx, dy] of [
+          [x, y], [y, x], [-y, x], [-x, y],
+          [-x, -y], [-y, -x], [y, -x], [x, -y],
+        ]) {
+          rim.add(`${CX + dx},${CY + dy}`);
+        }
+        y += 1;
+        if (err <= 0) err += 2 * y + 1;
+        else { x -= 1; err -= 2 * x + 1; }
+      }
+    }
+
+    const ring: Cell[] = [];
+    const lens: [number, number][] = [];
+    for (let x = 0; x < GRID; x += 1) {
+      for (let y = 0; y < GRID; y += 1) {
+        if (rim.has(`${x},${y}`)) ring.push([x, y, ink]);
+        else if (Math.hypot(x - CX, y - CY) < R - 0.5) lens.push([x, y]);
+      }
+    }
+    // Handle: down the diagonal from the rim toward the corner, two cells
+    // wide so it does not read as a dotted line at this pitch.
+    const handle: Cell[] = [];
+    for (let t = 0; t <= 5; t += 1) {
+      const x = Math.round(CX + (R + 0.2 + t * 0.8) * 0.707);
+      const y = Math.round(CY + (R + 0.2 + t * 0.8) * 0.707);
+      if (x < GRID && y < GRID) {
+        handle.push([x, y, ink]);
+        if (x + 1 < GRID) handle.push([x + 1, y, ink]);
+      }
+    }
+
+    /** The cell the scan turns up. Below and right of centre, so the scan has
+        somewhere to travel before it gets there. */
+    const find: [number, number] = [Math.round(CX) + 1, Math.round(CY) + 2];
+
+    const top = Math.ceil(CY - R);
+    const span = Math.round(2 * R);
+    /** Sweep, then a short rest before starting over. A long rest leaves the
+        icon sitting as a bare outline for most of its cycle. */
+    const CYCLE = span + 5;
+
+    const paint = (beat: number) => {
+      ctx.clearRect(0, 0, size, size);
+
+      // The scan line's row, sweeping the lens top to bottom then resting.
+      const phase = beat % CYCLE;
+      const row = top + Math.min(phase, span);
+      const sweeping = phase <= span;
+      const found = !sweeping || row >= find[1];
+
+      for (const [x, y] of lens) {
+        if (sweeping && y === row) {
+          ctx.fillStyle = faint;
+          ctx.fillRect(x * PIXEL, y * PIXEL, PIXEL - 1, PIXEL - 1);
+        }
+      }
+
+      // What the scan turned up stays lit once passed, and rests lit between
+      // sweeps — the icon is never a bare outline for long.
+      if (found) {
+        ctx.fillStyle = accent;
+        ctx.fillRect(find[0] * PIXEL, find[1] * PIXEL, PIXEL - 1, PIXEL - 1);
+      }
+
+      for (const [x, y, colour] of [...ring, ...handle]) {
+        ctx.fillStyle = colour;
+        ctx.fillRect(x * PIXEL, y * PIXEL, PIXEL - 1, PIXEL - 1);
+      }
+    };
+
+    let beat = 0;
+    let frame: number | undefined;
+    let last = 0;
+
+    const draw = (now: number) => {
+      frame = requestAnimationFrame(draw);
+      if (now - last < BEAT_MS) return;
+      last = now;
+      beat += 1;
+      paint(beat);
+    };
+
+    const start = () => {
+      if (frame === undefined && !reduced.matches) frame = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame);
+      frame = undefined;
+    };
+
+    // A still frame first, so the icon is drawn whether or not it animates.
+    paint(reduced.matches ? CYCLE - 1 : 0);
+
+    new IntersectionObserver((entries) => {
+      for (const e of entries) (e.isIntersecting ? start() : stop());
+    }).observe(canvas);
+
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+  }
+</script>

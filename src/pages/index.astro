@@ -29,6 +29,7 @@ import ImpactCarousel from '../components/ImpactCarousel.astro';
 import WorkEvidence from '../components/WorkEvidence.astro';
 import CampaignStrip from '../components/CampaignStrip.astro';
 import ClientMarquee from '../components/ClientMarquee.astro';
+import PixelIcon from '../components/PixelIcon.astro';
 import { HONEST, PROCESS, SITE } from '../data/site';
 ---
 
@@ -135,9 +136,12 @@ import { HONEST, PROCESS, SITE } from '../data/site';
 
       <ol class="steps">
         {
-          PROCESS.map((step) => (
+          PROCESS.map((step, i) => (
             <li class="step">
               <span class="font-mono text-[11px] tracking-[0.16em] text-accent">{step.num}</span>
+              {/* One stage first, to settle the drawing before the other three
+                  are made to match it. */}
+              {i === 0 && <PixelIcon name="discovery" class="step__icon" />}
               <h3 class="font-display mt-3 text-[20px] tracking-[-0.02em] md:text-[22px]">
                 {step.title}
               </h3>
@@ -244,6 +248,10 @@ import { HONEST, PROCESS, SITE } from '../data/site';
     line-height: 1.1;
     letter-spacing: -0.03em;
     text-wrap: balance;
+  }
+
+  .step__icon {
+    margin-top: 0.875rem;
   }
 
   .steps {
