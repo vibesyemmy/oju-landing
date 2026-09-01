@@ -18,8 +18,8 @@
  * somewhere say so, tiles that do not just carry their name.
  */
 import { getCollection } from 'astro:content';
-import { Image } from 'astro:assets';
-import { SELECTED_WORK } from '../data/site';
+import { Image, getImage } from 'astro:assets';
+import { SELECTED_WORK, CAMPAIGNS } from '../data/site';
 
 const entries = (await getCollection('work', ({ data }) => !data.draft)).sort(
   (a, b) => a.data.order - b.data.order || b.data.year - a.data.year,
@@ -29,13 +29,27 @@ const files = import.meta.glob<{ default: ImageMetadata }>(
   '../assets/work-selected/*.{webp,png,jpg,jpeg}',
   { eager: true },
 );
+const campaignFiles = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/campaigns/*.{webp,png,jpg,jpeg}',
+  { eager: true },
+);
+const pick = (
+  glob: Record<string, { default: ImageMetadata }>,
+  name?: string,
+) => {
+  if (!name) return undefined;
+  const hit = Object.keys(glob).find((k) => k.endsWith(`/${name}`));
+  return hit ? glob[hit].default : undefined;
+};
 
 type Tile = {
   title: string;
   meta: string;
   img?: ImageMetadata;
   href?: string;
-  /** What the cursor promises. Absent means the tile is not a link. */
+  /** Opens the viewer on this project's set, for work without a case study. */
+  setIndex?: number;
+  /** What the cursor promises. */
   action?: string;
   external?: boolean;
 };
@@ -48,33 +62,57 @@ const caseStudies: Tile[] = entries.map((e) => ({
   action: 'Read the case study',
 }));
 
-const projects: Tile[] = SELECTED_WORK.map((p) => {
-  const hit = Object.keys(files).find((k) => k.endsWith(`/${p.image}`));
+/**
+ * Everything the studio has for a company, gathered into one set: the project
+ * image, then any campaign pieces run for the same client. A project without a
+ * case study is no longer a dead tile — it opens what there is.
+ */
+const sets = SELECTED_WORK.map((p) => {
+  const own = pick(files, p.image);
+  const campaigns = CAMPAIGNS.filter((c) => c.client === p.name).map((c) => ({
+    img: pick(campaignFiles, c.image),
+    caption: c.caption,
+  }));
   return {
     title: p.name,
-    meta: p.services.join(' · '),
-    img: hit ? files[hit].default : undefined,
-    href: p.prototype,
-    action: p.prototype ? 'View the prototype' : undefined,
-    external: Boolean(p.prototype),
+    line: p.line,
+    prototype: p.prototype,
+    shots: [
+      ...(own ? [{ img: own, caption: p.services.join(' · ') }] : []),
+      ...campaigns.filter((c) => c.img),
+    ] as { img: ImageMetadata; caption: string }[],
   };
 });
 
+const projects: Tile[] = sets.map((set, i) => ({
+  title: set.title,
+  meta: SELECTED_WORK[i].services.join(' · '),
+  img: set.shots[0]?.img,
+  setIndex: i,
+  action: set.shots.length > 1 ? `View ${set.shots.length} pieces` : 'View the work',
+}));
+
 const tiles = [...caseStudies, ...projects].filter((t) => t.img);
-const withPages = tiles.filter((t) => t.href).length;
+
+/* Flattened, because the viewer holds every slide and shows one set at a time.
+   Resolved at build time and parked in data attributes: an image inside a
+   closed dialog is fetched like any other, so a src here would pull all of
+   them on every visit. */
+const slides = sets.flatMap((set, si) =>
+  set.shots.map((shot) => ({ ...shot, set: si, title: set.title })),
+);
+const shotUrls = await Promise.all(
+  slides.map((s) => getImage({ src: s.img, widths: [600, 900, 1400], format: 'webp' })),
+);
 ---
 
 <section class="gallery-wrap rule-t gutter py-14 md:py-22" aria-labelledby="work-heading">
-  <div class="mb-9 flex flex-wrap items-baseline justify-between gap-4 md:mb-14">
-    <h1 id="work-heading" class="font-display text-[44px] leading-tight tracking-tight md:text-[78px]">
-      Selected work
-    </h1>
-    <p class="label">
-      {String(tiles.length).padStart(2, '0')} projects
-      <span aria-hidden="true"> · </span>
-      {withPages} you can open
-    </p>
-  </div>
+  <h1
+    id="work-heading"
+    class="font-display mb-9 text-[44px] leading-tight tracking-tight md:mb-14 md:text-[78px]"
+  >
+    Selected work
+  </h1>
 
   <ul class="gallery" data-gallery>
     {
@@ -102,7 +140,7 @@ const withPages = tiles.filter((t) => t.href).length;
 
         return (
           <li
-            class:list={['tile', !t.href && 'tile--flat']}
+            class="tile"
             data-label={t.title}
             data-action={t.action ?? ''}
           >
@@ -110,14 +148,19 @@ const withPages = tiles.filter((t) => t.href).length;
               <a
                 class="tile__link"
                 href={t.href}
-                target={t.external ? '_blank' : undefined}
-                rel={t.external ? 'noopener noreferrer' : undefined}
                 aria-label={`${t.title} — ${t.action}`}
               >
                 {inner}
               </a>
             ) : (
-              <div class="tile__link">{inner}</div>
+              <button
+                type="button"
+                class="tile__link"
+                data-open-set={t.setIndex}
+                aria-label={`${t.title} — ${t.action}`}
+              >
+                {inner}
+              </button>
             )}
           </li>
         );
@@ -130,7 +173,70 @@ const withPages = tiles.filter((t) => t.href).length;
   <div class="magnet" data-magnet aria-hidden="true">
     <span class="magnet__label" data-magnet-label></span>
   </div>
+
+  {/* Everything the studio has for one company. A native <dialog> for Esc, the
+      focus trap, the inert background and the backdrop. */}
+  <dialog class="pv" aria-label="Project viewer" data-viewer>
+    <div class="pv__bar">
+      <p class="pv__counter font-mono">
+        <span data-pv-title></span>
+        <span class="pv__count" data-pv-count></span>
+      </p>
+      <button type="button" class="pv__btn" data-pv-close aria-label="Close viewer">
+        <svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <path d="M1 1 L14 14 M14 1 L1 14" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="pv__stage">
+      <button type="button" class="pv__btn pv__btn--nav" data-pv-prev aria-label="Previous piece">
+        <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <path d="M10.5 2 L4 8.5 L10.5 15" />
+        </svg>
+      </button>
+
+      <div class="pv__frame">
+        {
+          slides.map((s, i) => (
+            <img
+              class="pv__img"
+              alt={`${s.title} — ${s.caption}`}
+              width={s.img.width}
+              height={s.img.height}
+              sizes="(min-width: 1024px) 62vw, 92vw"
+              decoding="async"
+              data-pv-slide={i}
+              data-set={s.set}
+              data-src={shotUrls[i].src}
+              data-srcset={shotUrls[i].srcSet.attribute}
+              data-caption={s.caption}
+              hidden
+            />
+          ))
+        }
+      </div>
+
+      <button type="button" class="pv__btn pv__btn--nav" data-pv-next aria-label="Next piece">
+        <svg viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <path d="M6.5 2 L13 8.5 L6.5 15" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="pv__meta">
+      <p class="pv__caption" data-pv-caption></p>
+      <p class="pv__line" data-pv-line></p>
+      <a class="pv__proto" data-pv-proto href="#" target="_blank" rel="noopener noreferrer" hidden>
+        View the prototype <span aria-hidden="true">&#8599;</span>
+      </a>
+    </div>
+  </dialog>
 </section>
+
+<script is:inline define:vars={{ setMeta: sets.map((s) => ({ title: s.title, line: s.line, prototype: s.prototype ?? null, count: s.shots.length })) }}>
+  window.__ojuSets = setMeta;
+</script>
 
 <style>
   .gallery-wrap {
@@ -156,10 +262,18 @@ const withPages = tiles.filter((t) => t.href).length;
     position: relative;
   }
 
+  /* Buttons and anchors both, so they need levelling. */
   .tile__link {
     display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
     color: inherit;
     text-decoration: none;
+    cursor: pointer;
+    font: inherit;
   }
 
   .tile__frame {
@@ -211,14 +325,175 @@ const withPages = tiles.filter((t) => t.href).length;
     margin-top: 0.5rem;
   }
 
-  /* A tile with nowhere to go still belongs in the gallery, but it should not
-     invite a click it cannot answer. */
-  .tile--flat .tile__link { cursor: default; }
-
   .tile__link:focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 6px;
     border-radius: 4px;
+  }
+
+
+  /* ── the project viewer ─────────────────────────────────────────── */
+  .pv {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    /* Transparent, so the scrim is the backdrop and the gallery stays legible
+       behind it — the viewer is a layer over the page, not a new place. */
+    background: transparent;
+    color: var(--color-paper);
+    overflow: hidden;
+  }
+  .pv::backdrop {
+    background: rgb(23 22 15 / 0.84);
+    backdrop-filter: blur(4px) saturate(0.85);
+    -webkit-backdrop-filter: blur(4px) saturate(0.85);
+  }
+  .pv:not([open]) { display: none; }
+
+  .pv__bar {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    z-index: 3;
+  }
+  @media (min-width: 768px) {
+    .pv__bar { padding: 1.5rem 2rem; }
+  }
+
+  .pv__counter {
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .pv__count { color: rgb(242 239 233 / 0.55); }
+
+  .pv__btn {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgb(242 239 233 / 0.22);
+    border-radius: 50%;
+    background: none;
+    color: var(--color-paper);
+    cursor: pointer;
+    transition: border-color 200ms ease;
+  }
+  @media (min-width: 768px) {
+    .pv__btn { width: 56px; height: 56px; }
+  }
+  .pv__btn svg { width: 15px; height: 15px; }
+  .pv__btn:hover { border-color: rgb(242 239 233 / 0.55); }
+  .pv__btn:focus-visible { outline: 2px solid var(--color-paper); outline-offset: 3px; }
+  /* On a phone two 44px arrows flanking the frame take 88px of 375 and the
+     piece is left width-starved. They come out of the row and sit over the
+     artwork's edges instead — safe here, because a tap on the artwork does
+     nothing: only the stage and the ground around it close the viewer. */
+  @media (max-width: 767px) {
+    .pv__btn--nav {
+      position: absolute;
+      top: 44%;
+      background: rgb(23 22 15 / 0.5);
+      backdrop-filter: blur(2px);
+    }
+    .pv__stage > .pv__btn--nav:first-of-type { left: 0.5rem; }
+    .pv__stage > .pv__btn--nav:last-of-type { right: 0.5rem; }
+  }
+
+  /* A set of one has nowhere to go. */
+  .pv.is-single .pv__btn--nav { display: none; }
+  .pv.is-single .pv__count { display: none; }
+
+  .pv__stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 4.5rem 0.75rem 8rem;
+  }
+  @media (min-width: 768px) {
+    .pv__stage { gap: 2.75rem; padding: 6rem 2rem 8.5rem; }
+  }
+
+  .pv__frame {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .pv__img {
+    grid-area: 1 / 1;
+    max-width: 100%;
+    /* Against the viewport, not the frame: a percentage height on a centred
+       flex item does not resolve against the stage's padded box. */
+    max-height: calc(100dvh - 12.5rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    box-shadow: 0 40px 90px rgb(0 0 0 / 0.5);
+    opacity: 0;
+    transition: opacity 260ms ease, transform 440ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (min-width: 768px) {
+    .pv__img { max-height: calc(100dvh - 14.5rem); }
+  }
+  .pv__img.is-current { opacity: 1; transform: none; }
+
+  .pv__meta {
+    position: absolute;
+    inset: auto 0 2.25rem 0;
+    text-align: center;
+    padding: 0 4.75rem;
+    z-index: 2;
+  }
+  @media (min-width: 768px) {
+    .pv__meta { padding: 0 2rem; bottom: 2.75rem; }
+  }
+  .pv__caption { font-size: 0.9375rem; line-height: 1.5; }
+  @media (min-width: 768px) {
+    .pv__caption { font-size: 1.0625rem; }
+  }
+  .pv__line {
+    margin: 0.5rem auto 0;
+    max-width: 56ch;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: rgb(242 239 233 / 0.55);
+  }
+  .pv__proto {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.875rem;
+    min-height: 2.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-paper);
+    text-decoration: none;
+    border-bottom: 1px solid rgb(242 239 233 / 0.4);
+  }
+  .pv__proto:hover { border-color: var(--color-paper); }
+  .pv__proto[hidden] { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pv__btn,
+    .pv__img { transition: none; }
   }
 
   /* ── the cursor ─────────────────────────────────────────────────── */
@@ -278,6 +553,114 @@ const withPages = tiles.filter((t) => t.href).length;
     .tile:hover .tile__img { transform: none; }
   }
 </style>
+
+<script>
+  /**
+   * The project viewer.
+   *
+   * A company without a case study still has work: its project image, plus any
+   * campaign pieces run for the same client. Opening a tile shows that set.
+   *
+   * Every slide for every project lives in the one dialog and is filtered to the
+   * open set, which keeps the markup static and the navigation trivial. None of
+   * them carries a src until it is wanted — an image inside a closed dialog is
+   * fetched like any other, so parking the URLs is what stops fifteen of them
+   * loading on a page nobody has interacted with.
+   */
+  const viewer = document.querySelector<HTMLDialogElement>('[data-viewer]');
+  const shots = [...document.querySelectorAll<HTMLImageElement>('[data-pv-slide]')];
+  const meta = (window as any).__ojuSets as
+    | { title: string; line: string; prototype: string | null; count: number }[]
+    | undefined;
+
+  if (viewer && shots.length && meta) {
+    const titleEl = viewer.querySelector<HTMLElement>('[data-pv-title]');
+    const countEl = viewer.querySelector<HTMLElement>('[data-pv-count]');
+    const captionEl = viewer.querySelector<HTMLElement>('[data-pv-caption]');
+    const lineEl = viewer.querySelector<HTMLElement>('[data-pv-line]');
+    const protoEl = viewer.querySelector<HTMLAnchorElement>('[data-pv-proto]');
+
+    let opener: HTMLElement | null = null;
+    let inSet: HTMLImageElement[] = [];
+    let at = 0;
+
+    const attach = (img?: HTMLImageElement) => {
+      if (!img || img.getAttribute('src')) return;
+      const { src, srcset } = img.dataset;
+      if (srcset) img.setAttribute('srcset', srcset);
+      if (src) img.setAttribute('src', src);
+    };
+
+    const render = () => {
+      const img = inSet[at];
+      attach(img);
+      attach(inSet[(at + 1) % inSet.length]);
+
+      shots.forEach((s) => {
+        const on = s === img;
+        s.hidden = !on;
+        s.classList.toggle('is-current', on);
+      });
+
+      if (countEl) countEl.textContent = inSet.length > 1 ? `  ${at + 1} / ${inSet.length}` : '';
+      if (captionEl) captionEl.textContent = img.dataset.caption ?? '';
+    };
+
+    const step = (d: number) => {
+      at = (at + d + inSet.length) % inSet.length;
+      render();
+    };
+
+    const open = (setIndex: number, from: HTMLElement) => {
+      const info = meta[setIndex];
+      inSet = shots.filter((s) => Number(s.dataset.set) === setIndex);
+      if (!inSet.length) return;
+
+      opener = from;
+      at = 0;
+      viewer.classList.toggle('is-single', inSet.length === 1);
+      if (titleEl) titleEl.textContent = info.title;
+      if (lineEl) lineEl.textContent = info.line ?? '';
+      if (protoEl) {
+        protoEl.hidden = !info.prototype;
+        if (info.prototype) protoEl.href = info.prototype;
+      }
+      render();
+      viewer.showModal();
+    };
+
+    document.querySelectorAll<HTMLButtonElement>('[data-open-set]').forEach((b) =>
+      b.addEventListener('click', () => open(Number(b.dataset.openSet), b)),
+    );
+
+    viewer.querySelector('[data-pv-prev]')?.addEventListener('click', () => step(-1));
+    viewer.querySelector('[data-pv-next]')?.addEventListener('click', () => step(1));
+    viewer.querySelector('[data-pv-close]')?.addEventListener('click', () => viewer.close());
+
+    viewer.addEventListener('keydown', (e) => {
+      if (inSet.length < 2) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    });
+
+    /* The ground around the artwork closes. The dialog fills the viewport, so
+       the backdrop never gets the click — the target is the dialog or the
+       padding around the frame. */
+    viewer.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      if (t === viewer || t.classList.contains('pv__stage') || t.classList.contains('pv__frame')) {
+        viewer.close();
+      }
+    });
+
+    /* Back to the tile that opened it, so a keyboard user lands where they
+       were rather than at the top of the gallery. */
+    viewer.addEventListener('close', () => {
+      opener?.focus();
+      opener = null;
+    });
+  }
+</script>
 
 <script>
   /**
