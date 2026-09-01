@@ -1,6 +1,13 @@
 ---
 /**
- * A trail of dithered blocks behind the pointer.
+ * A pixel fireball on the pointer, with a dithered trail behind the page.
+ *
+ * Two canvases, because the two want opposite stacking. The trail sits behind
+ * everything so sections and images occlude it; the fireball is the pointer, so
+ * it has to stay on top of whatever it is over. One canvas could not do both.
+ *
+ * The system cursor is left alone. Replacing it would cost the arrow, the text
+ * beam and the pointer over links — a lot of usable signal for a decoration.
  *
  * Ordered dithering rather than a blur or a fade: each cell is either drawn or
  * not, decided by a 4×4 Bayer threshold, which is what gives the texture its
@@ -11,11 +18,9 @@
  * whatever the display density and the pattern reads as pixels rather than as
  * artefacts.
  *
- * It sits behind the page. Sections, tiles and images occlude it, so it shows
- * through the paper between them and reads as texture in the margins rather
- * than as something drawn over the work. That also settles what would otherwise
- * be a clash with the work gallery's own cursor: the trail is simply behind the
- * tiles there.
+ * Behind the page, the trail reads as texture in the margins rather than as
+ * something drawn over the work — and it settles what would otherwise clash
+ * with the work gallery's own cursor, which is simply in front of it.
  *
  * Off entirely under prefers-reduced-motion and on touch — there is no pointer
  * to trail.
@@ -27,6 +32,7 @@
 ---
 
 <canvas class="dither" data-dither aria-hidden="true"></canvas>
+<canvas class="ember" data-ember aria-hidden="true"></canvas>
 
 <style>
   .dither {
@@ -40,19 +46,75 @@
     z-index: -1;
     pointer-events: none;
   }
+  /* The pointer itself, so it goes over everything it passes. */
+  .ember {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 60;
+    pointer-events: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .dither { display: none; }
+    .dither,
+    .ember { display: none; }
   }
   @media (hover: none) {
-    .dither { display: none; }
+    .dither,
+    .ember { display: none; }
   }
 </style>
 
 <script>
   const canvas = document.querySelector<HTMLCanvasElement>('[data-dither]');
+  const ember = document.querySelector<HTMLCanvasElement>('[data-ember]');
 
-  if (canvas && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (canvas && ember && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const ctx = canvas.getContext('2d', { alpha: true });
+    const ectx = ember.getContext('2d', { alpha: true });
+
+    /* ── the fireball ───────────────────────────────────────────────
+       Built from rings by radius rather than a hand-drawn grid, so it stays a
+       clean circle at any size and the palette is one list to change. The
+       flecks are hashed from the cell's own coordinates, not random: a fireball
+       that reshuffled every frame would boil. */
+    const SPRITE = 13;          // cells across
+    const PIXEL = 5;            // css px per cell
+    const NAVY = '#151c6b';
+    const BLUE = '#3757e8';
+    const ORANGE = '#ff8a1e';
+    const YELLOW = '#ffe500';
+    const RED = '#ff2f14';
+
+    const cellHash = (x: number, y: number) => {
+      const h = Math.imul(x * 374761393 + y * 668265263, 1274126177);
+      return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
+    };
+
+    /** One-time bake: [dx, dy, colour] for every lit cell of the sprite. */
+    const FIREBALL: [number, number, string][] = (() => {
+      const out: [number, number, string][] = [];
+      const mid = (SPRITE - 1) / 2;
+      for (let x = 0; x < SPRITE; x += 1) {
+        for (let y = 0; y < SPRITE; y += 1) {
+          const r = Math.hypot(x - mid, y - mid);
+          if (r > mid + 0.35) continue;
+          let colour: string;
+          if (r > mid - 0.9) colour = NAVY;
+          else if (r > mid - 2.1) colour = BLUE;
+          else if (r > mid - 3.2) colour = ORANGE;
+          else colour = YELLOW;
+          // Embers inside the core, and a little orange bleeding into the blue.
+          const n = cellHash(x, y);
+          if (colour === YELLOW && n > 0.82) colour = RED;
+          else if (colour === YELLOW && n > 0.66) colour = ORANGE;
+          else if (colour === BLUE && n > 0.88) colour = ORANGE;
+          out.push([x - mid, y - mid, colour]);
+        }
+      }
+      return out;
+    })();
 
     /** Block size in CSS pixels. Large enough to read as a pixel, not as noise. */
     const CELL = 9;
@@ -75,6 +137,12 @@
     let dpr = 1;
     let points: { x: number; y: number; born: number }[] = [];
     let frame: number | undefined;
+    /** Where the fireball is, and where it is heading. */
+    let fx = -999;
+    let fy = -999;
+    let tx = -999;
+    let ty = -999;
+    let seen = false;
     let ink = '#17160f';
     let accent = '#a53d00';
 
@@ -86,13 +154,36 @@
 
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.floor(innerWidth * dpr);
-      canvas.height = Math.floor(innerHeight * dpr);
-      ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+      for (const [c, cx] of [[canvas, ctx], [ember, ectx]] as const) {
+        c.width = Math.floor(innerWidth * dpr);
+        c.height = Math.floor(innerHeight * dpr);
+        cx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    };
+
+    const drawFireball = () => {
+      if (!ectx) return;
+      ectx.clearRect(0, 0, innerWidth, innerHeight);
+      if (!seen) return;
+      // Snapped to the pixel grid, or the sprite blurs across half-pixels and
+      // stops looking drawn.
+      const ox = Math.round(fx / PIXEL) * PIXEL;
+      const oy = Math.round(fy / PIXEL) * PIXEL;
+      for (const [dx, dy, colour] of FIREBALL) {
+        ectx.fillStyle = colour;
+        ectx.fillRect(ox + dx * PIXEL, oy + dy * PIXEL, PIXEL, PIXEL);
+      }
     };
 
     const draw = () => {
       if (!ctx) return;
+
+      // Eased rather than pinned to the pointer: the lag is what makes it read
+      // as a thing being carried along rather than a decal on the cursor.
+      fx += (tx - fx) * 0.22;
+      fy += (ty - fy) * 0.22;
+      drawFireball();
+
       ctx.clearRect(0, 0, innerWidth, innerHeight);
 
       const now = performance.now();
@@ -131,7 +222,11 @@
       }
       ctx.globalAlpha = 1;
 
-      if (points.length) frame = requestAnimationFrame(draw);
+      // Keep going while the trail lives or the fireball is still catching up.
+      // Once both settle the loop stops, and the last frame stays painted — the
+      // fireball is always on screen without always costing a frame.
+      const settled = Math.hypot(tx - fx, ty - fy) < 0.4;
+      if (points.length || !settled) frame = requestAnimationFrame(draw);
       else frame = undefined;
     };
 
@@ -141,6 +236,17 @@
 
     document.addEventListener('pointermove', (e) => {
       if (e.pointerType !== 'mouse') return;
+
+      tx = e.clientX;
+      ty = e.clientY;
+      if (!seen) {
+        // Arrive where the pointer already is, rather than flying in from the
+        // corner on the first move.
+        seen = true;
+        fx = tx;
+        fy = ty;
+      }
+      start();
 
       const last = points[points.length - 1];
       // Sampling by distance rather than by event keeps the tail even: a slow
@@ -152,9 +258,12 @@
       start();
     });
 
-    /* Nothing to trail toward once the pointer has gone, and a tab away should
-       not leave the last frame painted on the page. */
-    document.addEventListener('pointerleave', () => { points = []; });
+    /* The trail is a record of movement, so it goes when the pointer does. The
+       fireball stays where it was left: it is meant to be on screen always. */
+    document.addEventListener('pointerleave', () => {
+      points = [];
+      start();
+    });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { points = []; ctx?.clearRect(0, 0, innerWidth, innerHeight); }
     });
@@ -167,5 +276,8 @@
 
     readTokens();
     resize();
+    // A resize re-scales both canvases and wipes them, so the fireball is
+    // redrawn rather than left missing until the next pointer move.
+    window.addEventListener('resize', () => setTimeout(drawFireball, 140));
   }
 </script>
