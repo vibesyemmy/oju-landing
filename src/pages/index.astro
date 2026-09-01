@@ -17,12 +17,13 @@
  * The capability cards are gone. They were the clearest instance of the problem
  * (three columns of things we can do), the method section covers the same
  * ground as part of the argument, and /services holds the detail for anyone who
- * wants it. `HeroStatement` is still in the tree, one import swap away.
+ * wants it. `HeroSeam`, the hero this one replaced, is still in the tree one
+ * import swap away — it carries the seam device, which is the site's own mark.
  */
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import HeroSeam from '../components/HeroSeam.astro';
+import HeroFire from '../components/HeroFire.astro';
 import Argument from '../components/Argument.astro';
 import ImpactCarousel from '../components/ImpactCarousel.astro';
 import WorkEvidence from '../components/WorkEvidence.astro';
@@ -35,7 +36,7 @@ import { HONEST, PROCESS, SITE } from '../data/site';
   <SiteHeader />
 
   <main id="main">
-    <HeroSeam />
+    <HeroFire />
 
     <!-- The claim, then the evidence, before any of the reasoning. -->
     <section class="rule-t gutter pt-12 md:pt-18">

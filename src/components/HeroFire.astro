@@ -1,0 +1,316 @@
+---
+/**
+ * Homepage hero — the claim, standing in a wildfire.
+ *
+ * Replaces the seam device that used to sit under the headline. That drawing
+ * was the argument stated literally: two rules, design and engineering, closing
+ * at a marked join. This trades that for atmosphere, so the argument now rests
+ * entirely on the sentence and on the page beneath it.
+ *
+ * The fire is a front burning along the bottom edge, not a picture of one. Each
+ * column has its own flame height, driven by slow lateral noise, so tongues
+ * rise and die along the width instead of the whole thing pulsing together.
+ * Turbulence grows with height: the base is a solid body and the tips shred
+ * into loose cells, which is the dither doing the work rather than a fade.
+ *
+ * Same material as the cursor fire — grid, palette, noise, compression and
+ * banding all come from src/lib/fire.ts, so the two cannot drift apart.
+ *
+ * ── the copy over it ─────────────────────────────────────────────────
+ * What sits behind the text is a legibility decision, not a taste one, and
+ * the palette settles it. The headline is set in ink: 14:1 on yellow, 7.8:1 on
+ * orange, 2.4:1 on blue. The two small lines are set in muted ink: 6.0:1 on
+ * yellow but only 3.3:1 on orange.
+ *
+ * So the fire is not thinned behind the copy so much as filtered. Each text
+ * block declares the coolest band that may show through it — orange under the
+ * headline, yellow under the small lines — and anything cooler is dropped
+ * rather than dimmed, because there is no alpha at which navy under a headline
+ * is readable. The flames cross the words; they just cannot cross them cold.
+ *
+ * Under prefers-reduced-motion it burns as a single still frame rather than
+ * disappearing: the hero should not be empty for anyone.
+ */
+import { SITE } from '../data/site';
+---
+
+<section class="hero" aria-labelledby="hero-claim">
+  <canvas class="hero__fire" data-hero-fire aria-hidden="true"></canvas>
+
+  <div class="hero__copy">
+    <p class="label hero__meta" data-fire-shield="0.42" data-fire-min="0.74">
+      A design, product &amp; engineering studio &middot; {SITE.city}, since 2023
+    </p>
+
+    <h1 id="hero-claim" class="hero__claim font-display" data-fire-shield="0.88">
+      The seam is where products fail.
+    </h1>
+
+    <p class="hero__line text-soft" data-fire-shield="0.42" data-fire-min="0.74">
+      Interfaces, brand systems, and the software underneath &mdash; drawn and
+      shipped by one team.
+    </p>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    place-items: center;
+    /* Tall enough for the fire to have somewhere to burn. Capped against the
+       viewport so the claim is never pushed below the fold on a laptop. */
+    min-height: min(82vh, 46rem);
+    padding: 5rem var(--gutter) 4rem;
+    overflow: hidden;
+  }
+
+  .hero__fire {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* Behind the copy, in front of the paper. */
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .hero__copy {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+    max-width: 46rem;
+  }
+
+  .hero__claim {
+    margin: 0;
+    font-size: clamp(2.75rem, 8.4vw, 6.5rem);
+    line-height: 0.94;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .hero__meta {
+    line-height: 1.9;
+  }
+
+  .hero__line {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    max-width: 34ch;
+  }
+</style>
+
+<script>
+  import { CELL, band, compress, noise, threshold, LEGIBLE } from '../lib/fire';
+
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-fire]');
+  const hero = canvas?.closest<HTMLElement>('.hero');
+
+  if (canvas && hero) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+    /** One flame frame. ~12fps: stepped enough to read as drawn. */
+    const BEAT_MS = 84;
+    /** Heat at the base of a column, before turbulence.
+        Deliberately low. Compression saturates above about 1.2, so a hotter
+        base puts every column in the same band and the bottom of the hero
+        becomes one flat slab of yellow; kept here the base spans orange to
+        yellow and the variation between columns can actually be seen. */
+    const FUEL = 1.45;
+    /** The hero fire never goes white. On a mass this size a cell the colour
+        of the paper reads as a hole punched in the flames rather than as the
+        hottest part of them — the cursor fire is small enough to get away
+        with white sparks, this is not. */
+    const CEILING = 0.93;
+
+    let cols = 0;
+    let rows = 0;
+    let dpr = 1;
+    /** Text boxes in cell coordinates: x0, y0, x1, y1, how much fire is left
+        standing inside them, and the coolest band that may show through.
+        Contrast against this palette decides the last of those: ink is 7.8:1 on
+        orange and 14:1 on yellow, but the muted ink the small copy is set in
+        is only 3.3:1 on orange and 6.0:1 on yellow. So the headline may have
+        orange through it and the small lines may not. */
+    let shields: [number, number, number, number, number, number][] = [];
+    /** Cells over which a shield softens back to open fire. */
+    const FEATHER = 4;
+
+    let beat = -1;
+    /** How far the pattern has climbed, and how far it has wandered sideways. */
+    let rise = 0;
+    let drift = 0;
+    let frame: number | undefined;
+
+    const measure = () => {
+      const r = hero.getBoundingClientRect();
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(r.width * dpr);
+      canvas.height = Math.floor(r.height * dpr);
+      ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = Math.ceil(r.width / CELL);
+      rows = Math.ceil(r.height / CELL);
+
+      // Margin, so the fire thins before it reaches a letter rather than at it.
+      const pad = 10;
+      shields = [...hero.querySelectorAll<HTMLElement>('[data-fire-shield]')].map((el) => {
+        const b = el.getBoundingClientRect();
+        return [
+          Math.floor((b.left - r.left - pad) / CELL),
+          Math.floor((b.top - r.top - pad) / CELL),
+          Math.ceil((b.right - r.left + pad) / CELL),
+          Math.ceil((b.bottom - r.top + pad) / CELL),
+          Number(el.dataset.fireShield) || 0.5,
+          Number(el.dataset.fireMin) || LEGIBLE,
+        ];
+      });
+    };
+
+    /**
+     * How much fire survives at this cell: 1 in the open, falling toward a
+     * shield's own strength as it approaches the text.
+     *
+     * Feathered rather than a hard test, because a rectangle of suppressed
+     * cells reads as a knocked-out box sitting in the flames. The fire has to
+     * thin toward the words the way it thins toward its own tips.
+     *
+     * These strengths are high on purpose: the flames are meant to cross the
+     * letters, not part around them. What keeps the copy readable is the rule
+     * below that drops cool bands under text, not this thinning — so this only
+     * has to take the edge off, and the headline barely needs even that.
+     */
+    let floor = 0;
+    const shelter = (gx: number, gy: number) => {
+      let factor = 1;
+      floor = 0;
+      for (const [x0, y0, x1, y1, strength, min] of shields) {
+        const dx = Math.max(x0 - gx, 0, gx - x1);
+        const dy = Math.max(y0 - gy, 0, gy - y1);
+        const d = Math.hypot(dx, dy) / FEATHER;
+        if (d >= 1) continue;
+        const t = d * d * (3 - 2 * d); // smoothstep out to the feather edge
+        const f = strength + (1 - strength) * t;
+        if (f < factor) factor = f;
+        // The strictest text this cell sits under wins.
+        if (min > floor) floor = min;
+      }
+      return factor;
+    };
+
+    const paint = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let gx = 0; gx < cols; gx += 1) {
+        /* Each column burns to its own height, on slow lateral noise that also
+           wanders sideways — so tongues rise and fall along the width instead
+           of the whole front pulsing at once. */
+        const lick = noise(gx * 0.085 + drift * 0.3, drift * 0.11);
+        const height = (0.32 + 0.72 * lick) * rows;
+        /* Fuel varies along the front too. Without this every column's base
+           lands in the same band and the bottom of the hero is a flat slab of
+           one colour rather than a fire. */
+        const fuel = FUEL * (0.55 + 0.8 * noise(gx * 0.14 + drift * 0.24, 7.3));
+
+        // Only walk as far up as this column can actually reach.
+        const top = Math.max(0, Math.floor(rows - height) - 7);
+        for (let gy = rows; gy >= top; gy -= 1) {
+          const above = rows - gy;
+          let h = (1 - above / height) * fuel;
+          if (h < -0.6) continue;
+
+          /* Turbulence grows with height: a solid body at the base, tips that
+             shred. Two octaves climbing at different rates, so the flame
+             churns as it rises rather than sliding up as one sheet. */
+          const churn = Math.min(1.4, above / height + 0.5);
+          h +=
+            ((noise(gx * 0.26, (gy - rise) * 0.26) - 0.5) * 1.5 +
+              (noise(gx * 0.6 + 31, (gy - rise * 1.7) * 0.6) - 0.5) * 0.8) *
+            churn;
+
+          // Sets `floor` as a side effect: the coolest band allowed here.
+          const cover = shelter(gx, gy);
+          h *= cover;
+          if (h <= 0) continue;
+
+          const heat = Math.min(CEILING, compress(h));
+          if (heat < threshold(gx, gy) * 0.16) continue;
+          // Ink sits on this. Cool bands are dropped rather than dimmed —
+          // there is no alpha at which navy under a headline is readable.
+          if (cover < 0.92 && heat < floor) continue;
+
+          const { colour, alpha } = band(heat);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = colour;
+          ctx.fillRect(gx * CELL, gy * CELL, CELL - 1, CELL - 1);
+        }
+      }
+      ctx.globalAlpha = 1;
+    };
+
+    const draw = (now: number) => {
+      frame = requestAnimationFrame(draw);
+      const b = Math.floor(now / BEAT_MS);
+      if (b === beat) return;
+      beat = b;
+      rise += 0.55;
+      drift += 0.08;
+      paint();
+    };
+
+    const start = () => {
+      if (frame === undefined) frame = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame);
+      frame = undefined;
+    };
+
+    /* A hero scrolled past is still burning sixty times a second otherwise.
+       Nothing below the fold needs to animate. */
+    const seen = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting && !reduced.matches) start();
+        else stop();
+      }
+    });
+
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const relayout = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        measure();
+        paint();
+      }, 120);
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else if (!reduced.matches) start();
+    });
+
+    measure();
+    paint();
+
+    if (reduced.matches) {
+      // One still frame, rather than an empty hero.
+      new ResizeObserver(relayout).observe(hero);
+    } else {
+      new ResizeObserver(relayout).observe(hero);
+      seen.observe(hero);
+    }
+
+    /* Web fonts land after first paint and reflow the headline, which moves the
+       boxes the fire has to stay legible behind. */
+    document.fonts?.ready.then(() => {
+      measure();
+      paint();
+    });
+  }
+</script>
