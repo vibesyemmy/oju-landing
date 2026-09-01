@@ -21,7 +21,7 @@ jobs:
       # Passes trivially while no font files are present.
       - run: npm run check:font
 
-      # The Pages Function never runs under `astro dev`, so the server side
+      # The route only runs on a real request, so the server side
       # of the enquiry form is only ever covered here.
       - run: npm run test:fn
       - run: npm run build

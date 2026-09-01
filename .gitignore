@@ -16,3 +16,6 @@ vendor/fonts/
 # these are re-seeded from them. Published copies live as Artifacts.
 /oju-homepage.html
 /case-study/oju-case-study.html
+
+# Vercel build output
+.vercel

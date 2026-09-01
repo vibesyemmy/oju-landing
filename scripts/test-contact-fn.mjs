@@ -1,25 +1,36 @@
 /**
- * Exercises functions/api/contact.ts outside Cloudflare.
+ * Exercises src/pages/api/contact.ts outside a running server.
  *
- * The Pages Function never runs under `astro dev`, so without this the server
- * side of the enquiry form ships unverified. Node 24 strips the types on
- * import, so there is no build step.
+ * The route only executes on a real request, so without this the server side of
+ * the enquiry form ships unverified. Node 24 strips the types on import, so
+ * there is no build step.
  *
  *   node scripts/test-contact-fn.mjs
  */
-import { onRequestPost } from '../functions/api/contact.ts';
+import { POST } from '../src/pages/api/contact.ts';
 
-const post = (fields, { json = true, env = {} } = {}) => {
+const post = async (fields, { json = true, env = {} } = {}) => {
   const body = new FormData();
   for (const [k, v] of Object.entries(fields)) body.append(k, v);
-  return onRequestPost({
-    request: new Request('https://oju.studio/api/contact', {
-      method: 'POST',
-      body,
-      headers: json ? { accept: 'application/json' } : {},
-    }),
-    env,
-  });
+  // The route reads the webhook from the environment rather than an argument,
+  // which is what every host actually gives it. Set and restore around the
+  // call so cases stay independent of each other.
+  const had = Object.prototype.hasOwnProperty.call(process.env, 'CONTACT_WEBHOOK_URL');
+  const prev = process.env.CONTACT_WEBHOOK_URL;
+  if (env.CONTACT_WEBHOOK_URL) process.env.CONTACT_WEBHOOK_URL = env.CONTACT_WEBHOOK_URL;
+  else delete process.env.CONTACT_WEBHOOK_URL;
+  try {
+    return await POST({
+      request: new Request('https://oju.studio/api/contact', {
+        method: 'POST',
+        body,
+        headers: json ? { accept: 'application/json' } : {},
+      }),
+    });
+  } finally {
+    if (had) process.env.CONTACT_WEBHOOK_URL = prev;
+    else delete process.env.CONTACT_WEBHOOK_URL;
+  }
 };
 
 const valid = { name: 'Ada', email: 'ada@example.com', message: 'We need an app.' };

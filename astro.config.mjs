@@ -3,12 +3,17 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import vercel from '@astrojs/vercel';
 
 // TODO: swap for the real domain once it is registered.
 const SITE = 'https://oju.studio';
 
 export default defineConfig({
   site: SITE,
+  // The site is static apart from the contact endpoint, which sets
+  // `prerender = false` and becomes the one serverless function. Without an
+  // adapter that route is silently dropped from the build.
+  adapter: vercel(),
   // Honour PORT so the dev server can be assigned a free port.
   server: { port: Number(process.env.PORT) || 4321 },
   integrations: [mdx(), sitemap()],

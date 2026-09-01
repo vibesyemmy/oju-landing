@@ -100,9 +100,10 @@ opeyemi.app if you need images that were removed.
 
 ## Contact form — needs one env var
 
-The enquiry form posts to a Cloudflare Pages Function at
-`functions/api/contact.ts`. It requires **`CONTACT_WEBHOOK_URL`** in the Pages
-project's environment variables — point it at anything that accepts a JSON POST
+The enquiry form posts to an Astro API route at `src/pages/api/contact.ts`.
+It is the only route with `prerender = false`, so it is the single serverless
+function in an otherwise static build. It requires **`CONTACT_WEBHOOK_URL`** in
+the Vercel project's environment variables — point it at anything that accepts a JSON POST
 (Resend, Postmark, a Slack incoming webhook, a Zapier catch hook).
 
 Without it the form returns 503 and tells the visitor to email instead. It does
@@ -149,7 +150,10 @@ vouch for a fact nobody marked, so mark them as you go.
 - [ ] `CLIENTS` in `src/data/site.ts` — empty array currently hides the strip
 - [ ] `/og.png` at 1200×630
 - [ ] Real domain in `astro.config.mjs` (`SITE`)
-- [ ] Set `CONTACT_WEBHOOK_URL` in the Cloudflare Pages project
+- [ ] Set `CONTACT_WEBHOOK_URL` in the Vercel project
+- [ ] Point `SITE` in `astro.config.mjs` at the real domain — canonical tags
+      and every sitemap entry currently claim `https://oju.studio`, which does
+      not resolve
 - [ ] Contact form endpoint
 
 ## Known gaps
