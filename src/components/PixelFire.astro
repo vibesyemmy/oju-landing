@@ -77,13 +77,13 @@
 </style>
 
 <script>
+  import { CELL, band, compress, hearthHeat, noise, threshold } from '../lib/fire';
+
   const canvas = document.querySelector<HTMLCanvasElement>('[data-fire]');
 
   if (canvas && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const ctx = canvas.getContext('2d', { alpha: true });
 
-    /** Cell pitch in CSS pixels: an 8px block in a 9px cell. */
-    const CELL = 9;
     /** One texture frame. ~11fps: stepped enough to read as drawn. */
     const FLAME_MS = 92;
 
@@ -109,47 +109,6 @@
     const IDLE_RATE = 26;
     /** Speed at which the fire reaches full heat, in px/s. */
     const WHITE_HOT = 1500;
-
-    const WHITE = '#fffbe8';
-    const YELLOW = '#ffe500';
-    const ORANGE = '#ff8a1e';
-    const RED = '#ff2f14';
-    const BLUE = '#3757e8';
-    const NAVY = '#151c6b';
-
-    /* The classic 4×4 ordered-dither threshold map, normalised. A cell is drawn
-       when its heat clears the threshold at its own grid position, so
-       neighbouring cells switch on at different heats and the edge becomes a
-       pattern rather than a gradient. */
-    const BAYER = [
-      [0, 8, 2, 10],
-      [12, 4, 14, 6],
-      [3, 11, 1, 9],
-      [15, 7, 13, 5],
-    ].map((row) => row.map((v) => (v + 0.5) / 16));
-
-    const hash = (x: number, y: number) => {
-      const h = Math.imul(x * 374761393 + y * 668265263, 1274126177);
-      return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
-    };
-
-    /** Value noise: hashed lattice, smoothstep between. Smooth enough that
-        translating it reads as flow rather than as a jump. */
-    const noise = (x: number, y: number) => {
-      const xi = Math.floor(x);
-      const yi = Math.floor(y);
-      const xf = x - xi;
-      const yf = y - yi;
-      const u = xf * xf * (3 - 2 * xf);
-      const v = yf * yf * (3 - 2 * yf);
-      const a = hash(xi, yi);
-      const b = hash(xi + 1, yi);
-      const top = a + (b - a) * u;
-      const c = hash(xi, yi + 1);
-      const d = hash(xi + 1, yi + 1);
-      const bottom = c + (d - c) * u;
-      return top + (bottom - top) * v;
-    };
 
     type Ember = { x: number; y: number; vx: number; vy: number; age: number; life: number; hot: number };
 
@@ -218,9 +177,12 @@
       const uy = speed > 1 ? cvy / speed : -1;
       const radius = 3.5;
       const span = Math.ceil(radius * stretch) + 1;
-      // Work heats it: the faster it is dragged, the more of the core clears
-      // the upper colour bands instead of sitting in orange.
-      const fuel = 1.2 + Math.min(0.9, speed / WHITE_HOT);
+      /* Work heats it: the faster it is dragged, the more of the core clears
+         the upper colour bands instead of sitting in orange. Passing a
+         standing flame heats it too — separate canvases cannot blend pixels,
+         but they can answer each other. */
+      const fuel =
+        1.2 + Math.min(0.9, speed / WHITE_HOT) + hearthHeat(cx, cy) * 0.85;
 
       const bx = Math.round(cx / CELL);
       const by = Math.round(cy / CELL);
@@ -342,24 +304,10 @@
            embers to make the tail denser also drove every cell into the top
            band, and the fire got whiter instead of fuller. Compressed, density
            is how much is lit and the fuel terms are how hot it is. */
-        const h = 1 - Math.exp(-raw * 1.15);
+        const h = compress(raw);
+        if (h < threshold(gx, gy) * 0.15) continue;
 
-        const threshold = BAYER[gy % 4][gx % 4];
-        if (h < threshold * 0.15) continue;
-
-        let colour: string;
-        let alpha = 1;
-        // White is deliberately hard to reach. The ground is cream, so a
-        // white-hot body reads as a pale smear rather than an intense one —
-        // on this paper the hot end of the palette is yellow, and white is
-        // only ever a spark at the very centre.
-        if (h > 0.95) colour = WHITE;
-        else if (h > 0.74) colour = YELLOW;
-        else if (h > 0.5) colour = ORANGE;
-        else if (h > 0.32) colour = RED;
-        else if (h > 0.16) { colour = BLUE; alpha = 0.9; }
-        else { colour = NAVY; alpha = 0.62; }
-
+        const { colour, alpha } = band(h);
         ctx.globalAlpha = alpha;
         ctx.fillStyle = colour;
         ctx.fillRect(gx * CELL, gy * CELL, CELL - 1, CELL - 1);

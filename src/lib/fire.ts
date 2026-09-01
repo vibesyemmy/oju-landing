@@ -94,3 +94,97 @@ export const band = (h: number): Band => {
 
 /** Heat below which a band is too cool to hold ink legibly on top of it. */
 export const LEGIBLE = 0.5;
+
+/* ── what the fires know about each other ──────────────────────────────
+ *
+ * The fires are separate canvases in separate stacking contexts, so they can
+ * never blend pixels. What they can do is react: the flames feel the pointer
+ * passing, and the pointer's own fire burns hotter going by a flame. Both
+ * halves read from here so there is one pointer and one list of hearths rather
+ * than a listener per component.
+ */
+
+/** Where the pointer is, and how fast it is travelling. Viewport coordinates. */
+export const pointer = { x: -9999, y: -9999, vx: 0, vy: 0, live: false };
+
+let watching = false;
+
+/** Attach the one pointer listener. Safe to call from every fire. */
+export const watchPointer = () => {
+  if (watching) return;
+  watching = true;
+  document.addEventListener(
+    'pointermove',
+    (e) => {
+      if (e.pointerType !== 'mouse') return;
+      if (pointer.live) {
+        // Smoothed, because a single event's delta is noisy and the lean it
+        // drives would jitter rather than bend.
+        pointer.vx += (e.clientX - pointer.x - pointer.vx) * 0.4;
+        pointer.vy += (e.clientY - pointer.y - pointer.vy) * 0.4;
+      }
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointer.live = true;
+    },
+    { passive: true },
+  );
+  document.addEventListener('pointerleave', () => {
+    pointer.live = false;
+  });
+};
+
+type Hearth = { el: Element; rect: DOMRect };
+const hearths = new Set<Hearth>();
+let stale = true;
+
+const mark = () => {
+  stale = true;
+};
+
+/**
+ * Register a burning thing, so the pointer's fire knows to flare near it.
+ *
+ * Rects are cached rather than measured per frame: this is read every frame by
+ * the cursor fire, and measuring three elements at 60fps forces layout sixty
+ * times a second for a decoration. They are viewport coordinates, so scrolling
+ * invalidates them.
+ */
+export const addHearth = (el: Element) => {
+  const hearth: Hearth = { el, rect: el.getBoundingClientRect() };
+  hearths.add(hearth);
+  if (hearths.size === 1) {
+    addEventListener('scroll', mark, { passive: true });
+    addEventListener('resize', mark, { passive: true });
+  }
+  stale = true;
+  return () => hearths.delete(hearth);
+};
+
+/** How strongly a point sits in the heat of any registered flame, 0..1. */
+export const hearthHeat = (x: number, y: number, reach = 110) => {
+  if (!hearths.size) return 0;
+  if (stale) {
+    for (const h of hearths) h.rect = h.el.getBoundingClientRect();
+    stale = false;
+  }
+  let best = 0;
+  for (const { rect } of hearths) {
+    if (!rect.width) continue;
+    const dx = Math.max(rect.left - x, 0, x - rect.right);
+    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+    const near = 1 - Math.hypot(dx, dy) / reach;
+    if (near > best) best = near;
+  }
+  return Math.max(0, best);
+};
+
+/** What the pointer is doing to a box: how much heat it brings, and which way
+    its travel bends the flame. */
+export const draughtOn = (rect: DOMRect, reach = 170) => {
+  if (!pointer.live || !rect.width) return { heat: 0, lean: 0 };
+  const dx = Math.max(rect.left - pointer.x, 0, pointer.x - rect.right);
+  const dy = Math.max(rect.top - pointer.y, 0, pointer.y - rect.bottom);
+  const heat = Math.max(0, 1 - Math.hypot(dx, dy) / reach);
+  return { heat, lean: heat * Math.max(-1, Math.min(1, pointer.vx / 26)) };
+};

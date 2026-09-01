@@ -45,7 +45,7 @@ const { cols = 9, rows = 12, class: className = '' } = Astro.props;
 </style>
 
 <script>
-  import { CELL, band, compress, noise, threshold } from '../lib/fire';
+  import { CELL, addHearth, band, compress, draughtOn, noise, threshold, watchPointer } from '../lib/fire';
 
   /** One flame frame. ~11fps, matching every other fire here. */
   const BEAT_MS = 92;
@@ -82,12 +82,18 @@ const { cols = 9, rows = 12, class: className = '' } = Astro.props;
     const paint = () => {
       ctx.clearRect(0, 0, cols * CELL, rows * CELL);
 
+      /* What the pointer's own fire is doing to this one as it goes past:
+         heat draws the flame up, travel bends it. Measured here rather than
+         per column — at this size the whole flame is inside one draught. */
+      const { heat: draught, lean } = draughtOn(canvas.getBoundingClientRect());
+
       for (let gx = 0; gx < cols; gx += 1) {
-        // Off-centre columns burn shorter, so the flame comes to a tip.
-        const off = (gx - mid) / (mid || 1);
+        // Off-centre columns burn shorter, so the flame comes to a tip. The
+        // taper's centre moves with the lean, which is what bends it.
+        const off = (gx - mid - lean * 1.6) / (mid || 1);
         const taper = 1 - off * off * 0.72;
         const lick = noise(gx * 0.46 + seed + drift * 0.5, seed + drift * 0.22);
-        const height = rows * taper * (0.72 + 0.5 * lick);
+        const height = rows * taper * (0.72 + 0.5 * lick) * (1 + draught * 0.6);
         if (height <= 0) continue;
 
         for (let gy = rows - 1; gy >= 0; gy -= 1) {
@@ -132,6 +138,9 @@ const { cols = 9, rows = 12, class: className = '' } = Astro.props;
       frame = undefined;
     };
 
+    watchPointer();
+    // Announce itself, so the pointer's fire flares going past.
+    addHearth(canvas);
     paint();
 
     /* Nothing below the fold needs to burn. */

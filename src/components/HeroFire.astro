@@ -197,7 +197,7 @@ import { SITE } from '../data/site';
 </style>
 
 <script>
-  import { CELL, band, compress, noise, threshold, LEGIBLE } from '../lib/fire';
+  import { CELL, addHearth, band, compress, noise, pointer, threshold, watchPointer, LEGIBLE } from '../lib/fire';
 
   const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-fire]');
   const hero = canvas?.closest<HTMLElement>('.hero');
@@ -300,16 +300,33 @@ import { SITE } from '../data/site';
       if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      /* The pointer's position in this canvas's own coordinates. The draught
+         is worked out per column here, not per flame: the front is wide
+         enough that only the part near the cursor should answer it, which is
+         what makes the fire lick after the pointer rather than swell whole. */
+      const box = hero.getBoundingClientRect();
+      const px = pointer.live ? pointer.x - box.left : -9999;
+      const py = pointer.live ? pointer.y - box.top : -9999;
+      const below = Math.max(0, py - rows * CELL);
+      const above = Math.max(0, -py);
+      const withinBand = Math.max(0, 1 - (below + above) / 280);
+
       for (let gx = 0; gx < cols; gx += 1) {
+        // Falls off either side of the pointer, so a tongue rises under it.
+        const draught =
+          withinBand * Math.max(0, 1 - Math.abs(gx * CELL - px) / 240);
         /* Each column burns to its own height, on slow lateral noise that also
            wanders sideways — so tongues rise and fall along the width instead
            of the whole front pulsing at once. */
-        const lick = noise(gx * 0.085 + drift * 0.3, drift * 0.11);
+        const lick = noise(
+          gx * 0.085 + drift * 0.3 + pointer.vx * draught * 0.012,
+          drift * 0.11,
+        );
         /* Squared, so the distribution leans low: most columns burn near the
            floor and only a few spike. A straight lick puts the body of the
            fire halfway up the hero, level with the headline; this keeps the
            mass down and still throws the occasional tongue up into it. */
-        const height = (0.16 + 0.62 * lick * lick) * rows;
+        const height = (0.16 + 0.62 * lick * lick) * rows * (1 + draught * 0.7);
         /* Fuel varies along the front too. Without this every column's base
            lands in the same band and the bottom of the hero is a flat slab of
            one colour rather than a fire. */
@@ -392,6 +409,8 @@ import { SITE } from '../data/site';
       else if (!reduced.matches) start();
     });
 
+    watchPointer();
+    addHearth(canvas);
     measure();
     paint();
 
