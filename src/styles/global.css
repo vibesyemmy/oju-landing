@@ -84,6 +84,9 @@
 
   html {
     scroll-behavior: smooth;
+    /* Clears the sticky header, so an in-page anchor — the skip link included
+       — lands below it rather than behind it. */
+    scroll-padding-top: 6.5rem;
   }
 
   @media (prefers-reduced-motion: reduce) {

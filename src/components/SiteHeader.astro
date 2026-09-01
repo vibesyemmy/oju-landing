@@ -7,7 +7,7 @@ interface Props {
 const { current } = Astro.props;
 ---
 
-<header class="flex h-22 items-center justify-between gutter">
+<header class="site-header flex h-22 items-center justify-between gutter" data-header>
   <a href="/" class="font-display text-2xl tracking-tight md:text-[27px]" aria-label={`${SITE.name} · home`}>
     {SITE.name}
   </a>
@@ -63,6 +63,33 @@ const { current } = Astro.props;
   </ul>
 </nav>
 
+<style>
+  /* Sticky, because the homepage is nearly seven screens tall and the nav was
+     unreachable for all but the first one. */
+  .site-header {
+    position: sticky;
+    top: 0;
+    /* Above the page and above the mobile panel that hangs off it, and above
+       the hero's own fire canvas. */
+    z-index: 50;
+    /* Opaque: the page — fire included — passes behind it, and a transparent
+       bar over a wildfire is not a bar. */
+    background: var(--color-paper);
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms ease;
+  }
+
+  /* Only once something has gone under it. At the top of the page the header
+     should read as part of the paper, not as a bar sitting on it. */
+  .site-header.is-stuck {
+    border-bottom-color: var(--color-rule);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-header { transition: none; }
+  }
+</style>
+
 <script>
   // Live studio time. ~300 bytes; the only script on the homepage besides the filter.
   const el = document.getElementById('local-time');
@@ -80,6 +107,27 @@ const { current } = Astro.props;
     };
     tick();
     setInterval(tick, 30_000);
+  }
+
+  /* The rule under the header appears only once the page has moved. One
+     class, rAF-throttled, so a scroll listener on every page stays cheap. */
+  const header = document.querySelector('[data-header]');
+  if (header) {
+    let ticking = false;
+    const mark = () => {
+      ticking = false;
+      header.classList.toggle('is-stuck', window.scrollY > 8);
+    };
+    addEventListener(
+      'scroll',
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(mark);
+      },
+      { passive: true },
+    );
+    mark();
   }
 
   const toggle = document.getElementById('menu-toggle');
