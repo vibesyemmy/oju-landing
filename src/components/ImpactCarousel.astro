@@ -1,11 +1,12 @@
 ---
 /**
- * UNUSED as of the homepage rebuild. The thesis is now proved by one static
- * figure tied to the sentence above it; a rotating set of five beside it meant
- * two stat treatments cancelling each other out. Kept because the outcomes in
- * it are real and it is one import from returning.
- *
  * Impact — rotates through each project's headline result.
+ *
+ * Presented as the proof panel that sits under the thesis: the figure on the
+ * left in accent, what it measures beside it, the project underneath. It used to
+ * be a full-width display section with a 7rem figure; the panel is the same
+ * content at the scale the homepage now needs, directly under the sentence it
+ * proves.
  *
  * Every figure is read from the case studies themselves, so the homepage can
  * never quote a number a project has stopped claiming.
@@ -18,10 +19,9 @@
  * - Under prefers-reduced-motion it never starts; the dots still work.
  * - With one project it renders static, with no controls and no script.
  *
- * Slides stack in one grid cell so the section is as tall as the tallest and
- * nothing jumps as they change. Inactive slides are `inert`, which also takes
- * their link out of the tab order — a carousel that tabs into invisible
- * content is a common and nasty failure.
+ * Slides stack in one grid cell so the panel is as tall as the tallest and
+ * nothing jumps as they change. Inactive slides are `inert`, which keeps them
+ * out of the tab order and away from assistive tech.
  */
 import { getCollection } from 'astro:content';
 
@@ -34,11 +34,12 @@ const slides = projects.map((entry) => ({
   value: entry.data.results[0].value,
   label: entry.data.results[0].label,
   client: entry.data.client,
-  /* Joined here rather than in the template: duration is optional, and
-     interpolating it directly leaves a dangling separator before the link. */
-  meta: [entry.data.client, entry.data.sector, entry.data.duration]
-    .filter(Boolean)
-    .join(' · '),
+  /* Several projects are named after the client, and "Lingawa · Lingawa" reads
+     as a bug. Where they match, the sector carries the second half instead. */
+  source:
+    entry.data.title === entry.data.client
+      ? `${entry.data.title} · ${entry.data.sector}`
+      : `${entry.data.title} · ${entry.data.client}`,
 }));
 
 const rotates = slides.length > 1;
@@ -47,12 +48,11 @@ const INTERVAL = 5000;
 
 <section
   class="impact"
+  aria-label="Outcomes"
   data-impact={rotates ? '' : null}
   style={`--impact-interval:${INTERVAL}ms`}
 >
-  <div class="impact__head">
-    <h2 class="label" id="impact-heading">Impact</h2>
-
+  <div class="impact__panel">
     {
       rotates && (
         <div class="impact__controls">
@@ -73,71 +73,71 @@ const INTERVAL = 5000;
         </div>
       )
     }
-  </div>
 
-  <div class="impact__stage">
-    {
-      slides.map((s, i) => (
-        <article
-          class="impact__slide"
-          data-slide={i}
-          aria-hidden={i === 0 ? 'false' : 'true'}
-          inert={i === 0 ? undefined : true}
-        >
-          <p class="impact__value font-display">{s.value}</p>
-          <p class="impact__label font-display text-pretty">{s.label}</p>
-          <p class="impact__meta font-mono">{s.meta}</p>
-          <a href={`/work/${s.id}/`} class="cta impact__link">
-            <span>Read the case study</span>
-            <span class="font-mono" aria-hidden="true">&rarr;</span>
-          </a>
-        </article>
-      ))
-    }
-  </div>
+    <div class="impact__stage">
+      {
+        slides.map((s, i) => (
+          <article
+            class="impact__slide"
+            data-slide={i}
+            aria-hidden={i === 0 ? 'false' : 'true'}
+            inert={i === 0 ? undefined : true}
+          >
+            <p class="impact__value font-display">{s.value}</p>
+            <div>
+              <p class="impact__label text-pretty">{s.label}</p>
+              <p class="label impact__source">{s.source}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
 
-  {rotates && <div class="impact__progress" aria-hidden="true"><i /></div>}
+    {rotates && <div class="impact__progress" aria-hidden="true"><i /></div>}
+  </div>
 </section>
 
 <style>
   .impact {
-    border-top: 1px solid var(--color-rule);
-    padding: 3.5rem 1.5rem;
+    padding: 0 1.5rem 3.5rem;
   }
   @media (min-width: 768px) {
-    .impact { padding: 5.5rem 5rem; }
+    .impact { padding: 0 5rem 5.25rem; }
   }
 
-  .impact__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    /* Five 44px targets plus the pause button outgrow a phone once the heading
-       has taken its share. Wrapping gives the controls the full width rather
-       than pushing them off the screen. */
-    flex-wrap: wrap;
+  .impact__panel {
+    position: relative;
+    background: var(--color-fill);
+    padding: 2rem 1.75rem 1.75rem;
   }
   @media (min-width: 768px) {
-    .impact__head { margin-bottom: 3rem; }
+    .impact__panel { padding: 2.75rem 3rem 2.25rem; }
   }
 
+  /* Sits above the figure on a phone, and out to the right of it on a wider
+     panel where there is room beside the text. */
   .impact__controls {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    /* Shrinkable in its own right, otherwise the row it wrapped onto still
-       refuses to give and the dots never get the chance to compress. */
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    /* Shrinkable, so five targets plus the button give way rather than
+       overflowing the panel. */
     min-width: 0;
-    max-width: 100%;
+  }
+  @media (min-width: 768px) {
+    .impact__controls {
+      position: absolute;
+      top: 1.5rem;
+      right: 2.25rem;
+      margin-bottom: 0;
+    }
   }
 
   .impact__dots {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    /* Shrinkable, so the row gives way on a narrow screen instead of overflowing. */
+    gap: 0.25rem;
     min-width: 0;
   }
 
@@ -145,7 +145,6 @@ const INTERVAL = 5000;
   .impact__dot {
     width: 44px;
     height: 44px;
-    /* Full size wherever it fits; never below the 24px minimum target. */
     flex-shrink: 1;
     min-width: 24px;
     padding: 0;
@@ -160,7 +159,9 @@ const INTERVAL = 5000;
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--color-rule);
+    /* On the fill panel the plain rule colour all but disappears, so the
+       inactive dot is darkened to stay visible against it. */
+    background: #c9c4b8;
     transition: background 220ms ease, transform 220ms ease;
   }
   .impact__dot:hover::before { background: var(--color-soft); }
@@ -199,8 +200,8 @@ const INTERVAL = 5000;
     border-bottom: 6px solid transparent;
   }
 
-  /* One cell, every slide in it: the section is as tall as the tallest slide
-     and nothing below it moves when the slide changes. */
+  /* One cell, every slide in it: the panel is as tall as the tallest slide and
+     nothing below it moves when the slide changes. */
   .impact__stage {
     display: grid;
   }
@@ -209,11 +210,17 @@ const INTERVAL = 5000;
     grid-area: 1 / 1;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 1rem;
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
     transition: opacity 520ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (min-width: 768px) {
+    .impact__slide {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 2.5rem;
+    }
   }
   .impact__slide[aria-hidden='false'] {
     opacity: 1;
@@ -221,30 +228,34 @@ const INTERVAL = 5000;
   }
 
   .impact__value {
-    font-size: clamp(3.5rem, 9vw, 7rem);
-    line-height: 0.9;
-    letter-spacing: -0.03em;
+    margin: 0;
+    font-size: clamp(3rem, 7vw, 4.25rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
     color: var(--color-accent);
+    flex: none;
+    /* Every figure reserves the width of the widest, so the sentence beside it
+       holds its left edge instead of sliding about as the slides change. */
+    min-width: 4.5ch;
   }
 
   .impact__label {
-    max-width: 20ch;
-    font-size: clamp(1.5rem, 3.4vw, 2.5rem);
-    line-height: 1.18;
-    letter-spacing: -0.018em;
+    max-width: 46ch;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  @media (min-width: 768px) {
+    .impact__label { font-size: 1.125rem; }
   }
 
-  .impact__meta {
-    font-size: 12.5px;
-    color: var(--color-faint);
+  .impact__source {
+    margin-top: 0.75rem;
   }
-
-  .impact__link { margin-top: 0.5rem; }
 
   .impact__progress {
-    margin-top: 2.5rem;
+    margin-top: 1.75rem;
     height: 1px;
-    background: var(--color-rule);
+    background: #d0cbbf;
     overflow: hidden;
   }
   .impact__progress i {
@@ -293,7 +304,7 @@ const INTERVAL = 5000;
       slides.forEach((s, i) => {
         const on = i === index;
         s.setAttribute('aria-hidden', String(!on));
-        // inert keeps the hidden slide's link out of the tab order.
+        // inert keeps the hidden slide away from the tab order and screen readers.
         s.toggleAttribute('inert', !on);
       });
       dots.forEach((d, i) => d.setAttribute('aria-current', String(i === index)));
