@@ -85,8 +85,25 @@ const { current } = Astro.props;
     border-bottom-color: var(--color-rule);
   }
 
+  /* Hamburger to close: the two bars cross into an X. Driven by aria-expanded,
+     the same state that opens the panel, so the two can never drift out of sync. */
+  #menu-toggle span {
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #menu-toggle[aria-expanded='true'] span:first-child {
+    transform: translateY(3px) rotate(45deg);
+  }
+
+  #menu-toggle[aria-expanded='true'] span:last-child {
+    transform: translateY(-3px) rotate(-45deg);
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .site-header { transition: none; }
+    .site-header,
+    #menu-toggle span {
+      transition: none;
+    }
   }
 </style>
 
