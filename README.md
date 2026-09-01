@@ -152,8 +152,8 @@ vouch for a fact nobody marked, so mark them as you go.
 - [ ] `/og.png` at 1200×630
 - [ ] Real domain in `astro.config.mjs` (`SITE`)
 - [ ] Set `CONTACT_WEBHOOK_URL` in the Vercel project
-- [ ] Set `PUBLIC_BRANDFETCH_CLIENT_ID` in Vercel, or add the last two logos as
-      files — Kairos Capital and GeoTravel render as wordmarks without either
+- [x] `BRANDFETCH_CLIENT_ID` is set in Vercel. Kairos Capital and GeoTravel
+      hotlink their logos from Brandfetch until local files replace them
 - [x] `SITE` points at `https://www.ojustudio.com`. The apex 308-redirects to
       www, so www is the canonical host.
 - [ ] Contact form endpoint

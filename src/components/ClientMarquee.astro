@@ -32,11 +32,25 @@ const resolve = (logo?: string) => {
 };
 
 /**
- * Brandfetch's client ID is not a secret — their terms require it embedded in a
- * live page's img src, so PUBLIC_ is correct and required. Absent, every remote
- * logo simply falls back to its wordmark.
+ * Brandfetch's client ID is not a secret whichever name it is stored under.
+ * Their terms require hotlinking, so it ships inside a public <img src> on this
+ * page either way — dropping the PUBLIC_ prefix changes how the build reads it,
+ * not who can see it.
+ *
+ * Read order matters. This component runs at build time, and a variable set in
+ * the Vercel dashboard without the PUBLIC_ prefix arrives in `process.env` but
+ * is not injected into `import.meta.env` — Vite only exposes prefix-matching
+ * names there. Checking process.env first is what makes the deployed build see
+ * it at all. The PUBLIC_ name is still accepted so an existing local .env keeps
+ * working without being edited.
+ *
+ * Absent entirely, every remote logo falls back to its wordmark.
  */
-const BRANDFETCH = import.meta.env.PUBLIC_BRANDFETCH_CLIENT_ID;
+const BRANDFETCH =
+  process.env.BRANDFETCH_CLIENT_ID ??
+  process.env.PUBLIC_BRANDFETCH_CLIENT_ID ??
+  import.meta.env.BRANDFETCH_CLIENT_ID ??
+  import.meta.env.PUBLIC_BRANDFETCH_CLIENT_ID;
 
 /**
  * `type/logo` is the horizontal lockup, which is what a single row wants.

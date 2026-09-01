@@ -129,7 +129,15 @@ Look before cropping.
 ## Brandfetch, as a gap-filler only
 
 Self-hosted logos always win. Brandfetch fills gaps for clients that have a
-`domain` and no local file, and only when `PUBLIC_BRANDFETCH_CLIENT_ID` is set.
+`domain` and no local file, and only when `BRANDFETCH_CLIENT_ID` is set.
+
+The name has no `PUBLIC_` prefix, which matters for how it is read. That prefix
+exists so client-side JavaScript can pull a value out of `import.meta.env`; this
+one is interpolated into the markup by `ClientMarquee.astro` at build time, so
+it is in the HTML before a browser ever sees the page. Without the prefix Vite
+does not inject it into `import.meta.env` at all, so the component reads
+`process.env` first — that is what lets a value set in the Vercel dashboard
+reach the build. The `PUBLIC_` name is still accepted as a fallback.
 Without the key, or when a logo is missing, the row shows a wordmark.
 
 **Currently unverified.** Brandfetch refuses these requests from localhost —
