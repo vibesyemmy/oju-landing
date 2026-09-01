@@ -50,13 +50,13 @@ const headingId = id ? `${id}-heading` : undefined;
   .argument__inner {
     display: grid;
     gap: 1.75rem;
-    padding: 3.5rem 1.5rem;
+    padding: 3.5rem var(--gutter);
   }
   @media (min-width: 768px) {
     .argument__inner {
       grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
       gap: 4rem;
-      padding: 5.25rem 5rem;
+      padding: 5.25rem var(--gutter);
     }
   }
   @media (min-width: 1280px) {

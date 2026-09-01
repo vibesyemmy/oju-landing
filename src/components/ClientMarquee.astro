@@ -121,10 +121,10 @@ const DURATION = Math.max(40, clients.length * 4);
   }
 
   .clients__head {
-    padding: 0 1.5rem 1.25rem;
+    padding: 0 var(--gutter) 1.25rem;
   }
   @media (min-width: 768px) {
-    .clients__head { padding-left: 5rem; padding-right: 5rem; }
+    .clients__head { padding-inline: var(--gutter); }
   }
 
   .marquee {
@@ -224,7 +224,7 @@ const DURATION = Math.max(40, clients.length * 4);
     .marquee {
       -webkit-mask-image: none;
       mask-image: none;
-      padding: 0 1.5rem;
+      padding: 0 var(--gutter);
     }
     .marquee__inner {
       animation: none;
@@ -240,7 +240,7 @@ const DURATION = Math.max(40, clients.length * 4);
       padding-right: 0;
     }
     @media (min-width: 768px) {
-      .marquee { padding: 0 5rem; }
+      .marquee { padding: 0 var(--gutter); }
     }
   }
 </style>

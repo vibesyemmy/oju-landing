@@ -14,7 +14,7 @@ const entries = (await getCollection('work', ({ data }) => !data.draft)).sort(
 <Base title="Work" description="Selected projects from Ojú: design, product and engineering.">
   <SiteHeader current="/work" />
   <main id="main">
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-22">
+    <section class="border-t border-rule gutter py-14 md:py-22">
       <h1 class="font-display mb-10 text-[44px] leading-tight tracking-tight md:mb-16 md:text-[78px]">
         Selected work
       </h1>
@@ -23,7 +23,7 @@ const entries = (await getCollection('work', ({ data }) => !data.draft)).sort(
 
     <SelectedProjects />
 
-    <section class="border-t border-rule px-6 py-14 md:px-20 md:py-20">
+    <section class="border-t border-rule gutter py-14 md:py-20">
       <div class="md:flex md:items-end md:justify-between md:gap-10">
         <div class="max-w-xl">
           <p class="label mb-4">Campaigns</p>

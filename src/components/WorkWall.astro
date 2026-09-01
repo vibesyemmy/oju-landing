@@ -97,7 +97,7 @@ const count = String(projects.length).padStart(2, '0');
     align-items: baseline;
     justify-content: space-between;
     gap: 1.5rem;
-    padding: 0 1.5rem clamp(1.5rem, 3vw, 2.25rem);
+    padding: 0 var(--gutter) clamp(1.5rem, 3vw, 2.25rem);
   }
   @media (min-width: 768px) {
     .workwall__head { padding-left: 5rem; padding-right: 5rem; }

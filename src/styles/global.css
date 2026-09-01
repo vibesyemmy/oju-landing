@@ -39,9 +39,31 @@
   --text-display--line-height: 1.02;
   --text-section:  2.75rem;  /* 44px  */
   --text-section--line-height: 1.1;
+
+  /* The width the type ramp was drawn against — see the note on --text-hero.
+     Until now it was an assumption nothing enforced, so on a 2560px screen the
+     body copy ran to ~148 characters a line against a 45-75 comfortable range. */
+  --content-max: 1280px;
 }
 
 @layer base {
+  /* The gutter grows so the content does not. Below 1440px this resolves to
+     exactly the 24/80px padding the site already used, so nothing moves at the
+     sizes most people are on; past it the surplus becomes margin and the
+     measure stops climbing.
+
+     Percentages resolve against the element the value lands on, so this belongs
+     on full-width sections only — nested inside one it would measure the parent
+     rather than the viewport. */
+  :root {
+    --gutter: max(1.5rem, (100% - var(--content-max)) / 2);
+  }
+  @media (min-width: 768px) {
+    :root {
+      --gutter: max(5rem, (100% - var(--content-max)) / 2);
+    }
+  }
+
   html {
     scroll-behavior: smooth;
   }
@@ -75,6 +97,13 @@
 }
 
 @layer components {
+  /* The page gutter. Full-bleed backgrounds and rules, capped content — which
+     keeps the hairlines running edge to edge and the marquee touching the
+     viewport, the things the editorial look is built on. */
+  .gutter {
+    padding-inline: var(--gutter);
+  }
+
   /* The small mono label used throughout the design. */
   .label {
     font-family: var(--font-mono);
