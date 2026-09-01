@@ -23,10 +23,16 @@
  * yellow but only 3.3:1 on orange.
  *
  * So the fire is not thinned behind the copy so much as filtered. Each text
- * block declares the coolest band that may show through it — orange under the
- * headline, yellow under the small lines — and anything cooler is dropped
- * rather than dimmed, because there is no alpha at which navy under a headline
- * is readable. The flames cross the words; they just cannot cross them cold.
+ * block declares the coolest band that may show through it, and anything
+ * cooler is dropped rather than dimmed, because there is no alpha at which
+ * navy under a headline is readable. The flames cross the words; they just
+ * cannot cross them cold.
+ *
+ * The floor is a claim about the text's own colour, so the two have to be set
+ * together. The sub-line is ink rather than the muted grey secondary copy
+ * normally takes, precisely so its floor can be orange: at grey the floor had
+ * to be yellow, yellow does not reach that height, and the filter cleared a
+ * rectangle that read as a white box behind the words.
  *
  * Under prefers-reduced-motion it burns as a single still frame rather than
  * disappearing: the hero should not be empty for anyone.
@@ -46,7 +52,7 @@ import { SITE } from '../data/site';
       The seam is where products fail.
     </h1>
 
-    <p class="hero__line text-soft" data-fire-shield="0.42" data-fire-min="0.74">
+    <p class="hero__line" data-fire-shield="0.88" data-fire-min="0.5">
       Interfaces, brand systems, and the software underneath &mdash; drawn and
       shipped by one team.
     </p>
@@ -155,10 +161,16 @@ import { SITE } from '../data/site';
     line-height: 1.9;
   }
 
+  /* Full ink rather than the muted grey secondary copy is usually set in.
+     That grey is 3.3:1 on orange, which is why the fire had to be filtered
+     down to yellow behind it — and since yellow rarely reaches this height,
+     the filter cleared a rectangle instead and read as a white box. Ink is
+     7.8:1 on orange, so the flames can cross the line legally. */
   .hero__line {
     font-size: 0.9375rem;
     line-height: 1.55;
     max-width: 34ch;
+    color: var(--color-ink);
   }
 </style>
 
@@ -196,8 +208,10 @@ import { SITE } from '../data/site';
         is only 3.3:1 on orange and 6.0:1 on yellow. So the headline may have
         orange through it and the small lines may not. */
     let shields: [number, number, number, number, number, number][] = [];
-    /** Cells over which a shield softens back to open fire. */
-    const FEATHER = 4;
+    /** Cells over which a shield softens back to open fire. Wide, because a
+        shield is a rectangle and a narrow feather lets that rectangle be read
+        as a box sitting in the flames. */
+    const FEATHER = 7;
 
     let beat = -1;
     /** How far the pattern has climbed, and how far it has wandered sideways. */
