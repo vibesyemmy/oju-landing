@@ -32,63 +32,6 @@ const resolve = (logo?: string) => {
 };
 
 /**
- * Brandfetch's client ID is not a secret whichever name it is stored under.
- * Their terms require hotlinking, so it ships inside a public <img src> on this
- * page either way — dropping the PUBLIC_ prefix changes how the build reads it,
- * not who can see it.
- *
- * Read order matters. This component runs at build time, and a variable set in
- * the Vercel dashboard without the PUBLIC_ prefix arrives in `process.env` but
- * is not injected into `import.meta.env` — Vite only exposes prefix-matching
- * names there. Checking process.env first is what makes the deployed build see
- * it at all. The PUBLIC_ name is still accepted so an existing local .env keeps
- * working without being edited.
- *
- * Absent entirely, every remote logo falls back to its wordmark.
- */
-const BRANDFETCH =
-  process.env.BRANDFETCH_CLIENT_ID ??
-  process.env.PUBLIC_BRANDFETCH_CLIENT_ID ??
-  import.meta.env.BRANDFETCH_CLIENT_ID ??
-  import.meta.env.PUBLIC_BRANDFETCH_CLIENT_ID;
-
-/**
- * `type/logo` is the horizontal lockup, which is what a single row wants.
- *
- * `fallback/404` is not optional: the default fallback for an icon is
- * *Brandfetch's own logo*, so an unrecognised domain would quietly put their
- * mark in the client wall as though it were a client. A 404 lets the img fail,
- * and the failure swaps in the wordmark.
- *
- * Parameter order follows their documented example (h, fallback, type).
- *
- * NOT WORKING IN PRODUCTION — the credential is rejected, not the code.
- *
- * Tested from https://www.ojustudio.com in a real browser. nike.com and
- * stripe.com fail exactly like kairoscapitalng.com and geotravel.tours, and
- * kairoscapitalng.com fails even with the fallback parameter removed, which
- * would otherwise have rendered Brandfetch's own default logo. So it is not
- * missing brand coverage, and — since it fails identically from localhost and
- * from the live domain — not referer or hotlink blocking either. Something
- * common to every request is being refused, and the only thing common to them
- * is the `c=` value.
- *
- * (An earlier note here blamed `hotlink_blocked` from localhost. That was
- * inference from circumstantial evidence and the production test disproved it.)
- *
- * Most likely the wrong kind of credential. Brandfetch ship two products: the
- * Brand API, which takes a long secret key, and Logo Link, which takes a short
- * client ID in this `c=` parameter. The value configured here is 86 characters,
- * which is the shape of the former. Check for a Logo Link client ID at
- * developers.brandfetch.com before looking anywhere else.
- *
- * Until it is resolved every one of these falls back to a wordmark, which is
- * the correct failure and is what visitors see today.
- */
-const remoteLogo = (domain: string) =>
-  `https://cdn.brandfetch.io/domain/${domain}/h/68/fallback/404/type/logo?c=${BRANDFETCH}`;
-
-/**
  * Optical sizing.
  *
  * Setting every logo to the same height only works while they share a shape.
@@ -127,8 +70,6 @@ const clients = CLIENTS.map((c) => {
     ...c,
     img,
     h: opticalHeight(img, c.tile),
-    // Self-hosted always wins; remote only fills gaps.
-    remote: !c.logo && c.domain && BRANDFETCH ? remoteLogo(c.domain) : undefined,
   };
 });
 
@@ -146,7 +87,7 @@ const DURATION = Math.max(40, clients.length * 4);
           {[0, 1].map((copy) => (
             <ul class="marquee__track" aria-hidden={copy === 1 ? 'true' : undefined}>
               {clients.map((c) => (
-                <li class="client" data-remote={c.remote ? '' : undefined} style={`--logo-h:${c.h}px`}>
+                <li class="client" style={`--logo-h:${c.h}px`}>
                   {c.img ? (
                     <Image
                       src={c.img}
@@ -157,23 +98,6 @@ const DURATION = Math.max(40, clients.length * 4);
                       decoding="async"
                       class:list={['client__logo', c.tile && 'client__logo--tile']}
                     />
-                  ) : c.remote ? (
-                    <>
-                      {/* Inline onerror rather than a listener: the image can
-                          fail before any script runs, and a missing logo must
-                          never leave a gap in the row. */}
-                      <img
-                        src={c.remote}
-                        alt={c.name}
-                        height="34"
-                        loading="lazy"
-                        decoding="async"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        class="client__logo"
-                        onerror="this.closest('.client').classList.add('is-missing')"
-                      />
-                      <span class="client__name font-display">{c.name}</span>
-                    </>
                   ) : (
                     <span class="client__name font-display">{c.name}</span>
                   )}
@@ -295,12 +219,6 @@ const DURATION = Math.max(40, clients.length * 4);
     .client__name { font-size: 1.375rem; }
   }
   .client:hover .client__name { color: var(--color-ink); }
-
-  /* A remote logo hides its wordmark until the image fails, at which point the
-     wordmark takes over and the image is removed from the row entirely. */
-  .client[data-remote] .client__name { display: none; }
-  .client[data-remote].is-missing .client__logo { display: none; }
-  .client[data-remote].is-missing .client__name { display: block; }
 
   @media (prefers-reduced-motion: reduce) {
     .marquee {

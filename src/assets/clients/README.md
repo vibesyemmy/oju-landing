@@ -126,54 +126,23 @@ Not everything on a board is a logo. Lingawa's "new brand" file is phone
 screenshots on pink, and Gangan's main logo file is a wall of applications.
 Look before cropping.
 
-## Brandfetch, as a gap-filler only
+## Self-hosted only
 
-Self-hosted logos always win. Brandfetch fills gaps for clients that have a
-`domain` and no local file, and only when `BRANDFETCH_CLIENT_ID` is set.
+Brandfetch was wired in as a gap-filler and removed again. It never worked: the
+credential was rejected for every domain including `nike.com`, and with the
+fallback parameter dropped even Brandfetch's own default logo failed to render —
+which ruled out brand coverage, referer checks and hotlink blocking alike. The
+remaining suspect was the `c=` value: an 86-character secret where Logo Link
+expects a short client ID, so most likely a Brand API key in a Logo Link slot.
 
-The name has no `PUBLIC_` prefix, which matters for how it is read. That prefix
-exists so client-side JavaScript can pull a value out of `import.meta.env`; this
-one is interpolated into the markup by `ClientMarquee.astro` at build time, so
-it is in the HTML before a browser ever sees the page. Without the prefix Vite
-does not inject it into `import.meta.env` at all, so the component reads
-`process.env` first — that is what lets a value set in the Vercel dashboard
-reach the build. The `PUBLIC_` name is still accepted as a fallback.
-Without the key, or when a logo is missing, the row shows a wordmark.
+Rather than chase that for two logos, both are being supplied as files. That
+also restores the original preference — no third-party origin on the homepage's
+critical path, no viewer IPs sent elsewhere, every image through Astro's
+pipeline.
 
-**Not working — the credential is rejected.** Tested from the live domain in a
-real browser: `nike.com` and `stripe.com` fail exactly as the two client domains
-do, and a client domain fails even with the fallback parameter removed, where
-Brandfetch's own default logo would otherwise appear. That rules out missing
-brand coverage. Failing identically from localhost and from production rules out
-referer and hotlink blocking. What is left is the `c=` value.
+The `Client` type no longer carries a `domain` field, and `ClientMarquee` has no
+remote branch. If a logo CDN is ever wanted again, `git log` has the whole
+implementation.
 
-Most likely the wrong credential type. Brandfetch ship two products — the Brand
-API, which uses a long secret key, and Logo Link, which uses a short client ID
-in this `c=` parameter. The configured value is 86 characters, the shape of the
-former. Look for a Logo Link client ID at developers.brandfetch.com first.
-
-Until then every remote logo falls back to a wordmark, which is the correct
-failure. Adding the two logo files removes the dependency entirely.
-
-Two things to keep in mind if it does light up:
-
-- `fallback/404` is mandatory. The default fallback for an icon is *Brandfetch's
-  own logo*, so an unrecognised domain would silently put their mark in the
-  client wall as though it were a client.
-- Only add a `domain` you can evidence. A wrong guess that happens to belong to
-  a real company shows a stranger's logo, which is worse than a wordmark.
-
-### The tradeoff this accepts
-
-Their Logo API fills gaps for free and keeps a mark current if a client
-rebrands — a real advantage, since a stale logo is worse than no logo. But their
-usage guidelines require **hotlinking**:
-programmatic access is explicitly not permitted, caching needs a sales
-conversation, and there is a dedicated `automated_traffic` error for requests
-that do not come from an `<img>` tag in a live page.
-
-So these images sit on the homepage's critical path from a third-party origin,
-outside Astro's pipeline, and send viewer IPs to Brandfetch. That is the cost of
-filling the gaps this way. Self-hosted files remain preferable wherever they can
-be obtained — replacing a remote logo is just adding the file and dropping the
-`domain`.
+Four clients still render as wordmarks: Kairos Capital, GeoTravel, NEPAL Oil &
+Gas and Butchers & Bakers. That is the designed fallback, not a gap.
