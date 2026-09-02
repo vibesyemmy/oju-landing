@@ -98,7 +98,7 @@ const INTERVAL = 5000;
     {/* Wrapped rather than classed directly: scoped styles reach this
         component's own elements, not those rendered by a child. */}
     <div class="impact__flame">
-      <EmberFlame cols={7} rows={8} />
+      <EmberFlame cols={7} rows={6} />
     </div>
 
     {rotates && <div class="impact__progress" aria-hidden="true"><i /></div>}
@@ -147,22 +147,23 @@ const INTERVAL = 5000;
      card. Nothing clips it — the panel and its section are both overflow
      visible.
 
-     Sized to the room above rather than to taste. There is 88px of clear space
-     between the panel and the copy above it, so a 72px flame leaves 16px; the
-     108px one this started as would have run into that copy by 20px.
+     Sized to the narrowest room it has to fit, which is the phone's. The gap
+     between the panel and the copy above it is structural — it comes from the
+     preceding section's padding, not from how that copy wraps — and measures
+     88px on a desktop but 60px on a phone. At 6 cells the flame is 54px and
+     clears both; at the 8 it was, it cleared the desktop and overran the phone
+     by 12px, which is why this was hidden below 768px rather than placed.
 
-     Held back until the panel is wide enough to have a free corner at all — on
-     a phone the controls sit inline above the figure and there is none. */
+     Inside the panel was the alternative on a phone and is worse: the free
+     band beside the figure is 80px tall and 87px wide against the longest
+     value, so the flame would live in an 8px margin that any reflow eats. */
   .impact__flame {
-    display: none;
+    position: absolute;
+    right: 1.75rem;
+    bottom: 100%;
   }
   @media (min-width: 768px) {
-    .impact__flame {
-      display: block;
-      position: absolute;
-      right: 2.5rem;
-      bottom: 100%;
-    }
+    .impact__flame { right: 2.5rem; }
   }
 
   .impact__dots {
