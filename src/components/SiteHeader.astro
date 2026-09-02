@@ -7,7 +7,7 @@ interface Props {
 const { current } = Astro.props;
 ---
 
-<header class="site-header flex h-22 items-center justify-between gutter" data-header>
+<header class="site-header flex h-16 items-center justify-between gutter md:h-22" data-header>
   <a href="/" class="font-display text-2xl tracking-tight md:text-[27px]" aria-label={`${SITE.name} · home`}>
     {SITE.name}
   </a>
@@ -46,7 +46,7 @@ const { current } = Astro.props;
 <!-- Fixed, not in flow: an open menu covers the page rather than shoving it down. -->
 <nav
   id="mobile-nav"
-  class="fixed inset-x-0 top-22 z-40 max-h-[calc(100dvh-5.5rem)] overflow-y-auto border-y border-rule bg-paper px-6 py-6 md:hidden"
+  class="fixed inset-x-0 top-16 z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto border-y border-rule bg-paper px-6 py-6 md:hidden"
   aria-label="Primary"
 >
   <ul class="flex flex-col gap-1">
