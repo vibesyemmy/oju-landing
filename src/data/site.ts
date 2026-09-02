@@ -421,7 +421,7 @@ export interface TeamMember {
 export const TEAM: readonly TeamMember[] = [
   {
     name: 'Dami Oloye',
-    role: 'Managing Director | Technical Program Manager',
+    role: 'Managing Director',
     portrait: 'dami-oloye.webp',
     summary:
       'Technology leader with 10+ years delivering large-scale enterprise programs across AI, data, digital commerce and SaaS. Founder of the studio, translating business objectives into roadmaps teams can actually execute.',
