@@ -431,10 +431,11 @@ export const TEAM: readonly TeamMember[] = [
       'Brand designer, product designer and creative director who also leads technology delivery, turning ideas into brands, digital products and working systems. Sits where design, technology, business and strategy meet.',
   },
   {
-    name: 'Third member',
-    role: 'Role to come',
-    summary: 'Name, role and two sentences. Portrait square, 1200×1200, same framing as the others.',
-    pending: true,
+    name: 'Opeyemi Ajagbe',
+    role: 'Product Design',
+    portrait: 'opeyemi-ajagbe.webp',
+    summary:
+      'Product designer working from the problem through to the shipped interface \u2014 research, flows, screens and the system that holds them together. Draws alongside the people who build it, so the states nobody specced get designed rather than discovered.',
   },
   {
     name: 'Fourth member',
