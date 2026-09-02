@@ -59,18 +59,13 @@ const items = entries.map((entry) => ({
         </li>
       ))
     }
-
-    {/* In the grid rather than under it. Five cards into three columns leaves
-        an empty cell, and the link was sitting alone in the corner beside it
-        instead of in it. As a grid item it fills whatever cell is going spare
-        at each breakpoint, and takes a row of its own at five columns where
-        there is none. */}
-    <li class="evidence__more">
-      <a href="/work" class="evidence__all font-mono">
-        All projects <span aria-hidden="true">&rarr;</span>
-      </a>
-    </li>
   </ul>
+
+  <div class="evidence__foot">
+    <a href="/work" class="evidence__all font-mono">
+      All projects <span aria-hidden="true">&rarr;</span>
+    </a>
+  </div>
 </section>
 
 <style>
@@ -148,13 +143,13 @@ const items = entries.map((entry) => ({
     text-wrap: pretty;
   }
 
-  /* Centred in its cell, both ways. The cell is as tall as the tallest card
-     in the row, so the link sits in the middle of that block rather than
-     hanging off one of its edges. */
-  .evidence__more {
+  .evidence__foot {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    padding-top: 2rem;
+  }
+  @media (min-width: 768px) {
+    .evidence__foot { padding-top: 2.5rem; }
   }
 
   .evidence__all {
