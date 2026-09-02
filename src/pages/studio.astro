@@ -240,9 +240,16 @@ const teamSnapKeyframes = (() => {
     --track-w: calc(var(--count) * var(--card-w) + (var(--count) - 1) * var(--gap));
     /* One card plus the gap after it — the distance from a card to the next. */
     --step: calc(var(--card-w) + var(--gap));
+    /*
+     * The space the row actually has. Past 1440px the gutter grows instead of
+     * the content, so the column stops at --content-max — measuring from the
+     * viewport alone would have the row believing in width it never gets, and
+     * the last card would sit clipped in the margin with no pan to reach it.
+     */
+    --avail: min(calc(100vw - var(--edge)), var(--content-max));
     /* Zero when the row already fits — a short team pins nothing and pans
        nothing, because the stage is then exactly as tall as the pin. */
-    --pan-abs: max(0px, calc(var(--track-w) - (100vw - var(--edge))));
+    --pan-abs: max(0px, calc(var(--track-w) - var(--avail)));
   }
 
   /*
