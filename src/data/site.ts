@@ -437,12 +437,6 @@ export const TEAM: readonly TeamMember[] = [
     summary:
       'Product designer working from the problem through to the shipped interface \u2014 research, flows, screens and the system that holds them together. Draws alongside the people who build it, so the states nobody specced get designed rather than discovered.',
   },
-  {
-    name: 'Fourth member',
-    role: 'Role to come',
-    summary: 'Name, role and two sentences. Portrait square, 1200×1200, same framing as the others.',
-    pending: true,
-  },
 ];
 
 export const STUDIO_FACTS = [
