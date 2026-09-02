@@ -1,0 +1,261 @@
+---
+/**
+ * A heart, burning.
+ *
+ * Same material as every other fire here — grid, palette, noise, compression
+ * and banding all come from src/lib/fire.ts — arranged as a body of fuel with
+ * a flame standing on it rather than as a front or a lone flame.
+ *
+ * The heart is built from two lobes and a taper rather than from the usual
+ * implicit curve: the curve's cleft is under two cells deep at this size, so
+ * on a grid it comes out as a fat blob with a notch. Two circles that meet on
+ * the centre line put the cleft a whole lobe deep, which is the feature that
+ * makes the shape read as a heart at a glance.
+ *
+ * Colour comes from how far inside the silhouette a cell sits — measured once,
+ * as a distance transform over the mask — so the rim is red, the middle
+ * orange, and the core yellow. That gradient is what keeps the outline visible
+ * while the whole body flickers.
+ *
+ * The flame above is EmberFlame's, sourced from the heart's own silhouette:
+ * each column burns up from the topmost heart cell in it, so fire climbs out
+ * of the cleft as well as off the crowns instead of running flat across the
+ * top.
+ *
+ * Capped below white, like the rest: on this paper a cell the colour of the
+ * page reads as a hole punched in the fire.
+ *
+ * Decorative only — aria-hidden, no state anything depends on. Under
+ * prefers-reduced-motion it holds one frame rather than disappearing, and it
+ * stops burning when scrolled out of view.
+ */
+interface Props {
+  /** Cells across and up. The canvas sizes itself from these. */
+  cols?: number;
+  rows?: number;
+  /** Extra classes, for the parent to place it. */
+  class?: string;
+}
+
+const { cols = 22, rows = 25, class: className = '' } = Astro.props;
+---
+
+<canvas
+  class:list={['heart', className]}
+  data-burning-heart
+  data-cols={cols}
+  data-rows={rows}
+  aria-hidden="true"></canvas>
+
+<style>
+  .heart {
+    display: block;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { CELL, addHearth, band, compress, draughtOn, noise, threshold, watchPointer } from '../lib/fire';
+
+  /** One frame. ~11fps, matching every other fire here. */
+  const BEAT_MS = 92;
+  /** Heat in the flame at its base, before turbulence. */
+  const FUEL = 1.5;
+  /** Never white: on cream paper a page-coloured cell reads as a hole. */
+  const CEILING = 0.93;
+  /** How much of the grid's height the heart itself takes. The rest is the
+      headroom the flames need — a heart filling the box would have nowhere
+      to burn. */
+  const BODY = 0.68;
+  /** How the lower half narrows to the tip. Below 1 the sides bow out a little
+      before they close, which is the difference between a heart and a cone. */
+  const TAPER = 0.85;
+
+  for (const canvas of document.querySelectorAll<HTMLCanvasElement>('[data-burning-heart]')) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) continue;
+
+    const cols = Number(canvas.dataset.cols) || 22;
+    const rows = Number(canvas.dataset.rows) || 25;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.style.width = `${cols * CELL}px`;
+    canvas.style.height = `${rows * CELL}px`;
+    canvas.width = Math.floor(cols * CELL * dpr);
+    canvas.height = Math.floor(rows * CELL * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const mid = (cols - 1) / 2 + 0.5;
+    const bodyRows = Math.round(rows * BODY);
+    const tipRow = rows - 1;
+    const halfW = cols / 2;
+    /* Lobes the size of a quarter of the width, centred a radius apart, so
+       they meet exactly on the centre line and the cleft between them is a
+       full lobe deep. */
+    const lobeR = halfW / 2;
+    const lobeCY = tipRow - bodyRows + 1 + lobeR;
+
+    /* The silhouette, solved once. */
+    const solid = new Uint8Array(cols * rows);
+    /** The topmost heart cell in each column — where that column's flame
+        stands. Left at the grid height where a column misses the heart, so
+        nothing burns out in the empty corners. */
+    const crown = new Int32Array(cols).fill(rows);
+
+    for (let gx = 0; gx < cols; gx += 1) {
+      for (let gy = 0; gy < rows; gy += 1) {
+        const x = gx + 0.5;
+        const y = gy + 0.5;
+        const drop = (y - lobeCY) / (tipRow + 1 - lobeCY);
+        const inLobe =
+          Math.hypot(x - (mid - lobeR), y - lobeCY) <= lobeR ||
+          Math.hypot(x - (mid + lobeR), y - lobeCY) <= lobeR;
+        const inTaper =
+          drop >= 0 && drop <= 1 && Math.abs(x - mid) <= halfW * Math.pow(1 - drop, TAPER);
+        if (!inLobe && !inTaper) continue;
+        solid[gy * cols + gx] = 1;
+        if (gy < crown[gx]) crown[gx] = gy;
+      }
+    }
+
+    /* How deep inside the silhouette each cell sits, in cells, by flooding
+       inwards from everything that is not the heart. Once, at setup: this is
+       what the body's colour is read from every frame, and it cannot change
+       because the shape does not. */
+    const depth = new Int32Array(cols * rows);
+    let ring: number[] = [];
+    for (let i = 0; i < solid.length; i += 1) if (solid[i]) depth[i] = -1;
+    for (let gx = 0; gx < cols; gx += 1) {
+      for (let gy = 0; gy < rows; gy += 1) {
+        const i = gy * cols + gx;
+        if (!solid[i]) continue;
+        // An edge cell is one with a neighbour outside the shape — the grid's
+        // own border counts, so a heart touching the edge still has a rim.
+        const edge =
+          gx === 0 ||
+          gy === 0 ||
+          gx === cols - 1 ||
+          gy === rows - 1 ||
+          !solid[i - 1] ||
+          !solid[i + 1] ||
+          !solid[i - cols] ||
+          !solid[i + cols];
+        if (edge) {
+          depth[i] = 1;
+          ring.push(i);
+        }
+      }
+    }
+    while (ring.length) {
+      const next: number[] = [];
+      for (const i of ring) {
+        for (const j of [i - 1, i + 1, i - cols, i + cols]) {
+          if (j < 0 || j >= depth.length || !solid[j] || depth[j] !== -1) continue;
+          depth[j] = depth[i] + 1;
+          next.push(j);
+        }
+      }
+      ring = next;
+    }
+
+    /** Headroom above the highest point of the heart: how far a flame has to
+        climb before it is off the canvas. */
+    const reach = Math.min(...crown);
+
+    /** A per-heart offset into the noise field, so two on one page do not burn
+        in lockstep. */
+    const seed = Math.random() * 400;
+    let rise = 0;
+    let drift = 0;
+    let beat = -1;
+    let frame: number | undefined;
+
+    const paint = () => {
+      ctx.clearRect(0, 0, cols * CELL, rows * CELL);
+
+      /* What the pointer's own fire is doing to this one as it goes past: heat
+         draws the flames up, travel bends them. Measured once for the whole
+         thing — at this size it is all inside one draught. */
+      const { heat: draught, lean } = draughtOn(canvas.getBoundingClientRect());
+
+      const cell = (gx: number, gy: number, raw: number) => {
+        const heat = Math.min(CEILING, compress(raw));
+        if (heat < threshold(gx, gy) * 0.2) return;
+        const { colour, alpha } = band(heat);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = colour;
+        ctx.fillRect(gx * CELL, gy * CELL, CELL - 1, CELL - 1);
+      };
+
+      for (let gx = 0; gx < cols; gx += 1) {
+        // The body. Depth carries the colour — red at the rim, yellow in the
+        // core — and the flicker is what keeps it alive without moving the
+        // silhouette, which has to stay a heart.
+        for (let gy = crown[gx]; gy < rows; gy += 1) {
+          const d = depth[gy * cols + gx];
+          if (d <= 0) continue;
+          const flicker = (noise(gx * 0.7 + seed, (gy - rise * 0.35) * 0.7 + seed) - 0.5) * 0.55;
+          cell(gx, gy, 0.05 + 0.4 * d + flicker + draught * 0.35);
+        }
+
+        // The flame, standing on this column's crown. Height is measured off
+        // the headroom rather than off the crown, so the cleft's fire climbs
+        // out of it instead of stopping level with the lobes.
+        const top = crown[gx];
+        if (top >= rows || reach <= 0) continue;
+        const off = (gx - mid + 0.5 - lean * 1.6) / (halfW || 1);
+        const taper = 1 - off * off * 0.45;
+        const lick = noise(gx * 0.46 + seed + drift * 0.5, seed + drift * 0.22);
+        const height = reach * taper * (0.85 + 0.6 * lick) * (1 + draught * 0.6);
+        if (height <= 0) continue;
+
+        for (let gy = top - 1; gy >= 0; gy -= 1) {
+          const above = top - gy;
+          let h = (1 - above / height) * FUEL * (1 - off * off * 0.4);
+          if (h < -0.5) continue;
+
+          const churn = Math.min(1.3, above / height + 0.45);
+          h +=
+            ((noise(gx * 0.5 + seed, (gy - rise) * 0.5 + seed) - 0.5) * 1.3 +
+              (noise(gx * 0.9 + seed + 17, (gy - rise * 1.6) * 0.9) - 0.5) * 0.6) *
+            churn;
+          if (h <= 0) continue;
+          cell(gx, gy, h);
+        }
+      }
+
+      ctx.globalAlpha = 1;
+    };
+
+    const draw = (now: number) => {
+      frame = requestAnimationFrame(draw);
+      const b = Math.floor(now / BEAT_MS);
+      if (b === beat) return;
+      beat = b;
+      rise += 0.55;
+      drift += 0.09;
+      paint();
+    };
+
+    const start = () => {
+      if (frame === undefined && !reduced.matches) frame = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame);
+      frame = undefined;
+    };
+
+    watchPointer();
+    // Announce itself, so the pointer's fire flares going past.
+    addHearth(canvas);
+    paint();
+
+    /* Nothing below the fold needs to burn. */
+    new IntersectionObserver((entries) => {
+      for (const e of entries) (e.isIntersecting ? start() : stop());
+    }).observe(canvas);
+
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+  }
+</script>

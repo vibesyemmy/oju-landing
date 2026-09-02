@@ -4,6 +4,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
 import Media from '../components/Media.astro';
+import EmberFlame from '../components/EmberFlame.astro';
 /* Licensed stock, standing in until the real room and street are photographed.
    Pexels licence, free for commercial use.
      studio-room   — Skylar Kang, pexels.com/photo/6044844
@@ -58,15 +59,22 @@ const teamSnapKeyframes = (() => {
     />
 
     <section class="gutter pb-12 md:pb-20">
-      <Media
-        label="The studio at work: the room, the wall, people mid-argument over a screen. Not a stock office."
-        src={studioRoom}
-        alt="Desks, screens and drawn curtains in a working studio."
-        ratio="21/9"
-        size="2400×1029"
-        loading="eager"
-        sizes="(max-width: 768px) 100vw, 90vw"
-      />
+      {/* The wrapper exists to be the flame's positioning parent: Media renders
+          the image itself, so there is nothing else here to hang a corner off. */}
+      <div class="studio-shot">
+        <Media
+          label="The studio at work: the room, the wall, people mid-argument over a screen. Not a stock office."
+          src={studioRoom}
+          alt="Desks, screens and drawn curtains in a working studio."
+          ratio="21/9"
+          size="2400×1029"
+          loading="eager"
+          sizes="(max-width: 768px) 100vw, 90vw"
+        />
+        <div class="studio-shot__flame">
+          <EmberFlame cols={12} rows={18} />
+        </div>
+      </div>
     </section>
 
     <!-- THE NAME -->
@@ -217,6 +225,30 @@ const teamSnapKeyframes = (() => {
 </Base>
 
 <style>
+  .studio-shot {
+    position: relative;
+  }
+
+  /* The corner of the room catching. Same fire as the homepage's, at the size
+     of a single flame, rooted a few cells inside the photograph's top edge so
+     it burns off the corner rather than floating above it.
+
+     Held back below 1024px: the flame stands taller than the gap between the
+     lede and the image, and on a narrow column the lede runs the full width,
+     so there is nowhere up there for it to burn that is not text. */
+  .studio-shot__flame {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .studio-shot__flame {
+      display: block;
+      position: absolute;
+      bottom: calc(100% - 2.25rem);
+      inset-inline-end: 1.25rem;
+      pointer-events: none;
+    }
+  }
+
   /*
    * The section holds still while the row walks sideways, then releases and the
    * page carries on. Mechanically: the stage is a viewport taller than the pin

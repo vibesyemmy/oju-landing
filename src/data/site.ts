@@ -375,11 +375,14 @@ export const ENGAGEMENTS = [
   },
 ] as const;
 
+/* `icon` names a drawing in PixelIcon. It lives on the data because both the
+   homepage and /services render these stages, and a per-page list keyed by
+   index would be two places to keep in step with one array. */
 export const PROCESS = [
-  { num: '01', title: 'Discovery', body: 'We work out what the actual problem is, which is rarely the one in the brief. Research, stakeholder interviews, a look at what you already have.' },
-  { num: '02', title: 'Design', body: 'Flows, then screens, then a system. We test the risky parts early and cheaply, before they are expensive to change.' },
-  { num: '03', title: 'Build', body: 'The same team that drew it builds it, so nothing is lost at handover. Shipped in increments you can see, not one reveal at the end.' },
-  { num: '04', title: 'Support', body: 'Launch is the middle, not the end. We monitor, fix, and hand over cleanly, or stay on if you want us to.' },
+  { title: 'Discovery', icon: 'discovery', body: 'We work out what the actual problem is, which is rarely the one in the brief. Research, stakeholder interviews, a look at what you already have.' },
+  { title: 'Design', icon: 'design', body: 'Flows, then screens, then a system. We test the risky parts early and cheaply, before they are expensive to change.' },
+  { title: 'Build', icon: 'build', body: 'The same team that drew it builds it, so nothing is lost at handover. Shipped in increments you can see, not one reveal at the end.' },
+  { title: 'Support', icon: 'support', body: 'Launch is the middle, not the end. We monitor, fix, and hand over cleanly, or stay on if you want us to.' },
 ] as const;
 
 /* ── /studio ───────────────────────────────────────────────────── */

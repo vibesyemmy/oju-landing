@@ -30,13 +30,8 @@ import WorkEvidence from '../components/WorkEvidence.astro';
 import CampaignStrip from '../components/CampaignStrip.astro';
 import ClientMarquee from '../components/ClientMarquee.astro';
 import EmberFlame from '../components/EmberFlame.astro';
-import PixelIcon, { type IconName } from '../components/PixelIcon.astro';
+import PixelIcon from '../components/PixelIcon.astro';
 import { HONEST, PROCESS, SITE } from '../data/site';
-
-/* One per stage, in the order PROCESS lists them. Kept beside the render
-   rather than in the data file: which drawing belongs to a stage is a fact
-   about this page, not about the stage. */
-const ICONS: IconName[] = ['discovery', 'design', 'build', 'support'];
 ---
 
 <Base>
@@ -142,10 +137,9 @@ const ICONS: IconName[] = ['discovery', 'design', 'build', 'support'];
 
       <ol class="steps">
         {
-          PROCESS.map((step, i) => (
+          PROCESS.map((step) => (
             <li class="step">
-              <span class="font-mono text-[11px] tracking-[0.16em] text-accent">{step.num}</span>
-              <PixelIcon name={ICONS[i]} class="step__icon" />
+              <PixelIcon name={step.icon} class="step__icon" />
               <h3 class="font-display mt-3 text-[20px] tracking-[-0.02em] md:text-[22px]">
                 {step.title}
               </h3>

@@ -4,6 +4,8 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import PageHero from '../components/PageHero.astro';
 import Media from '../components/Media.astro';
+import PixelIcon from '../components/PixelIcon.astro';
+import BurningHeart from '../components/BurningHeart.astro';
 /* Licensed stock, standing in until real artefacts can be exported from the
    projects themselves. Pexels licence, free for commercial use.
      design      — Md Mahdi, pexels.com/photo/36747234
@@ -42,6 +44,7 @@ import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
       label="Services"
       title="Three disciplines, one team, one invoice."
       lede="Most studios do the drawing and hand the rest to somebody else. We keep the whole thing, because the handover is where products go wrong."
+      flame
     />
 
     {
@@ -106,7 +109,7 @@ import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
         {
           PROCESS.map((p) => (
             <li class="border-t border-ink pt-5">
-              <p class="font-mono text-[11px] text-accent">{p.num}</p>
+              <PixelIcon name={p.icon} class="mt-3.5" />
               <h3 class="font-display mt-3 text-[26px] tracking-tight">{p.title}</h3>
               <p class="mt-4 text-[15px] leading-relaxed text-soft text-pretty">{p.body}</p>
             </li>
@@ -139,7 +142,17 @@ import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
     </section>
 
     <!-- CTA -->
-    <section class="rule-t gutter py-16 md:py-28">
+    <section class="cta-section rule-t gutter py-16 md:py-28">
+      {/* Inside a wrapper spanning the section's padding box and inheriting its
+          resolved gutter, so the heart's right edge lands on the content column
+          at any width — the gutter is computed from 100%, and an absolutely
+          positioned child has no equivalent that also excludes the scrollbar.
+          The wrapper carries the class because scoped styles reach this page's
+          own elements and not a child component's. */}
+      <div class="cta-section__heart">
+        <BurningHeart cols={22} rows={25} />
+      </div>
+
       <h2 class="font-display max-w-[18ch] text-[40px] leading-[1.04] tracking-[-0.024em] md:text-[72px] md:tracking-[-0.028em]">
         Not sure which of these you need?
       </h2>
@@ -161,3 +174,30 @@ import { SERVICES, ENGAGEMENTS, PROCESS, SITE } from '../data/site';
 
   <SiteFooter />
 </Base>
+
+<style>
+  .cta-section {
+    position: relative;
+  }
+
+  /* Out at the content edge, level with the middle of the block.
+
+     Held back below 1024px: the heart is as wide as a phone's whole column,
+     and there is no empty half of the section for it to burn in until the
+     headline stops running the full measure. */
+  .cta-section__heart {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .cta-section__heart {
+      display: flex;
+      justify-content: flex-end;
+      position: absolute;
+      inset-inline: 0;
+      padding-inline: inherit;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+  }
+</style>
