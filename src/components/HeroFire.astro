@@ -68,9 +68,10 @@ import { SITE } from '../data/site';
        viewport so the claim is never pushed below the fold on a laptop. */
     min-height: min(82vh, 46rem);
     /* Uneven on purpose. The copy is centred in the content box, so its centre
-       sits at (height + top - bottom) / 2 — the heavier bottom padding is what
-       rides it 3rem above the hero's middle and leaves the fire more room. */
-    padding: 4rem var(--gutter) 9rem;
+       sits at (height + top - bottom) / 2, which puts it (bottom - top) / 2
+       above the hero's middle — the heavier bottom padding is the whole lever,
+       and it leaves the fire more room under the copy as it lifts it. */
+    padding: 3.5rem var(--gutter) 12rem;
     overflow: hidden;
   }
 
